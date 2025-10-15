@@ -429,7 +429,7 @@ async function resolveLocales() {
 /**
  * main
  */
-const SERVICE_URL = `https://github.com/ckeiituk/outclash-service/releases/download/${SIDECAR_HOST}`;
+const SERVICE_URL = `https://github.com/ckeiituk/service/releases/download/${SIDECAR_HOST}`;
 
 const resolveService = () => {
   let ext = platform === "win32" ? ".exe" : "";
