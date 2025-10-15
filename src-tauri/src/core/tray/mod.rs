@@ -413,7 +413,7 @@ impl Tray {
 
         if let Some(tray) = app_handle.tray_by_id("main") {
             let _ = tray.set_tooltip(Some(&format!(
-                "Koala Clash {version}\n{}: {}\n{}: {}\n{}: {}",
+                "OutClash {version}\n{}: {}\n{}: {}\n{}: {}",
                 t("SysProxy"),
                 switch_map[system_proxy],
                 t("TUN"),

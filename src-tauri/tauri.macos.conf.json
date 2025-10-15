@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "identifier": "io.github.outclash",
-  "productName": "Koala Clash",
+  "productName": "OutClash",
   "bundle": {
     "targets": ["app", "dmg"],
     "macOS": {

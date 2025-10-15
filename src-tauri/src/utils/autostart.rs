@@ -39,7 +39,7 @@ pub fn get_exe_path() -> Result<PathBuf> {
 pub fn create_shortcut() -> Result<()> {
     let exe_path = get_exe_path()?;
     let startup_dir = get_startup_dir()?;
-    let shortcut_path = startup_dir.join("Koala-Clash.lnk");
+    let shortcut_path = startup_dir.join("OutClash.lnk");
 
     // If the shortcut already exists, return success directly
     if shortcut_path.exists() {
@@ -77,7 +77,7 @@ pub fn create_shortcut() -> Result<()> {
 #[cfg(target_os = "windows")]
 pub fn remove_shortcut() -> Result<()> {
     let startup_dir = get_startup_dir()?;
-    let shortcut_path = startup_dir.join("Koala-Clash.lnk");
+    let shortcut_path = startup_dir.join("OutClash.lnk");
 
     // If the shortcut does not exist, return success directly
     if !shortcut_path.exists() {
@@ -96,7 +96,7 @@ pub fn remove_shortcut() -> Result<()> {
 #[cfg(target_os = "windows")]
 pub fn is_shortcut_enabled() -> Result<bool> {
     let startup_dir = get_startup_dir()?;
-    let shortcut_path = startup_dir.join("Koala-Clash.lnk");
+    let shortcut_path = startup_dir.join("OutClash.lnk");
 
     Ok(shortcut_path.exists())
 }

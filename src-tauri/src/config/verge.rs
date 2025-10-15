@@ -277,7 +277,7 @@ impl IVerge {
         // 修正后保存配置
         if needs_fix {
             logging!(info, Type::Config, true, "Saving fixed configuration file...");
-            help::save_yaml(&config_path, &config, Some("# Koala Clash Config"))?;
+            help::save_yaml(&config_path, &config, Some("# OutClash Config"))?;
             logging!(
                 info,
                 Type::Config,
@@ -414,7 +414,7 @@ impl IVerge {
 
     /// Save IVerge App Config
     pub fn save_file(&self) -> Result<()> {
-        help::save_yaml(&dirs::verge_path()?, &self, Some("# Koala Clash Config"))
+        help::save_yaml(&dirs::verge_path()?, &self, Some("# OutClash Config"))
     }
 
     /// patch verge config
