@@ -6,8 +6,44 @@ dist-ssr
 *.local
 update.json
 scripts/_env.sh
-.vscode
 .tool-versions
-.idea
 .old
 bun.lock
+
+# IDE directories and files
+.vscode
+.idea
+.fleet
+.cursor
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+
+# Editor temporary files
+*.swp
+*.swo
+*~
+*.bak
+
+# OS files
+Thumbs.db
+Desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Temporary files
+*.tmp
+*.temp
+.cache
