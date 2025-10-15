@@ -446,7 +446,7 @@
   "Merge File Mapping Error": "Error de mapeo en el archivo de sobrescritura. Los cambios se han deshecho",
   "Merge File Key Error": "Error de clave en el archivo de sobrescritura. Los cambios se han deshecho",
   "Merge File Error": "Error en el archivo de sobrescritura. Los cambios se han deshecho",
-  "Service Administrator Prompt": "Clash Verge requiere permisos de administrador para instalar el servicio del sistema",
+  "Service Administrator Prompt": "OutClash requiere permisos de administrador para instalar el servicio del sistema",
   "DNS Settings": "Configuración de DNS",
   "DNS settings saved": "Configuración de DNS guardada",
   "DNS Overwrite": "Sobrescritura de DNS",

@@ -449,7 +449,7 @@
   "Merge File Mapping Error": "覆寫文件映射錯誤，變更已撤銷",
   "Merge File Key Error": "覆寫文件鍵錯誤，變更已撤銷",
   "Merge File Error": "覆寫文件錯誤，變更已撤銷",
-  "Service Administrator Prompt": "Clash Verge 需要管理員權限安裝系統服務",
+  "Service Administrator Prompt": "OutClash 需要管理員權限安裝系統服務",
   "DNS Settings": "DNS 設置",
   "DNS settings saved": "DNS 設置已保存",
   "DNS Overwrite": "DNS 覆寫",

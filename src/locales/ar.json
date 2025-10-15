@@ -214,7 +214,7 @@
   "uninstall": "إلغاء التثبيت",
   "active": "نشط",
   "unknown": "غير معروف",
-  "Information: Please make sure that the Clash Verge Service is installed and enabled": "معلومة: يرجى التأكد من تثبيت وتشغيل خدمة Clash Verge",
+  "Information: Please make sure that the OutClash Service is installed and enabled": "معلومة: يرجى التأكد من تثبيت وتشغيل خدمة OutClash",
   "Install": "تثبيت",
   "Uninstall": "إلغاء التثبيت",
   "Disable Service Mode": "تعطيل وضع الخدمة",
@@ -456,5 +456,5 @@
   "TUN requires Service Mode": "يتطلب وضع TUN خدمة",
   "Install Service": "تثبيت الخدمة ",
   "Installing Service...": "جاري تثبيت الخدمة...",
-  "Service Administrator Prompt": "يتطلب Clash Verge امتيازات المسؤول لإعادة تثبيت خدمة النظام"
+  "Service Administrator Prompt": "يتطلب OutClash امتيازات المسؤول لإعادة تثبيت خدمة النظام"
 }

@@ -446,7 +446,7 @@
   "Merge File Mapping Error": "Mappingfehler in der Überdeckungsdatei. Die Änderungen wurden rückgängig gemacht.",
   "Merge File Key Error": "Schlüsselfehler in der Überdeckungsdatei. Die Änderungen wurden rückgängig gemacht.",
   "Merge File Error": "Fehler in der Überdeckungsdatei. Die Änderungen wurden rückgängig gemacht.",
-  "Service Administrator Prompt": "Clash Verge benötigt Administratorrechte, um den Systemdienst zu installieren.",
+  "Service Administrator Prompt": "OutClash benötigt Administratorrechte, um den Systemdienst zu installieren.",
   "DNS Settings": "DNS-Einstellungen",
   "DNS settings saved": "DNS-Einstellungen wurden gespeichert",
   "DNS Overwrite": "DNS-Überschreibung",

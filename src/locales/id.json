@@ -246,7 +246,7 @@
   "uninstall": "dicopot",
   "active": "aktif",
   "unknown": "tidak diketahui",
-  "Information: Please make sure that the Clash Verge Service is installed and enabled": "Informasi: Harap pastikan bahwa Layanan Clash Verge terinstal dan diaktifkan",
+  "Information: Please make sure that the OutClash Service is installed and enabled": "Informasi: Harap pastikan bahwa Layanan OutClash terinstal dan diaktifkan",
   "Install": "Instal",
   "Uninstall": "Copot",
   "Disable Service Mode": "Nonaktifkan Mode Layanan",
@@ -452,5 +452,5 @@
   "TUN requires Service Mode": "Mode TUN memerlukan layanan",
   "Install Service": "Instal Layanan",
   "Installing Service...": "Memasang Layanan...",
-  "Service Administrator Prompt": "Clash Verge memerlukan hak administrator untuk menginstal ulang layanan sistem"
+  "Service Administrator Prompt": "OutClash memerlukan hak administrator untuk menginstal ulang layanan sistem"
 }

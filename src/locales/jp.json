@@ -449,7 +449,7 @@
   "Merge File Mapping Error": "上書きファイルのマッピングエラーがあります。変更は取り消されました。",
   "Merge File Key Error": "上書きファイルのキーエラーがあります。変更は取り消されました。",
   "Merge File Error": "上書きファイルにエラーがあります。変更は取り消されました。",
-  "Service Administrator Prompt": "Clash Vergeはシステムサービスをインストールするために管理者権限が必要です。",
+  "Service Administrator Prompt": "OutClashはシステムサービスをインストールするために管理者権限が必要です。",
   "DNS Settings": "DNS設定",
   "DNS settings saved": "DNS設定が保存されました。",
   "DNS Overwrite": "DNS上書き",
