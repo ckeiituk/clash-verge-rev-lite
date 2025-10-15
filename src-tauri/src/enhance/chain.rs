@@ -108,8 +108,8 @@ impl ChainSupport {
                 (self, core.as_str()),
                 (ChainSupport::All, _)
                     | (ChainSupport::Clash, "clash")
-                    | (ChainSupport::ClashMeta, "koala-mihomo")
-                    | (ChainSupport::ClashMetaAlpha, "koala-mihomo-alpha")
+                    | (ChainSupport::ClashMeta, "out-mihomo")
+                    | (ChainSupport::ClashMetaAlpha, "out-mihomo-alpha")
             ),
             None => true,
         }

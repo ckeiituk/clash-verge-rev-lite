@@ -327,6 +327,11 @@ export async function saveWebdavConfig(
 
 export async function listWebDavBackup() {
   let list: IWebDavFile[] = await invoke<IWebDavFile[]>("list_webdav_backup");
+  // Проверка на null/undefined и тип массива
+  if (!list || !Array.isArray(list)) {
+    console.warn("listWebDavBackup: Invalid response, returning empty array");
+    return [];
+  }
   list.map((item) => {
     item.filename = item.href.split("/").pop() as string;
   });

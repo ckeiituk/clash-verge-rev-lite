@@ -1,6 +1,6 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "identifier": "io.github.koala-clash",
+  "identifier": "io.github.outclash",
   "bundle": {
     "targets": ["nsis"],
     "windows": {
@@ -27,7 +27,7 @@
       "endpoints": [
         "https://github.com/coolcoala/clash-verge-rev-lite/releases/download/updater/update-fixed-webview2.json"
       ],
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IERCQjQ1QjQ0QUJDQTU1RTkKUldUcFZjcXJSRnUwMjdXSERoZVQ1R0hHRDMrT3VkSmpvbDJmb01sN3ZpYWhVYnEwaWpYUWU4YU0K"
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQ3OThBRjc2RDFEQUQ0RjYKUldUMjFOclJkcStZMSswMC9DWkNSZzRyZS9YMStUd3diOTdKOTk1S1I4Wk5iK2lBNnZHMC9DZDIK"
     }
   }
 }

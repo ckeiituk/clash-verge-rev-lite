@@ -428,19 +428,19 @@ Function .onInit
 FunctionEnd
 
 !macro CheckAllKoalaProcesses
-  ; Check if koala-clash-service.exe is running
+  ; Check if outclash-service.exe is running
   !if "${INSTALLMODE}" == "currentUser"
-    nsis_tauri_utils::FindProcessCurrentUser "koala-clash-service.exe"
+    nsis_tauri_utils::FindProcessCurrentUser "outclash-service.exe"
   !else
-    nsis_tauri_utils::FindProcess "koala-clash-service.exe"
+    nsis_tauri_utils::FindProcess "outclash-service.exe"
   !endif
   Pop $R0
   ${If} $R0 = 0
-    DetailPrint "Kill koala-clash-service.exe..."
+    DetailPrint "Kill outclash-service.exe..."
     !if "${INSTALLMODE}" == "currentUser"
-      nsis_tauri_utils::KillProcessCurrentUser "koala-clash-service.exe"
+      nsis_tauri_utils::KillProcessCurrentUser "outclash-service.exe"
     !else
-      nsis_tauri_utils::KillProcess "koala-clash-service.exe"
+      nsis_tauri_utils::KillProcess "outclash-service.exe"
     !endif
   ${EndIf}
 
@@ -511,20 +511,20 @@ FunctionEnd
 
 !macro StartKoalaService
   ; Check if the service exists
-  SimpleSC::ExistsService "koala_clash_service"
+  SimpleSC::ExistsService "outclash_service"
   Pop $0  ; 0：service exists；other: service not exists
   ; Service exists
   ${If} $0 == 0
     Push $0
     ; Check if the service is running
-    SimpleSC::ServiceIsRunning "koala_clash_service"
+    SimpleSC::ServiceIsRunning "outclash_service"
     Pop $0 ; returns an errorcode (<>0) otherwise success (0)
     Pop $1 ; returns 1 (service is running) - returns 0 (service is not running)
     ${If} $0 == 0
       Push $0
       ${If} $1 == 0
-            DetailPrint "Restart Koala Clash Service..."
-            SimpleSC::StartService "koala_clash_service" "" 30
+            DetailPrint "Restart OutClash Service..."
+            SimpleSC::StartService "outclash_service" "" 30
       ${EndIf}
     ${ElseIf} $0 != 0
           Push $0
@@ -537,33 +537,33 @@ FunctionEnd
 
 !macro RemoveKoalaService
   ; Check if the service exists
-  SimpleSC::ExistsService "koala_clash_service"
+  SimpleSC::ExistsService "outclash_service"
   Pop $0  ; 0：service exists；other: service not exists
   ; Service exists
   ${If} $0 == 0
     Push $0
     ; Check if the service is running
-    SimpleSC::ServiceIsRunning "koala_clash_service"
+    SimpleSC::ServiceIsRunning "outclash_service"
     Pop $0 ; returns an errorcode (<>0) otherwise success (0)
     Pop $1 ; returns 1 (service is running) - returns 0 (service is not running)
     ${If} $0 == 0
       Push $0
       ${If} $1 == 1
-        DetailPrint "Stop Koala Clash Service..."
-        SimpleSC::StopService "koala_clash_service" 1 30
+        DetailPrint "Stop OutClash Service..."
+        SimpleSC::StopService "outclash_service" 1 30
         Pop $0 ; returns an errorcode (<>0) otherwise success (0)
         ${If} $0 == 0
-              DetailPrint "Removing Koala Clash Service..."
-              SimpleSC::RemoveService "koala_clash_service"
+              DetailPrint "Removing OutClash Service..."
+              SimpleSC::RemoveService "outclash_service"
         ${ElseIf} $0 != 0
                   Push $0
                   SimpleSC::GetErrorMessage
                   Pop $0
-                  MessageBox MB_OK|MB_ICONSTOP "Koala Clash Service Stop Error ($0)"
+                  MessageBox MB_OK|MB_ICONSTOP "OutClash Service Stop Error ($0)"
         ${EndIf}
   ${ElseIf} $1 == 0
-        DetailPrint "Removing Koala Clash Service..."
-        SimpleSC::RemoveService "koala_clash_service"
+        DetailPrint "Removing OutClash Service..."
+        SimpleSC::RemoveService "outclash_service"
   ${EndIf}
     ${ElseIf} $0 != 0
           Push $0
@@ -817,6 +817,22 @@ Section Install
 
   !insertmacro StartKoalaService
 
+  ; Register URL protocol handlers (deep links)
+  WriteRegStr SHCTX "Software\Classes\clash" "" "URL:Clash Protocol"
+  WriteRegStr SHCTX "Software\Classes\clash" "URL Protocol" ""
+  WriteRegStr SHCTX "Software\Classes\clash\DefaultIcon" "" "$\"$INSTDIR\${MAINBINARYNAME}.exe$\",0"
+  WriteRegStr SHCTX "Software\Classes\clash\shell\open\command" "" "$\"$INSTDIR\${MAINBINARYNAME}.exe$\" $\"%1$\""
+
+  WriteRegStr SHCTX "Software\Classes\koala-clash" "" "URL:Koala Clash Protocol"
+  WriteRegStr SHCTX "Software\Classes\koala-clash" "URL Protocol" ""
+  WriteRegStr SHCTX "Software\Classes\koala-clash\DefaultIcon" "" "$\"$INSTDIR\${MAINBINARYNAME}.exe$\",0"
+  WriteRegStr SHCTX "Software\Classes\koala-clash\shell\open\command" "" "$\"$INSTDIR\${MAINBINARYNAME}.exe$\" $\"%1$\""
+
+  WriteRegStr SHCTX "Software\Classes\outclash" "" "URL:OutClash Protocol"
+  WriteRegStr SHCTX "Software\Classes\outclash" "URL Protocol" ""
+  WriteRegStr SHCTX "Software\Classes\outclash\DefaultIcon" "" "$\"$INSTDIR\${MAINBINARYNAME}.exe$\",0"
+  WriteRegStr SHCTX "Software\Classes\outclash\shell\open\command" "" "$\"$INSTDIR\${MAINBINARYNAME}.exe$\" $\"%1$\""
+
   ; Create uninstaller
   WriteUninstaller "$INSTDIR\uninstall.exe"
 
@@ -918,7 +934,7 @@ FunctionEnd
 Section Uninstall
   ;删除 window-state.json 文件
   SetShellVarContext current
-  Delete "$APPDATA\io.github.koala-clash\window-state.json"
+  Delete "$APPDATA\io.github.outclash\window-state.json"
 
   !insertmacro CheckIfAppIsRunning
   !insertmacro CheckAllKoalaProcesses
@@ -1006,6 +1022,11 @@ Section Uninstall
     DeleteRegKey HKCU "${UNINSTKEY}"
   !endif
 
+  ; Remove URL protocol handlers (deep links)
+  DeleteRegKey SHCTX "Software\Classes\clash"
+  DeleteRegKey SHCTX "Software\Classes\koala-clash"
+  DeleteRegKey SHCTX "Software\Classes\outclash"
+
   DeleteRegValue HKCU "${MANUPRODUCTKEY}" "Installer Language"
 
   ; Delete app data
@@ -1017,7 +1038,7 @@ Section Uninstall
 
   ;删除 window-state.json 文件
   SetShellVarContext current
-  Delete "$APPDATA\io.github.koala-clash\window-state.json"
+  Delete "$APPDATA\io.github.outclash\window-state.json"
 
   ${GetOptions} $CMDLINE "/P" $R0
   IfErrors +2 0

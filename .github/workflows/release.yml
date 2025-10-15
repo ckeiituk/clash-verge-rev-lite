@@ -1,14 +1,8 @@
 name: Release Build
 
 on:
-  # ! 为了避免重复发布版本，应当通过独特 git tag 触发。
-  # ! 不再使用 workflow_dispatch 触发。
-  # workflow_dispatch:
+  # 仅通过符合语义化的版本标签触发发布，避免在 main 上误触发。
   push:
-    # 应当限制在 main 分支上触发发布。
-    branches:
-      - main
-    # 应当限制 v*.*.* 的 tag 触发发布。
     tags:
       - "v*.*.*"
 permissions: write-all
@@ -85,31 +79,33 @@ jobs:
 
           ## Which version should I download?
 
+          <!--
           ### macOS
-          <a href="https://github.com/coolcoala/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/Koala.Clash_aarch64.dmg"><img src="https://img.shields.io/badge/DMG-default?style=flat&logo=apple&label=Apple%20Silicon"></a><br>
-          <a href="https://github.com/coolcoala/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/Koala.Clash_x64.dmg"><img src="https://img.shields.io/badge/DMG-default?style=flat&logo=apple&label=Intel"></a><br>
+          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash_aarch64.dmg"><img src="https://img.shields.io/badge/DMG-default?style=flat&logo=apple&label=Apple%20Silicon"></a><br>
+          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash_x64.dmg"><img src="https://img.shields.io/badge/DMG-default?style=flat&logo=apple&label=Intel"></a><br>
           > :warning: **Warning**
           If you get a notification that the application is corrupted when you run it on macOS, run this command:<br>
-          <code>sudo xattr -r -c /Applications/Koala\ Clash.app</code>
+          <code>sudo xattr -r -c /Applications/OutClash.app</code>
+          -->
 
           ### Linux
-          <a href="https://github.com/coolcoala/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/Koala.Clash_amd64.deb"><img src="https://img.shields.io/badge/x64-default?style=flat&logo=debian&label=DEB"> </a><br>
-          <a href="https://github.com/coolcoala/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/Koala.Clash.x86_64.rpm"><img src="https://img.shields.io/badge/x64-default?style=flat&logo=fedora&label=RPM"> </a>
+          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash_amd64.deb"><img src="https://img.shields.io/badge/x64-default?style=flat&logo=debian&label=DEB"> </a><br>
+          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash.x86_64.rpm"><img src="https://img.shields.io/badge/x64-default?style=flat&logo=fedora&label=RPM"> </a>
 
-          <a href="https://github.com/coolcoala/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/Koala.Clash_arm64.deb"><img src="https://img.shields.io/badge/arm64-default?style=flat&logo=debian&label=DEB"> </a><br>
-          <a href="https://github.com/coolcoala/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/Koala.Clash.aarch64.rpm"><img src="https://img.shields.io/badge/aarch64-default?style=flat&logo=fedora&label=RPM"> </a>
+          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash_arm64.deb"><img src="https://img.shields.io/badge/arm64-default?style=flat&logo=debian&label=DEB"> </a><br>
+          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash.aarch64.rpm"><img src="https://img.shields.io/badge/aarch64-default?style=flat&logo=fedora&label=RPM"> </a>
 
-          <a href="https://github.com/coolcoala/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/Koala.Clash_armhf.deb"><img src="https://img.shields.io/badge/armhf-default?style=flat&logo=debian&label=DEB"> </a><br>
-          <a href="https://github.com/coolcoala/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/Koala.Clash.armhfp.rpm"><img src="https://img.shields.io/badge/armhfp-default?style=flat&logo=fedora&label=RPM"> </a>
+          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash_armhf.deb"><img src="https://img.shields.io/badge/armhf-default?style=flat&logo=debian&label=DEB"> </a><br>
+          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash.armhfp.rpm"><img src="https://img.shields.io/badge/armhfp-default?style=flat&logo=fedora&label=RPM"> </a>
 
           ### Windows (Win7 is no longer supported)
           #### Normal version (recommended)
-          <a href="https://github.com/coolcoala/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/Koala.Clash_x64-setup.exe"><img src="https://badgen.net/badge/icon/x64?icon=windows&label=exe"></a><br>
-          <a href="https://github.com/coolcoala/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/Koala.Clash_arm64-setup.exe"><img src="https://badgen.net/badge/icon/arm64?icon=windows&label=exe"></a>
+          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash_x64-setup.exe"><img src="https://badgen.net/badge/icon/x64?icon=windows&label=exe"></a><br>
+          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash_arm64-setup.exe"><img src="https://badgen.net/badge/icon/arm64?icon=windows&label=exe"></a>
           #### Portable version is no longer available with many problems
           #### Built-in Webview version 2 (large size, only used in enterprise version of the system or can not install webview2)
-          <a href="https://github.com/coolcoala/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/Koala.Clash_x64_fixed_webview2-setup.exe"><img src="https://badgen.net/badge/icon/x64?icon=windows&label=exe"></a><br>
-          <a href="https://github.com/coolcoala/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/Koala.Clash_arm64_fixed_webview2-setup.exe"><img src="https://badgen.net/badge/icon/arm64?icon=windows&label=exe"></a>
+          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash_x64_fixed_webview2-setup.exe"><img src="https://badgen.net/badge/icon/x64?icon=windows&label=exe"></a><br>
+          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash_arm64_fixed_webview2-setup.exe"><img src="https://badgen.net/badge/icon/arm64?icon=windows&label=exe"></a>
 
           Created at ${{ env.BUILDTIME }}.
           EOF
@@ -118,7 +114,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{env.VERSION}}
-          name: "Koala Clash v${{env.VERSION}}"
+          name: "OutClash v${{env.VERSION}}"
           body_path: release.txt
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -133,10 +129,11 @@ jobs:
             target: x86_64-pc-windows-msvc
           - os: windows-latest
             target: aarch64-pc-windows-msvc
-          - os: macos-latest
-            target: aarch64-apple-darwin
-          - os: macos-latest
-            target: x86_64-apple-darwin
+          # macOS builds disabled (no certificate)
+          # - os: macos-latest
+          #   target: aarch64-apple-darwin
+          # - os: macos-latest
+          #   target: x86_64-apple-darwin
           - os: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
 
@@ -178,11 +175,6 @@ jobs:
           pnpm i
           pnpm run prebuild ${{ matrix.target }}
 
-      - name: Create .p8 file
-        run: |
-          mkdir -p ~/.appstoreconnect/private_keys
-          echo "${{ secrets.APPLE_API_KEY_CONTENT }}" > ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APPLE_API_KEY }}.p8
-
       - name: Tauri build
         id: build
         uses: tauri-apps/tauri-action@v0
@@ -191,12 +183,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
-          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
-          APPLE_API_KEY_PATH: "~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APPLE_API_KEY }}.p8"
         with:
           tauriScript: pnpm
           args: --target ${{ matrix.target }}
@@ -239,7 +225,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{steps.build.outputs.appVersion}}
-          name: "Koala Clash v${{steps.build.outputs.appVersion}}"
+          name: "OutClash v${{steps.build.outputs.appVersion}}"
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
             src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
@@ -387,7 +373,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{env.VERSION}}
-          name: "Koala Clash v${{env.VERSION}}"
+          name: "OutClash v${{env.VERSION}}"
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
             src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
@@ -477,7 +463,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{steps.build.outputs.appVersion}}
-          name: "Koala Clash v${{steps.build.outputs.appVersion}}"
+          name: "OutClash v${{steps.build.outputs.appVersion}}"
           token: ${{ secrets.GITHUB_TOKEN }}
           files: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*setup*
 
@@ -583,7 +569,7 @@ jobs:
 
           $UPDATE_LOGS
 
-          [Ссылка на релиз](https://github.com/coolcoala/clash-verge-rev-lite/releases/latest)
+          [Ссылка на релиз](https://github.com/ckeiituk/clash-verge-rev-lite/releases/latest)
 
           EOF
 
