@@ -1191,7 +1191,7 @@ pub async fn force_reinstall_service() -> Result<()> {
                 logging!(info, Type::Service, true, "尝试检查macOS服务状态...");
 
                 let output = Command::new("launchctl")
-                    .args(["list", "io.github.outclash.outclash-service"])
+                    .args(["list", "io.github.outclash.service"])
                     .output();
 
                 match output {
@@ -1222,7 +1222,7 @@ pub async fn force_reinstall_service() -> Result<()> {
                 logging!(info, Type::Service, true, "尝试检查Linux服务状态...");
 
                 let output = Command::new("systemctl")
-                    .args(["status", "outclash_service"])
+                    .args(["status", "outclash-service"])
                     .output();
 
                 match output {
