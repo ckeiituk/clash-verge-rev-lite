@@ -6,7 +6,7 @@
     "linux": {
       "deb": {
         "depends": ["openssl"],
-        "desktopTemplate": "./packages/linux/koala-clash.desktop",
+        "desktopTemplate": "./packages/linux/outclash.desktop",
         "provides": ["outclash"],
         "conflicts": ["koala-clash"],
         "replaces": ["koala-clash"],
@@ -15,7 +15,7 @@
       },
       "rpm": {
         "depends": ["openssl"],
-        "desktopTemplate": "./packages/linux/koala-clash.desktop",
+        "desktopTemplate": "./packages/linux/outclash.desktop",
         "provides": ["outclash"],
         "conflicts": ["koala-clash"],
         "obsoletes": ["koala-clash"],
