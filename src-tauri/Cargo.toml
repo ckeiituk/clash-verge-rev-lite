@@ -1,16 +1,16 @@
 [package]
-name = "koala-clash"
-version = "0.2.7"
-description = "koala clash"
+name = "outclash"
+version = "0.1.0"
+description = "outclash"
 authors = ["zzzgydi", "wonfen", "MystiPanda", "coolcoala"]
 license = "GPL-3.0-only"
-repository = "https://github.com/coolcoala/clash-verge-rev-lite.git"
-default-run = "koala-clash"
+repository = "https://github.com/ckeiituk/clash-verge-rev-lite.git"
+default-run = "outclash"
 edition = "2021"
 build = "build.rs"
 
 [package.metadata.bundle]
-identifier = "io.github.koala-clash"
+identifier = "io.github.outclash"
 
 [build-dependencies]
 tauri-build = { version = "2.3.0", features = [] }

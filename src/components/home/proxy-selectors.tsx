@@ -17,7 +17,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {AlertTriangle, ChevronsUpDown, Timer, WholeWord} from "lucide-react";
+import { AlertTriangle, ChevronsUpDown, Timer, WholeWord } from "lucide-react";
 
 import { useVerge } from "@/hooks/use-verge";
 import { useAppData } from "@/providers/app-data-provider";
@@ -77,21 +77,21 @@ const ProxySelectItem = ({
   }, [proxyName, groupName]);
 
   return (
-      <SelectItem key={proxyName} value={proxyName}>
-        <div className="flex items-center justify-between w-full">
-          <Badge
-              variant="outline"
-              className={cn(
-                  "mr-2 flex-shrink-0 px-2 h-5 w-8 justify-center transition-colors duration-300",
-                  getDelayColorClasses(delay),
-                  isJustUpdated && "bg-primary/10 border-primary/50",
-              )}
-          >
-            {delay < 0 || delay > 10000 ? "---" : delay}
-          </Badge>
-          <span className="truncate">{proxyName}</span>
-        </div>
-      </SelectItem>
+    <SelectItem key={proxyName} value={proxyName}>
+      <div className="flex items-center justify-between w-full">
+        <Badge
+          variant="outline"
+          className={cn(
+            "mr-2 flex-shrink-0 px-2 h-5 w-8 justify-center transition-colors duration-300",
+            getDelayColorClasses(delay),
+            isJustUpdated && "bg-primary/10 border-primary/50",
+          )}
+        >
+          {delay < 0 || delay > 10000 ? "---" : delay}
+        </Badge>
+        <span className="truncate">{proxyName}</span>
+      </div>
+    </SelectItem>
   );
 };
 
@@ -258,10 +258,10 @@ export const ProxySelectors: React.FC = () => {
 
     if (sourceList) {
       const rawOptions = sourceList
-          .map((proxy: any) => ({
-            name: typeof proxy === "string" ? proxy : proxy.name,
-          }))
-          .filter((p: { name: string }) => p.name);
+        .map((proxy: any) => ({
+          name: typeof proxy === "string" ? proxy : proxy.name,
+        }))
+        .filter((p: { name: string }) => p.name);
 
       const uniqueNames = new Set<string>();
       options = rawOptions.filter((proxy: any) => {
@@ -301,18 +301,18 @@ export const ProxySelectors: React.FC = () => {
           >
             <SelectTrigger className="w-100">
               {isGlobalMode ? (
-                  <div className="flex items-center gap-2 text-destructive">
-                    <AlertTriangle className="h-4 w-4 text-destructive" />
-                    <span className="font-medium text-sm">
-                      {t("Global Mode Active")}
-                    </span>
-                  </div>
+                <div className="flex items-center gap-2 text-destructive">
+                  <AlertTriangle className="h-4 w-4 text-destructive" />
+                  <span className="font-medium text-sm">
+                    {t("Global Mode Active")}
+                  </span>
+                </div>
               ) : (
-              <div className="flex items-center gap-2 truncate">
-                <span className="truncate">
-                  <SelectValue placeholder={t("Select a group...")} />
-                </span>
-              </div>
+                <div className="flex items-center gap-2 truncate">
+                  <span className="truncate">
+                    <SelectValue placeholder={t("Select a group...")} />
+                  </span>
+                </div>
               )}
             </SelectTrigger>
             <SelectContent>
@@ -361,37 +361,37 @@ export const ProxySelectors: React.FC = () => {
                     {sortType === "name" && <WholeWord className="h-4 w-4" />}
                   </Button>
                 </span>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {sortType === "default" && <p>{t("Sort by default")}</p>}
-                  {sortType === "delay" && <p>{t("Sort by delay")}</p>}
-                  {sortType === "name" && <p>{t("Sort by name")}</p>}
-                </TooltipContent>
-              </Tooltip>
-            </div>
-            <Select
-                value={selectedProxy}
-                onValueChange={handleProxyChange}
-                disabled={isDirectMode}
-                onOpenChange={handleProxyListOpen}
-            >
-              <SelectTrigger className="w-100">
+              </TooltipTrigger>
+              <TooltipContent>
+                {sortType === "default" && <p>{t("Sort by default")}</p>}
+                {sortType === "delay" && <p>{t("Sort by delay")}</p>}
+                {sortType === "name" && <p>{t("Sort by name")}</p>}
+              </TooltipContent>
+            </Tooltip>
+          </div>
+          <Select
+            value={selectedProxy}
+            onValueChange={handleProxyChange}
+            disabled={isDirectMode}
+            onOpenChange={handleProxyListOpen}
+          >
+            <SelectTrigger className="w-100">
               <span className="truncate">
                 <SelectValue placeholder={t("Select a proxy...")} />
               </span>
-              </SelectTrigger>
-              <SelectContent>
-                {proxyOptions.map((proxy) => (
-                    <ProxySelectItem
-                        key={proxy.name}
-                        proxyName={proxy.name}
-                        groupName={selectedGroup}
-                    />
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+            </SelectTrigger>
+            <SelectContent>
+              {proxyOptions.map((proxy) => (
+                <ProxySelectItem
+                  key={proxy.name}
+                  proxyName={proxy.name}
+                  groupName={selectedGroup}
+                />
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-      </TooltipProvider>
+      </div>
+    </TooltipProvider>
   );
 };

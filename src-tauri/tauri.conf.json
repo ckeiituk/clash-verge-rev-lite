@@ -1,9 +1,9 @@
 {
-  "version": "0.2.7",
+  "version": "0.1.0",
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "bundle": {
     "active": true,
-    "longDescription": "Koala Clash",
+    "longDescription": "OutClash",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -11,18 +11,12 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "resources": [
-      "resources",
-      "resources/locales/*"
-    ],
-    "publisher": "Koala Clash",
-    "externalBin": [
-      "sidecar/koala-mihomo",
-      "sidecar/koala-mihomo-alpha"
-    ],
+    "resources": ["resources", "resources/locales/*"],
+    "publisher": "OutClash",
+    "externalBin": ["sidecar/out-mihomo", "sidecar/out-mihomo-alpha"],
     "copyright": "GNU General Public License v3.0",
     "category": "DeveloperTool",
-    "shortDescription": "Koala Clash",
+    "shortDescription": "OutClash",
     "createUpdaterArtifacts": true
   },
   "build": {
@@ -31,14 +25,14 @@
     "beforeDevCommand": "pnpm run web:dev",
     "devUrl": "http://localhost:3000/"
   },
-  "productName": "Koala Clash",
-  "identifier": "io.github.koala-clash",
+  "productName": "OutClash",
+  "identifier": "io.github.outclash",
   "plugins": {
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IERCQjQ1QjQ0QUJDQTU1RTkKUldUcFZjcXJSRnUwMjdXSERoZVQ1R0hHRDMrT3VkSmpvbDJmb01sN3ZpYWhVYnEwaWpYUWU4YU0K",
       "endpoints": [
-        "https://github.com/coolcoala/clash-verge-rev-lite/releases/download/updater/update.json",
-        "https://github.com/coolcoala/clash-verge-rev-lite/releases/download/updater-alpha/update-alpha.json"
+        "https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/updater/update.json",
+        "https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/updater-alpha/update-alpha.json"
       ],
       "windows": {
         "installMode": "basicUi"
@@ -46,25 +40,15 @@
     },
     "deep-link": {
       "desktop": {
-        "schemes": [
-          "clash",
-          "koala-clash"
-        ]
+        "schemes": ["clash", "koala-clash", "outclash"]
       }
     }
   },
   "app": {
     "security": {
-      "capabilities": [
-        "desktop-capability",
-        "migrated"
-      ],
+      "capabilities": ["desktop-capability", "migrated"],
       "assetProtocol": {
-        "scope": [
-          "$APPDATA/**",
-          "$RESOURCE/../**",
-          "**"
-        ],
+        "scope": ["$APPDATA/**", "$RESOURCE/../**", "**"],
         "enable": true
       },
       "csp": null

@@ -66,7 +66,7 @@ impl IProfiles {
         help::save_yaml(
             &dirs::profiles_path()?,
             self,
-            Some("# Profiles Config for Koala Clash"),
+            Some("# Profiles Config for OutClash"),
         )
     }
 

@@ -175,8 +175,8 @@ function clashMetaAlpha() {
   const zipFile = `${name}-${META_ALPHA_VERSION}.${urlExt}`;
 
   return {
-    name: "koala-mihomo-alpha",
-    targetFile: `koala-mihomo-alpha-${SIDECAR_HOST}${isWin ? ".exe" : ""}`,
+    name: "out-mihomo-alpha",
+    targetFile: `out-mihomo-alpha-${SIDECAR_HOST}${isWin ? ".exe" : ""}`,
     exeFile,
     zipFile,
     downloadURL,
@@ -192,8 +192,8 @@ function clashMeta() {
   const zipFile = `${name}-${META_VERSION}.${urlExt}`;
 
   return {
-    name: "koala-mihomo",
-    targetFile: `koala-mihomo-${SIDECAR_HOST}${isWin ? ".exe" : ""}`,
+    name: "out-mihomo",
+    targetFile: `out-mihomo-${SIDECAR_HOST}${isWin ? ".exe" : ""}`,
     exeFile,
     zipFile,
     downloadURL,
@@ -381,7 +381,7 @@ const resolvePlugin = async () => {
 // service chmod
 const resolveServicePermission = async () => {
   const serviceExecutables = [
-    "koala-clash-service*",
+    "outclash-service*",
     "install-service*",
     "uninstall-service*",
   ];
@@ -429,14 +429,14 @@ async function resolveLocales() {
 /**
  * main
  */
-const SERVICE_URL = `https://github.com/coolcoala/koala-clash-service/releases/download/${SIDECAR_HOST}`;
+const SERVICE_URL = `https://github.com/ckeiituk/outclash-service/releases/download/${SIDECAR_HOST}`;
 
 const resolveService = () => {
   let ext = platform === "win32" ? ".exe" : "";
   let suffix = platform === "linux" ? "-" + SIDECAR_HOST : "";
   resolveResource({
-    file: "koala-clash-service" + suffix + ext,
-    downloadURL: `${SERVICE_URL}/koala-clash-service${ext}`,
+    file: "outclash-service" + suffix + ext,
+    downloadURL: `${SERVICE_URL}/outclash-service${ext}`,
   });
 };
 
@@ -489,13 +489,13 @@ const resolveWinSysproxy = () =>
 const tasks = [
   // { name: "clash", func: resolveClash, retry: 5 },
   {
-    name: "koala-mihomo-alpha",
+    name: "out-mihomo-alpha",
     func: () =>
       getLatestAlphaVersion().then(() => resolveSidecar(clashMetaAlpha())),
     retry: 5,
   },
   {
-    name: "koala-mihomo",
+    name: "out-mihomo",
     func: () =>
       getLatestReleaseVersion().then(() => resolveSidecar(clashMeta())),
     retry: 5,

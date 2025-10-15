@@ -238,7 +238,7 @@ pub struct IVergeTheme {
 
 impl IVerge {
     /// 有效的clash核心名称
-    pub const VALID_CLASH_CORES: &'static [&'static str] = &["koala-mihomo", "koala-mihomo-alpha"];
+    pub const VALID_CLASH_CORES: &'static [&'static str] = &["out-mihomo", "out-mihomo-alpha"];
 
     /// 验证并修正配置文件中的clash_core值
     pub fn validate_and_fix_config() -> Result<()> {
@@ -257,10 +257,10 @@ impl IVerge {
                     warn,
                     Type::Config,
                     true,
-                    "Invalid clash_core config detected at startup: '{}', auto-fixing to 'koala-mihomo'",
+                    "Invalid clash_core config detected at startup: '{}', auto-fixing to 'out-mihomo'",
                     core
                 );
-                config.clash_core = Some("koala-mihomo".to_string());
+                config.clash_core = Some("out-mihomo".to_string());
                 needs_fix = true;
             }
         } else {
@@ -268,9 +268,9 @@ impl IVerge {
                 info,
                 Type::Config,
                 true,
-                "clash_core not configured at startup; setting default to 'koala-mihomo'"
+                "clash_core not configured at startup; setting default to 'out-mihomo'"
             );
-            config.clash_core = Some("koala-mihomo".to_string());
+            config.clash_core = Some("out-mihomo".to_string());
             needs_fix = true;
         }
 
@@ -321,7 +321,7 @@ impl IVerge {
     pub fn get_valid_clash_core(&self) -> String {
         self.clash_core
             .clone()
-            .unwrap_or_else(|| "koala-mihomo".to_string())
+            .unwrap_or_else(|| "out-mihomo".to_string())
     }
 
     fn get_system_language() -> String {
@@ -350,7 +350,7 @@ impl IVerge {
 
     pub fn template() -> Self {
         Self {
-            clash_core: Some("koala-mihomo".into()),
+            clash_core: Some("out-mihomo".into()),
             language: Some(Self::get_system_language()),
             theme_mode: Some("system".into()),
             #[cfg(not(target_os = "windows"))]

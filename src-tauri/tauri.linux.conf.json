@@ -1,13 +1,13 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "identifier": "io.github.koala-clash",
+  "identifier": "io.github.outclash",
   "bundle": {
     "targets": ["deb", "rpm"],
     "linux": {
       "deb": {
         "depends": ["openssl"],
         "desktopTemplate": "./packages/linux/koala-clash.desktop",
-        "provides": ["koala-clash"],
+        "provides": ["outclash"],
         "conflicts": ["koala-clash"],
         "replaces": ["koala-clash"],
         "postInstallScript": "./packages/linux/post-install.sh",
@@ -16,7 +16,7 @@
       "rpm": {
         "depends": ["openssl"],
         "desktopTemplate": "./packages/linux/koala-clash.desktop",
-        "provides": ["koala-clash"],
+        "provides": ["outclash"],
         "conflicts": ["koala-clash"],
         "obsoletes": ["koala-clash"],
         "postInstallScript": "./packages/linux/post-install.sh",
@@ -24,11 +24,11 @@
       }
     },
     "externalBin": [
-      "./resources/koala-clash-service",
+      "./resources/outclash-service",
       "./resources/install-service",
       "./resources/uninstall-service",
-      "./sidecar/koala-mihomo",
-      "./sidecar/koala-mihomo-alpha"
+      "./sidecar/out-mihomo",
+      "./sidecar/out-mihomo-alpha"
     ]
   }
 }

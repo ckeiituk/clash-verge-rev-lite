@@ -26,8 +26,8 @@ import { showNotice } from "@/services/noticeService";
 
 // Константы и интерфейсы
 const VALID_CORE = [
-  { name: "Mihomo", core: "koala-mihomo", chip: "Release Version" },
-  { name: "Mihomo Alpha", core: "koala-mihomo-alpha", chip: "Alpha Version" },
+  { name: "Mihomo", core: "out-mihomo", chip: "Release Version" },
+  { name: "Mihomo Alpha", core: "out-mihomo-alpha", chip: "Alpha Version" },
 ];
 
 export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
@@ -44,7 +44,7 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
     close: () => setOpen(false),
   }));
 
-  const { clash_core = "koala-mihomo" } = verge ?? {};
+  const { clash_core = "out-mihomo" } = verge ?? {};
 
   const onCoreChange = useLockFn(async (core: string) => {
     if (core === clash_core) return;
