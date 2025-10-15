@@ -29,7 +29,7 @@
   "identifier": "io.github.outclash",
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IERCQjQ1QjQ0QUJDQTU1RTkKUldUcFZjcXJSRnUwMjdXSERoZVQ1R0hHRDMrT3VkSmpvbDJmb01sN3ZpYWhVYnEwaWpYUWU4YU0K",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEE0MUMzNzQ0NjIzMzNBQzQKUldURU9qTmlSRGNjcEttdjJKNVV1cHJiWVUvWm03dU1aYVJyZHBZZXgzS3FWZ0hWL2JMZllXRnIK",
       "endpoints": [
         "https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/updater/update.json",
         "https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/updater-alpha/update-alpha.json"
