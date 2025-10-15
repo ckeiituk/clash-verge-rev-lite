@@ -11,3 +11,6 @@ scripts/_env.sh
 .idea
 .old
 bun.lock
+AGENTS.md
+CLAUDE.md
+WORKFLOWS.md

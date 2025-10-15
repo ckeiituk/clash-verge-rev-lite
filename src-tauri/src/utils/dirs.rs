@@ -5,14 +5,14 @@ use std::{fs, path::PathBuf};
 use tauri::Manager;
 
 #[cfg(not(feature = "verge-dev"))]
-pub static APP_ID: &str = "io.github.koala-clash";
+pub static APP_ID: &str = "io.github.outclash";
 #[cfg(not(feature = "verge-dev"))]
-pub static BACKUP_DIR: &str = "io.github.koala-clash-backup";
+pub static BACKUP_DIR: &str = "io.github.outclash-backup";
 
 #[cfg(feature = "verge-dev")]
-pub static APP_ID: &str = "io.github.koala-clash.dev";
+pub static APP_ID: &str = "io.github.outclash.dev";
 #[cfg(feature = "verge-dev")]
-pub static BACKUP_DIR: &str = "io.github.koala-clash-backup-dev";
+pub static BACKUP_DIR: &str = "io.github.outclash-backup-dev";
 
 pub static PORTABLE_FLAG: OnceCell<bool> = OnceCell::new();
 

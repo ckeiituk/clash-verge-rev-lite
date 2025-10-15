@@ -597,7 +597,7 @@ pub async fn check_ipc_service_status() -> Result<JsonResponse> {
                 "IPC communication failed: {}",
                 e
             );
-            bail!("Unable to connect to Koala Clash Service: {}", e)
+            bail!("Unable to connect to OutClash Service: {}", e)
         }
     }
 }
@@ -703,7 +703,7 @@ pub async fn check_service_version() -> Result<String> {
                 "IPC communication failed: {}",
                 e
             );
-            bail!("Unable to connect to Koala Clash Service: {}", e)
+            bail!("Unable to connect to OutClash Service: {}", e)
         }
     }
 }
@@ -885,7 +885,7 @@ pub(super) async fn start_with_existing_service(config_file: &PathBuf) -> Result
                 "Failed to start core via IPC: {}",
                 e
             );
-            bail!("Unable to connect to Koala Clash Service: {}", e)
+            bail!("Unable to connect to OutClash Service: {}", e)
         }
     }
 }
@@ -981,7 +981,7 @@ pub(super) async fn stop_core_by_service() -> Result<()> {
     let payload = serde_json::json!({});
     let response = send_ipc_request(IpcCommand::StopClash, payload)
         .await
-        .context("Unable to connect to Koala Clash Service")?;
+        .context("Unable to connect to OutClash Service")?;
 
     if !response.success {
         bail!(response

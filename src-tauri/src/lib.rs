@@ -101,7 +101,7 @@ pub fn run() {
 			// Handle deep link when a second instance is invoked: forward URL to the running instance
 			if let Some(url) = argv
 				.iter()
-				.find(|a| a.starts_with("clash://") || a.starts_with("koala-clash://"))
+				.find(|a| a.starts_with("clash://") || a.starts_with("koala-clash://") || a.starts_with("outclash://"))
 				.cloned()
 			{
 				// Robust scheduling avoids races with lightweight/window
@@ -376,7 +376,7 @@ pub fn run() {
                     .get_webview_window("main")
                 {
                     logging!(info, Type::Window, true, "Setting macOS window title");
-                    let _ = window.set_title("Koala Clash");
+                    let _ = window.set_title("OutClash");
                 }
             }
         }

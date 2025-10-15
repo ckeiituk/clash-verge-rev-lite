@@ -40,7 +40,7 @@ impl NetworkManager {
         // 创建专用的异步运行时，线程数限制为4个
         let runtime = Builder::new_multi_thread()
             .worker_threads(4)
-            .thread_name("koala-clash-network")
+            .thread_name("outclash-network")
             .enable_io()
             .enable_time()
             .build()
@@ -322,9 +322,11 @@ impl NetworkManager {
         } else {
             use crate::utils::resolve::VERSION;
 
+            // Use clash-meta as User-Agent to ensure subscription servers return YAML format
+            // instead of universal proxy URL format (vless://, ss://, etc.)
             let version = match VERSION.get() {
-                Some(v) => format!("koala-clash/v{v}"),
-                None => "koala-clash/unknown".to_string(),
+                Some(v) => format!("clash-meta/v{v}"),
+                None => "clash-meta/unknown".to_string(),
             };
 
             builder = builder.user_agent(version);

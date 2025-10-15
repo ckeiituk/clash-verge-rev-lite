@@ -78,7 +78,7 @@ fn get_early_deep_link() -> &'static Mutex<Option<String>> {
 /// Capture deep link from process arguments as early as possible (cold start on macOS)
 pub fn capture_early_deep_link_from_args() {
     let args: Vec<String> = std::env::args().collect();
-    if let Some(url) = args.iter().find(|a| a.starts_with("clash://") || a.starts_with("koala-clash://")).cloned() {
+    if let Some(url) = args.iter().find(|a| a.starts_with("clash://") || a.starts_with("koala-clash://") || a.starts_with("outclash://")).cloned() {
         println!("[DeepLink][argv] {}", url);
         logging!(info, Type::Setup, true, "argv captured deep link: {}", url);
         *get_early_deep_link().lock() = Some(url);
@@ -461,7 +461,7 @@ pub fn create_window(is_show: bool) -> bool {
         "main", /* the unique window label */
         tauri::WebviewUrl::App("index.html".into()),
     )
-    .title("Koala Clash")
+    .title("OutClash")
     .center()
     .decorations(true)
     .fullscreen(false)
@@ -498,7 +498,7 @@ pub fn create_window(is_show: bool) -> bool {
                             animation: spin 1s linear infinite;
                         "></div>
                     </div>
-                    <div style="font-size: 14px; opacity: 0.7;">Loading Koala Clash...</div>
+                    <div style="font-size: 14px; opacity: 0.7;">Loading OutClash...</div>
                 </div>
                 <style>
                     @keyframes spin {
@@ -675,7 +675,7 @@ pub async fn resolve_scheme(param: String) -> Result<()> {
         }
     };
 
-    if link_parsed.scheme() == "clash" || link_parsed.scheme() == "koala-clash" {
+    if link_parsed.scheme() == "clash" || link_parsed.scheme() == "koala-clash" || link_parsed.scheme() == "outclash" {
         let mut name: Option<String> = None;
         let mut url_param: Option<String> = None;
 
