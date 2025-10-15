@@ -47,3 +47,6 @@ yarn-error.log*
 *.tmp
 *.temp
 .cache
+
+# Project documentation (local only)
+CLAUDE.md
