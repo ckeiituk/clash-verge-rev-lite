@@ -598,20 +598,20 @@ const MinimalHomePage: React.FC = () => {
               disabled={isToggling || profileItems.length === 0}
             >
               {verge?.primary_action === "tun-mode"
-                ? `${t("Enable")} ${t("System Proxy")}`
-                : `${t("Enable")} ${t("Tun Mode")}`}
+                ? t("switch_to_system_proxy")
+                : t("switch_to_tun_mode")}
             </Button>
           </div>
 
           {/* Mode switch: rule <-> global */}
           <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-            <span>{t("rule")}</span>
+            <span>{t("clash_mode_rule")}</span>
             <Switch
               checked={isGlobalMode}
               onCheckedChange={(checked) => onChangeMode(checked ? "global" : "rule")}
               aria-label={t("clash_mode_global")}
             />
-            <span>{t("global")}</span>
+            <span>{t("clash_mode_global")}</span>
           </div>
 
           {showTunAlert && (

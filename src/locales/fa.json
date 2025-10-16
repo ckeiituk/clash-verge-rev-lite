@@ -339,6 +339,8 @@
   "clash_mode_direct": "حالت مستقیم",
   "toggle_system_proxy": "فعال/غیرفعال کردن پراکسی سیستم",
   "toggle_tun_mode": "فعال/غیرفعال کردن حالت Tun",
+  "switch_to_system_proxy": "تغییر به پراکسی سیستم",
+  "switch_to_tun_mode": "تغییر به حالت TUN",
   "Backup Setting": "تنظیمات پشتیبان گیری",
   "Backup Setting Info": "از فایل های پیکربندی پشتیبان WebDAV پشتیبانی می کند",
   "Runtime Config": "پیکربندی زمان اجرا",

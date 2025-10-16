@@ -338,6 +338,8 @@
   "clash_mode_direct": "Туры режим",
   "toggle_system_proxy": "Системалы проксины кабызу/сүндерү",
   "toggle_tun_mode": "Tun режимын кабызу/сүндерү",
+  "switch_to_system_proxy": "Системалы проксига күчү",
+  "switch_to_tun_mode": "TUN режимына күчү",
   "Backup Setting": "Резерв копия көйләүләре",
   "Backup Setting Info": "WebDAV аша конфигурация файлын саклауны хуплый",
   "Runtime Config": "Агымдагы конфигурация",

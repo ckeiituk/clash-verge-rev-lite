@@ -47,7 +47,7 @@ async function resolveUpdater() {
   console.log(`Retrieved ${tags.length} tags in total`);
 
   // More flexible tag detection with regex patterns
-  const stableTagRegex = /^v\d+\.\d+\.\d+$/; // Matches vX.Y.Z format
+  const stableTagRegex = /^out-v\d+\.\d+\.\d+$/; // Matches out-vX.Y.Z format
   // const preReleaseRegex = /^v\d+\.\d+\.\d+-(alpha|beta|rc|pre)/i; // Matches vX.Y.Z-alpha/beta/rc format
   const preReleaseRegex = /^(alpha|beta|rc|pre)$/i; // Matches exact alpha/beta/rc/pre tags
 

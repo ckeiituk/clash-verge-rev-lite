@@ -337,6 +337,8 @@
   "clash_mode_direct": "الوضع المباشر",
   "toggle_system_proxy": "تفعيل/تعطيل وكيل النظام",
   "toggle_tun_mode": "تفعيل/تعطيل وضع TUN",
+  "switch_to_system_proxy": "التبديل إلى وكيل النظام",
+  "switch_to_tun_mode": "التبديل إلى وضع TUN",
   "Backup Setting": "إعداد النسخ الاحتياطي",
   "Runtime Config": "تكوين وقت التشغيل",
   "Open Conf Dir": "فتح مجلد التكوين",

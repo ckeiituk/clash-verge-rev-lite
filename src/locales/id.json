@@ -370,6 +370,8 @@
   "clash_mode_direct": "Mode Langsung",
   "toggle_system_proxy": "Aktifkan/Nonaktifkan Proksi Sistem",
   "toggle_tun_mode": "Aktifkan/Nonaktifkan Mode Tun",
+  "switch_to_system_proxy": "Beralih ke Proksi Sistem",
+  "switch_to_tun_mode": "Beralih ke Mode TUN",
   "Backup Setting": "Pengaturan Cadangan",
   "Backup Setting Info": "Mendukung file konfigurasi cadangan WebDAV",
   "Runtime Config": "Konfigurasi Runtime",

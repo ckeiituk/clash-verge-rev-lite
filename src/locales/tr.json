@@ -360,6 +360,8 @@
   "clash_mode_direct": "Doğrudan Mod",
   "toggle_system_proxy": "Sistem Vekil'ini Etkinleştir/Devre Dışı Bırak",
   "toggle_tun_mode": "Tun Modunu Etkinleştir/Devre Dışı Bırak",
+  "switch_to_system_proxy": "Sistem vekiline geç",
+  "switch_to_tun_mode": "TUN moduna geç",
   "entry_lightweight_mode": "Hafif Moda Gir",
   "Backup Setting": "Yedekleme Ayarı",
   "Backup Setting Info": "WebDAV yedekleme yapılandırma dosyalarını destekler",
