@@ -38,11 +38,21 @@ import {
 } from "@/components/ui/tooltip";
 import { Wand2, Maximize, Minimize } from "lucide-react";
 
+type MaybeTauriWindow = Window &
+  typeof globalThis & {
+    __TAURI_INTERNALS__?: unknown;
+    __TAURI__?: unknown;
+  };
+
+const hasTauriInternals = (
+  win: Window & typeof globalThis,
+): win is MaybeTauriWindow =>
+  "__TAURI_INTERNALS__" in (win as MaybeTauriWindow) ||
+  "__TAURI__" in (win as MaybeTauriWindow);
+
 // Guard Tauri API usage for web-only dev (vite preview/web:dev)
 const isTauriEnv =
-  typeof window !== "undefined" &&
-  (("__TAURI_INTERNALS__" in (window as Window & Record<string, unknown>)) ||
-    "__TAURI__" in (window as Window & Record<string, unknown>));
+  typeof window !== "undefined" && hasTauriInternals(window);
 
 type EditorWindowControls = Pick<
   WebviewWindow,

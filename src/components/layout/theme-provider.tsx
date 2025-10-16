@@ -57,14 +57,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   useEffect(() => {
     const root = window.document.documentElement; // <html> тег
     const tauriWindow =
-      typeof window !== "undefined" &&
-      (() => {
-        const globalWindow = window as Window &
-          Record<string, unknown>;
-        return (
-          "__TAURI_INTERNALS__" in globalWindow || "__TAURI__" in globalWindow
-        );
-      })()
+      typeof window !== "undefined" && hasTauriInternals(window)
         ? getCurrentWebviewWindow()
         : undefined;
 
@@ -165,3 +158,14 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 
   return <>{children}</>;
 }
+type MaybeTauriWindow = Window &
+  typeof globalThis & {
+    __TAURI_INTERNALS__?: unknown;
+    __TAURI__?: unknown;
+  };
+
+const hasTauriInternals = (
+  win: Window & typeof globalThis,
+): win is MaybeTauriWindow =>
+  "__TAURI_INTERNALS__" in (win as MaybeTauriWindow) ||
+  "__TAURI__" in (win as MaybeTauriWindow);
