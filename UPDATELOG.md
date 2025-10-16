@@ -9,7 +9,6 @@ Fixes
 - RU locale: removed duplicate keys and refined wording.
 
 CI/Release
-- Releases are tagged with the `vX.Y.Z` prefix.
 - Update manifests (including Fixed WebView2) are generated for matching tags.
 
 Known limitations
