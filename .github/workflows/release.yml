@@ -1,14 +1,8 @@
 name: Release Build
 
 on:
-  # ! 为了避免重复发布版本，应当通过独特 git tag 触发。
-  # ! 不再使用 workflow_dispatch 触发。
-  # workflow_dispatch:
+  # 仅通过符合语义化的版本标签触发发布，避免在 main 上误触发。
   push:
-    # 应当限制在 main 分支上触发发布。
-    branches:
-      - main
-    # 应当限制 v*.*.* 的 tag 触发发布。
     tags:
       - "v*.*.*"
 permissions: write-all
@@ -27,6 +21,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Install jq
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
 
       - name: Check tag and package.json version
         run: |
@@ -68,7 +67,7 @@ jobs:
       - name: Get Version
         run: |
           sudo apt-get update
-          sudo apt-get install jq
+          sudo apt-get install -y jq
           echo "VERSION=$(cat package.json | jq '.version' | tr -d '"')" >> $GITHUB_ENV
           echo "BUILDTIME=$(TZ=Europe/Moscow date)" >> $GITHUB_ENV
 
@@ -233,6 +232,7 @@ jobs:
           tag_name: v${{steps.build.outputs.appVersion}}
           name: "OutClash v${{steps.build.outputs.appVersion}}"
           token: ${{ secrets.GITHUB_TOKEN }}
+          fail_on_unmatched_files: false
           files: |
             src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
             src-tauri/target/${{ matrix.target }}/release/bundle/rpm/*.rpm
@@ -348,7 +348,7 @@ jobs:
       - name: Get Version
         run: |
           sudo apt-get update
-          sudo apt-get install jq
+          sudo apt-get install -y jq
           echo "VERSION=$(cat package.json | jq '.version' | tr -d '"')" >> $GITHUB_ENV
           echo "BUILDTIME=$(TZ=Europe/Moscow date)" >> $GITHUB_ENV
 
@@ -401,6 +401,9 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+
+      - name: Install Rust Stable
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Add Rust Target
         run: rustup target add ${{ matrix.target }}
@@ -557,7 +560,7 @@ jobs:
       - name: Get Version
         run: |
           sudo apt-get update
-          sudo apt-get install jq
+          sudo apt-get install -y jq
           echo "VERSION=$(cat package.json | jq '.version' | tr -d '"')" >> $GITHUB_ENV
           echo "BUILDTIME=$(TZ=Europe/Moscow date)" >> $GITHUB_ENV
 
