@@ -50,3 +50,7 @@ yarn-error.log*
 
 # Project documentation (local only)
 CLAUDE.md
+AGENTS.md
+Agents.md
+WORKFLOWS.md
+Workflows.md
