@@ -33,7 +33,18 @@ import {
 } from "@/components/ui/tooltip";
 import { Wand2, Maximize, Minimize } from "lucide-react";
 
-const appWindow = getCurrentWebviewWindow();
+// Guard Tauri API usage for web-only dev (vite preview/web:dev)
+const isTauriEnv =
+  typeof window !== "undefined" &&
+  ("__TAURI_INTERNALS__" in (window as any) || "__TAURI__" in (window as any));
+
+const appWindow: any = isTauriEnv
+  ? getCurrentWebviewWindow()
+  : {
+      onResized: async () => async () => {},
+      isMaximized: async () => false,
+      toggleMaximize: async () => {},
+    };
 
 // --- Типы и интерфейсы (без изменений) ---
 type Language = "yaml" | "javascript" | "css";

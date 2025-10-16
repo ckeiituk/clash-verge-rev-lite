@@ -44,6 +44,7 @@ import { Switch } from "@/components/ui/switch";
 import { ProxySelectors } from "@/components/home/proxy-selectors";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { closeAllConnections } from "@/services/api";
+import { patchClashMode } from "@/services/cmds";
 import {
   Tooltip,
   TooltipContent,
@@ -95,7 +96,7 @@ const MinimalHomePage: React.FC = () => {
     useProfiles();
   const viewerRef = useRef<ProfileViewerRef>(null);
   const [uidToActivate, setUidToActivate] = useState<string | null>(null);
-  const { connections } = useAppData();
+  const { connections, clashConfig, refreshClashConfig } = useAppData();
 
   const profileItems = useMemo(() => {
     const items =
@@ -151,6 +152,27 @@ const MinimalHomePage: React.FC = () => {
   const showTunAlert =
     (verge?.primary_action ?? "tun-mode") === "tun-mode" && !isTunAvailable;
 
+  // Mode toggle (rule/global)
+  const modeList = ["rule", "global"] as const;
+  const curMode = (clashConfig?.mode || "rule").toLowerCase();
+  const isGlobalMode = curMode === "global";
+
+  const onChangeMode = useLockFn(async (mode: string) => {
+    if (!modeList.includes(mode as (typeof modeList)[number])) return;
+    const isTauriEnv =
+      typeof window !== "undefined" &&
+      ((window as any).__TAURI_INTERNALS__ || (window as any).__TAURI__);
+    if (!isTauriEnv) {
+      toast.error(t("This action is only available in the desktop app"));
+      return;
+    }
+    if (mode !== curMode && verge?.auto_close_connection) {
+      closeAllConnections();
+    }
+    await patchClashMode(mode);
+    await refreshClashConfig();
+  });
+
   const handleToggleProxy = useLockFn(async () => {
     const turningOn = !isProxyEnabled;
     const primaryAction = verge?.primary_action || "tun-mode";
@@ -181,6 +203,40 @@ const MinimalHomePage: React.FC = () => {
           enable_system_proxy: false,
         });
         toast.success(t("Proxy disabled"));
+      }
+      mutateVerge();
+    } catch (error: any) {
+      toast.error(t("Failed to toggle proxy"), { description: error.message });
+    } finally {
+      setIsToggling(false);
+    }
+  });
+
+  // Opposite action toggle: enable the other mode than primary_action
+  const handleOppositeAction = useLockFn(async () => {
+    const isDesktop =
+      typeof window !== "undefined" &&
+      ((window as any).__TAURI_INTERNALS__ || (window as any).__TAURI__);
+    if (!isDesktop) {
+      toast.error(t("This action is only available in the desktop app"));
+      return;
+    }
+
+    const primary = verge?.primary_action || "tun-mode";
+    const opposite = primary === "tun-mode" ? "system-proxy" : "tun-mode";
+    setIsToggling(true);
+    try {
+      if (opposite === "tun-mode") {
+        if (!isTunAvailable) {
+          toast.error(t("TUN requires Service Mode or Admin Mode"));
+          setIsToggling(false);
+          return;
+        }
+        await patchVerge({ enable_tun_mode: true, enable_system_proxy: false });
+        toast.success(t("Tun Mode"));
+      } else {
+        await patchVerge({ enable_system_proxy: true, enable_tun_mode: false });
+        toast.success(t("Use System Proxy"));
       }
       mutateVerge();
     } catch (error: any) {
@@ -522,6 +578,31 @@ const MinimalHomePage: React.FC = () => {
               disabled={showTunAlert || isToggling || profileItems.length === 0}
               aria-label={t("Toggle Proxy")}
             />
+          </div>
+
+          {/* Opposite action button: enables the other primary mode */}
+          <div className="mt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleOppositeAction}
+              disabled={isToggling || profileItems.length === 0}
+            >
+              {verge?.primary_action === "tun-mode"
+                ? `${t("Enable")} ${t("System Proxy")}`
+                : `${t("Enable")} ${t("Tun Mode")}`}
+            </Button>
+          </div>
+
+          {/* Mode switch: rule <-> global */}
+          <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+            <span>{t("rule")}</span>
+            <Switch
+              checked={isGlobalMode}
+              onCheckedChange={(checked) => onChangeMode(checked ? "global" : "rule")}
+              aria-label={t("clash_mode_global")}
+            />
+            <span>{t("global")}</span>
           </div>
 
           {showTunAlert && (

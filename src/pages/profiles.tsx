@@ -299,6 +299,11 @@ const ProfilePage = () => {
     let unlistenPromise: Promise<() => void> | undefined;
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
     const setupListener = async () => {
+      const isTauriEnv =
+        typeof window !== "undefined" &&
+        ("__TAURI_INTERNALS__" in (window as any) ||
+          "__TAURI__" in (window as any));
+      if (!isTauriEnv) return;
       unlistenPromise = listen<string>("profile-changed", () => {
         if (timeoutId) clearTimeout(timeoutId);
         timeoutId = setTimeout(() => {

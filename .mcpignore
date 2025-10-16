@@ -1,0 +1,75 @@
+# Build directories and artifacts
+/target
+node_modules/
+.pnpm-store
+dist/
+dist-ssr/
+build/
+*.7z
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor temporary files
+*.swp
+*.swo
+*~
+*.bak
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Temporary files
+*.tmp
+*.temp
+.cache
+
+# IDEs and Editors
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.vs/
+*.code-workspace
+.cursor/
+.fleet/
+*.sublime-project
+*.sublime-workspace
+.project
+.classpath
+.settings/
+
+# Local files and configs
+*.local
+update.json
+scripts/_env.sh
+.tool-versions
+.old
+bun.lock
+
+# Local clones and external deps
+external/
+
+# macOS debug symbols
+*.dSYM/
+
+# Merge and backup artifacts
+*.orig
+*.rej
+*.bk
+
+# Project documentation (local only)
+CLAUDE.md
+WORKFLOWS.md
+AGENTS.md

@@ -54,7 +54,15 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 
   useEffect(() => {
     const root = window.document.documentElement; // <html> тег
-    const appWindow = getCurrentWebviewWindow();
+    const isTauriEnv =
+      typeof window !== "undefined" &&
+      ("__TAURI_INTERNALS__" in (window as any) || "__TAURI__" in (window as any));
+    const appWindow: any = isTauriEnv
+      ? getCurrentWebviewWindow()
+      : {
+          setTheme: async () => {},
+          onThemeChanged: async () => () => {},
+        };
 
     const applyTheme = (mode: "light" | "dark") => {
       root.classList.remove("light", "dark");
@@ -125,7 +133,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
         ? "dark"
         : "light";
       applyTheme(systemTheme);
-      const unlistenPromise = appWindow.onThemeChanged(({ payload }) => {
+      const unlistenPromise = appWindow.onThemeChanged(({ payload }: any) => {
         if (verge?.theme_mode === "system") applyTheme(payload);
       });
       return () => {
