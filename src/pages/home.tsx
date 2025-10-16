@@ -146,11 +146,13 @@ const MinimalHomePage: React.FC = () => {
   const isTunAvailable = isServiceMode || isAdminMode;
   const isProxyEnabled =
     !!verge?.enable_system_proxy || !!verge?.enable_tun_mode;
+  const primaryAction: "tun-mode" | "system-proxy" =
+    verge?.primary_action ?? "tun-mode";
 
   const uiProxyEnabled = useSmoothBoolean(isProxyEnabled, 600, 0);
 
   const showTunAlert =
-    (verge?.primary_action ?? "tun-mode") === "tun-mode" && !isTunAvailable;
+    primaryAction === "tun-mode" && !isTunAvailable;
 
   // Mode toggle (rule/global)
   const modeList = ["rule", "global"] as const;
@@ -175,7 +177,6 @@ const MinimalHomePage: React.FC = () => {
 
   const handleToggleProxy = useLockFn(async () => {
     const turningOn = !isProxyEnabled;
-    const primaryAction = verge?.primary_action || "tun-mode";
     setIsToggling(true);
 
     try {
@@ -222,20 +223,28 @@ const MinimalHomePage: React.FC = () => {
       return;
     }
 
-    const primary = verge?.primary_action || "tun-mode";
-    const opposite = primary === "tun-mode" ? "system-proxy" : "tun-mode";
+    const oppositeAction: "tun-mode" | "system-proxy" =
+      primaryAction === "tun-mode" ? "system-proxy" : "tun-mode";
     setIsToggling(true);
     try {
-      if (opposite === "tun-mode") {
+      if (oppositeAction === "tun-mode") {
         if (!isTunAvailable) {
           toast.error(t("TUN requires Service Mode or Admin Mode"));
           setIsToggling(false);
           return;
         }
-        await patchVerge({ enable_tun_mode: true, enable_system_proxy: false });
+        await patchVerge({
+          enable_tun_mode: true,
+          enable_system_proxy: false,
+          primary_action: oppositeAction,
+        });
         toast.success(t("Tun Mode"));
       } else {
-        await patchVerge({ enable_system_proxy: true, enable_tun_mode: false });
+        await patchVerge({
+          enable_system_proxy: true,
+          enable_tun_mode: false,
+          primary_action: oppositeAction,
+        });
         toast.success(t("Use System Proxy"));
       }
       mutateVerge();
