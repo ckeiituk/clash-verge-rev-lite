@@ -1,9 +1,21 @@
 import { invoke } from "@tauri-apps/api/core";
 import { showNotice } from "@/services/noticeService";
-// Detect Tauri runtime (desktop app) more robustly by checking invoke availability
-const isTauriEnv =
-  typeof window !== "undefined" &&
-  !!((window as any).__TAURI__ && typeof (window as any).__TAURI__.invoke === "function");
+// Detect Tauri runtime (desktop app) reliably for Tauri 2.x
+type MaybeTauriWindow = Window &
+  typeof globalThis & {
+    __TAURI_INTERNALS__?: unknown;
+    __TAURI__?: { core?: { invoke?: unknown } };
+  };
+
+const hasTauriRuntime = (win: Window & typeof globalThis): win is MaybeTauriWindow => {
+  const w = win as MaybeTauriWindow;
+  return (
+    typeof w !== "undefined" &&
+    ("__TAURI_INTERNALS__" in w || typeof w.__TAURI__?.core?.invoke === "function")
+  );
+};
+
+const isTauriEnv = typeof window !== "undefined" && hasTauriRuntime(window);
 
 export async function copyClashEnv() {
   return invoke<void>("copy_clash_env");
