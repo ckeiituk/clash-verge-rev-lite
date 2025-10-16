@@ -161,6 +161,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      - name: Install jq
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
       - name: Remove old assets from release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
