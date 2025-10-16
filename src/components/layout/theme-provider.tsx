@@ -7,6 +7,18 @@ import type { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 import { defaultTheme, defaultDarkTheme } from "@/pages/_theme";
 
+type MaybeTauriWindow = Window &
+  typeof globalThis & {
+    __TAURI_INTERNALS__?: unknown;
+    __TAURI__?: unknown;
+  };
+
+const hasTauriInternals = (
+  win: Window & typeof globalThis,
+): win is MaybeTauriWindow =>
+  "__TAURI_INTERNALS__" in (win as MaybeTauriWindow) ||
+  "__TAURI__" in (win as MaybeTauriWindow);
+
 type ThemeProviderProps = {
   children: React.ReactNode;
 };
@@ -158,14 +170,3 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 
   return <>{children}</>;
 }
-type MaybeTauriWindow = Window &
-  typeof globalThis & {
-    __TAURI_INTERNALS__?: unknown;
-    __TAURI__?: unknown;
-  };
-
-const hasTauriInternals = (
-  win: Window & typeof globalThis,
-): win is MaybeTauriWindow =>
-  "__TAURI_INTERNALS__" in (win as MaybeTauriWindow) ||
-  "__TAURI__" in (win as MaybeTauriWindow);
