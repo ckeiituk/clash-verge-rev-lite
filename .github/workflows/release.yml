@@ -4,7 +4,7 @@ on:
   # 仅通过符合语义化的版本标签触发发布，避免在 main 上误触发。
   push:
     tags:
-      - "out-v*.*.*"
+      - "v*.*.*"
 permissions: write-all
 env:
   CARGO_INCREMENTAL: 0
@@ -33,8 +33,8 @@ jobs:
           echo "Current tag: $TAG_REF"
           PKG_VERSION=$(jq -r .version package.json)
           echo "package.json version: $PKG_VERSION"
-          if [[ "$TAG_REF" != "out-v$PKG_VERSION" ]]; then
-            echo "Tag ($TAG_REF) does not match package.json version (out-v$PKG_VERSION)."
+          if [[ "$TAG_REF" != "v$PKG_VERSION" ]]; then
+            echo "Tag ($TAG_REF) does not match package.json version (v$PKG_VERSION)."
             exit 1
           fi
           echo "Tag and package.json version are consistent."
@@ -86,31 +86,31 @@ jobs:
 
           <!--
           ### macOS
-          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/out-v${{ env.VERSION }}/OutClash_aarch64.dmg"><img src="https://img.shields.io/badge/DMG-default?style=flat&logo=apple&label=Apple%20Silicon"></a><br>
-          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/out-v${{ env.VERSION }}/OutClash_x64.dmg"><img src="https://img.shields.io/badge/DMG-default?style=flat&logo=apple&label=Intel"></a><br>
+          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash_aarch64.dmg"><img src="https://img.shields.io/badge/DMG-default?style=flat&logo=apple&label=Apple%20Silicon"></a><br>
+          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash_x64.dmg"><img src="https://img.shields.io/badge/DMG-default?style=flat&logo=apple&label=Intel"></a><br>
           > :warning: **Warning**
           If you get a notification that the application is corrupted when you run it on macOS, run this command:<br>
           <code>sudo xattr -r -c /Applications/OutClash.app</code>
           -->
 
           ### Linux
-          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/out-v${{ env.VERSION }}/OutClash_amd64.deb"><img src="https://img.shields.io/badge/x64-default?style=flat&logo=debian&label=DEB"> </a><br>
-          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/out-v${{ env.VERSION }}/OutClash.x86_64.rpm"><img src="https://img.shields.io/badge/x64-default?style=flat&logo=fedora&label=RPM"> </a>
+          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash_amd64.deb"><img src="https://img.shields.io/badge/x64-default?style=flat&logo=debian&label=DEB"> </a><br>
+          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash.x86_64.rpm"><img src="https://img.shields.io/badge/x64-default?style=flat&logo=fedora&label=RPM"> </a>
 
-          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/out-v${{ env.VERSION }}/OutClash_arm64.deb"><img src="https://img.shields.io/badge/arm64-default?style=flat&logo=debian&label=DEB"> </a><br>
-          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/out-v${{ env.VERSION }}/OutClash.aarch64.rpm"><img src="https://img.shields.io/badge/aarch64-default?style=flat&logo=fedora&label=RPM"> </a>
+          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash_arm64.deb"><img src="https://img.shields.io/badge/arm64-default?style=flat&logo=debian&label=DEB"> </a><br>
+          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash.aarch64.rpm"><img src="https://img.shields.io/badge/aarch64-default?style=flat&logo=fedora&label=RPM"> </a>
 
-          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/out-v${{ env.VERSION }}/OutClash_armhf.deb"><img src="https://img.shields.io/badge/armhf-default?style=flat&logo=debian&label=DEB"> </a><br>
-          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/out-v${{ env.VERSION }}/OutClash.armhfp.rpm"><img src="https://img.shields.io/badge/armhfp-default?style=flat&logo=fedora&label=RPM"> </a>
+          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash_armhf.deb"><img src="https://img.shields.io/badge/armhf-default?style=flat&logo=debian&label=DEB"> </a><br>
+          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash.armhfp.rpm"><img src="https://img.shields.io/badge/armhfp-default?style=flat&logo=fedora&label=RPM"> </a>
 
           ### Windows (Win7 is no longer supported)
           #### Normal version (recommended)
-          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/out-v${{ env.VERSION }}/OutClash_x64-setup.exe"><img src="https://badgen.net/badge/icon/x64?icon=windows&label=exe"></a><br>
-          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/out-v${{ env.VERSION }}/OutClash_arm64-setup.exe"><img src="https://badgen.net/badge/icon/arm64?icon=windows&label=exe"></a>
+          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash_x64-setup.exe"><img src="https://badgen.net/badge/icon/x64?icon=windows&label=exe"></a><br>
+          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash_arm64-setup.exe"><img src="https://badgen.net/badge/icon/arm64?icon=windows&label=exe"></a>
           #### Portable version is no longer available with many problems
           #### Built-in Webview version 2 (large size, only used in enterprise version of the system or can not install webview2)
-          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/out-v${{ env.VERSION }}/OutClash_x64_fixed_webview2-setup.exe"><img src="https://badgen.net/badge/icon/x64?icon=windows&label=exe"></a><br>
-          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/out-v${{ env.VERSION }}/OutClash_arm64_fixed_webview2-setup.exe"><img src="https://badgen.net/badge/icon/arm64?icon=windows&label=exe"></a>
+          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash_x64_fixed_webview2-setup.exe"><img src="https://badgen.net/badge/icon/x64?icon=windows&label=exe"></a><br>
+          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash_arm64_fixed_webview2-setup.exe"><img src="https://badgen.net/badge/icon/arm64?icon=windows&label=exe"></a>
 
           Created at ${{ env.BUILDTIME }}.
           EOF
@@ -118,7 +118,7 @@ jobs:
       - name: Upload Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: out-v${{env.VERSION}}
+          tag_name: v${{env.VERSION}}
           name: "OutClash v${{env.VERSION}}"
           body_path: release.txt
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -229,7 +229,7 @@ jobs:
       - name: Upload Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: out-v${{steps.build.outputs.appVersion}}
+          tag_name: v${{steps.build.outputs.appVersion}}
           name: "OutClash v${{steps.build.outputs.appVersion}}"
           token: ${{ secrets.GITHUB_TOKEN }}
           fail_on_unmatched_files: false
@@ -471,7 +471,7 @@ jobs:
       - name: Upload Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: out-v${{steps.build.outputs.appVersion}}
+          tag_name: v${{steps.build.outputs.appVersion}}
           name: "OutClash v${{steps.build.outputs.appVersion}}"
           token: ${{ secrets.GITHUB_TOKEN }}
           files: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*setup*
