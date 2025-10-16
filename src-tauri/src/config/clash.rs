@@ -355,6 +355,10 @@ fn test_clash_info() {
     );
 }
 
+// These structs model the Clash YAML config for (de)serialization.
+// They are not currently instantiated directly; most reads/writes use Mapping.
+// Keep them for typed boundaries and future migration to strongly-typed config.
+#[allow(dead_code)]
 #[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 pub struct IClashExternalControllerCors {
@@ -362,6 +366,8 @@ pub struct IClashExternalControllerCors {
     pub allow_private_network: Option<bool>,
 }
 
+// See note above; kept for typed config bridging.
+#[allow(dead_code)]
 #[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 pub struct IClash {
@@ -378,6 +384,8 @@ pub struct IClash {
     pub external_controller_cors: Option<IClashExternalControllerCors>,
 }
 
+// See note above; kept for typed config bridging.
+#[allow(dead_code)]
 #[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 pub struct IClashTUN {
@@ -388,6 +396,8 @@ pub struct IClashTUN {
     pub dns_hijack: Option<Vec<String>>,
 }
 
+// See note above; kept for typed config bridging.
+#[allow(dead_code)]
 #[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 pub struct IClashDNS {
@@ -404,6 +414,8 @@ pub struct IClashDNS {
     pub nameserver_policy: Option<Vec<String>>,
 }
 
+// See note above; kept for typed config bridging.
+#[allow(dead_code)]
 #[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 pub struct IClashFallbackFilter {
