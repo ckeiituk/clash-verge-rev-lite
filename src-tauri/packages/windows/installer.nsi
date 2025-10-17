@@ -476,6 +476,38 @@ FunctionEnd
     !endif
   ${EndIf}
 
+  ; Check if out-mihomo.exe is running
+  !if "${INSTALLMODE}" == "currentUser"
+    nsis_tauri_utils::FindProcessCurrentUser "out-mihomo.exe"
+  !else
+    nsis_tauri_utils::FindProcess "out-mihomo.exe"
+  !endif
+  Pop $R0
+  ${If} $R0 = 0
+    DetailPrint "Kill out-mihomo.exe..."
+    !if "${INSTALLMODE}" == "currentUser"
+      nsis_tauri_utils::KillProcessCurrentUser "out-mihomo.exe"
+    !else
+      nsis_tauri_utils::KillProcess "out-mihomo.exe"
+    !endif
+  ${EndIf}
+
+  ; Check if out-mihomo-alpha.exe is running
+  !if "${INSTALLMODE}" == "currentUser"
+    nsis_tauri_utils::FindProcessCurrentUser "out-mihomo-alpha.exe"
+  !else
+    nsis_tauri_utils::FindProcess "out-mihomo-alpha.exe"
+  !endif
+  Pop $R0
+  ${If} $R0 = 0
+    DetailPrint "Kill out-mihomo-alpha.exe..."
+    !if "${INSTALLMODE}" == "currentUser"
+      nsis_tauri_utils::KillProcessCurrentUser "out-mihomo-alpha.exe"
+    !else
+      nsis_tauri_utils::KillProcess "out-mihomo-alpha.exe"
+    !endif
+  ${EndIf}
+
   ; Check if clash-meta-alpha.exe is running
   !if "${INSTALLMODE}" == "currentUser"
     nsis_tauri_utils::FindProcessCurrentUser "clash-meta-alpha.exe"

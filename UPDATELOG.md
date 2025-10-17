@@ -1,3 +1,13 @@
+## v0.2.2
+
+Fixes
+
+- Windows installer: terminate new `out-mihomo(.exe)` and `out-mihomo-alpha(.exe)` processes before copying files to avoid "cannot open file" errors during upgrade.
+
+CI/Release
+
+- Bump release version to 0.2.2.
+
 ## v0.2.1
 
 New
