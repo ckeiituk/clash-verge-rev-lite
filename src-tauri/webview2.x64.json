@@ -25,7 +25,7 @@
       "active": true,
       "dialog": false,
       "endpoints": [
-        "https://github.com/coolcoala/clash-verge-rev-lite/releases/download/updater/update-fixed-webview2.json"
+        "https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/updater/update-fixed-webview2.json"
       ],
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQ3OThBRjc2RDFEQUQ0RjYKUldUMjFOclJkcStZMSswMC9DWkNSZzRyZS9YMStUd3diOTdKOTk1S1I4Wk5iK2lBNnZHMC9DZDIK"
     }

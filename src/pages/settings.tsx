@@ -35,7 +35,7 @@ const SettingPage = () => {
   const onError = (err: any) =>
     showNotice("error", err?.message || err.toString());
   const toGithubRepo = useLockFn(() =>
-    openWebUrl("https://github.com/coolcoala/clash-verge-rev-lite"),
+    openWebUrl("https://github.com/ckeiituk/clash-verge-rev-lite"),
   );
 
   return (
