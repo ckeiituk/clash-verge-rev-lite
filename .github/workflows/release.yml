@@ -198,7 +198,15 @@ jobs:
           pnpm i
           pnpm run prebuild ${{ matrix.target }}
 
-      - name: Get Version
+      - name: Get Version (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $v = node -p "require('./package.json').version"
+          Add-Content -Path $env:GITHUB_ENV -Value "VERSION=$v"
+
+      - name: Get Version (Unix)
+        if: runner.os != 'Windows'
         shell: bash
         run: echo "VERSION=$(node -p \"require('./package.json').version\")" >> $GITHUB_ENV
 
@@ -460,7 +468,15 @@ jobs:
           pnpm i
           pnpm run prebuild ${{ matrix.target }}
 
-      - name: Get Version
+      - name: Get Version (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $v = node -p "require('./package.json').version"
+          Add-Content -Path $env:GITHUB_ENV -Value "VERSION=$v"
+
+      - name: Get Version (Unix)
+        if: runner.os != 'Windows'
         shell: bash
         run: echo "VERSION=$(node -p \"require('./package.json').version\")" >> $GITHUB_ENV
 
