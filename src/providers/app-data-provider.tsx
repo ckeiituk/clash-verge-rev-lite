@@ -76,6 +76,10 @@ export const AppDataProvider = ({
 
   // 监听profile和clash配置变更事件
   useEffect(() => {
+    const isTauriEnv =
+      typeof window !== "undefined" &&
+      ("__TAURI_INTERNALS__" in (window as any) ||
+        "__TAURI__" in (window as any));
     let profileUnlisten: Promise<() => void> | undefined;
     let lastProfileId: string | null = null;
     let lastUpdateTime = 0;
@@ -83,61 +87,63 @@ export const AppDataProvider = ({
 
     const setupEventListeners = async () => {
       try {
-        // 监听profile切换事件
-        profileUnlisten = listen<string>("profile-changed", (event) => {
-          const newProfileId = event.payload;
-          const now = Date.now();
+        // 监听profile切换事件（仅桌面端）
+        if (isTauriEnv) {
+          profileUnlisten = listen<string>("profile-changed", (event) => {
+            const newProfileId = event.payload;
+            const now = Date.now();
 
-          console.log(`[AppDataProvider] Profile switched: ${newProfileId}`);
+            console.log(`[AppDataProvider] Profile switched: ${newProfileId}`);
 
-          if (
-            lastProfileId === newProfileId &&
-            now - lastUpdateTime < refreshThrottle
-          ) {
-            console.log("[AppDataProvider] Duplicate event debounced, skip");
-            return;
-          }
-
-          lastProfileId = newProfileId;
-          lastUpdateTime = now;
-
-          setTimeout(async () => {
-            try {
-              console.log("[AppDataProvider] Force refresh proxy cache");
-
-              const refreshPromise = Promise.race([
-                forceRefreshProxies(),
-                new Promise((_, reject) =>
-                  setTimeout(
-                    () => reject(new Error("forceRefreshProxies timeout")),
-                    8000,
-                  ),
-                ),
-              ]);
-
-              await refreshPromise;
-
-              console.log("[AppDataProvider] Refresh frontend proxy data");
-              await refreshProxy();
-
-              console.log(
-                "[AppDataProvider] Proxy data refreshed for profile switch",
-              );
-            } catch (error) {
-              console.error(
-                "[AppDataProvider] Force refresh proxy cache failed:",
-                error,
-              );
-
-              refreshProxy().catch((e) =>
-                console.warn(
-                  "[AppDataProvider] Normal refresh also failed:",
-                  e,
-                ),
-              );
+            if (
+              lastProfileId === newProfileId &&
+              now - lastUpdateTime < refreshThrottle
+            ) {
+              console.log("[AppDataProvider] Duplicate event debounced, skip");
+              return;
             }
-          }, 0);
-        });
+
+            lastProfileId = newProfileId;
+            lastUpdateTime = now;
+
+            setTimeout(async () => {
+              try {
+                console.log("[AppDataProvider] Force refresh proxy cache");
+
+                const refreshPromise = Promise.race([
+                  forceRefreshProxies(),
+                  new Promise((_, reject) =>
+                    setTimeout(
+                      () => reject(new Error("forceRefreshProxies timeout")),
+                      8000,
+                    ),
+                  ),
+                ]);
+
+                await refreshPromise;
+
+                console.log("[AppDataProvider] Refresh frontend proxy data");
+                await refreshProxy();
+
+                console.log(
+                  "[AppDataProvider] Proxy data refreshed for profile switch",
+                );
+              } catch (error) {
+                console.error(
+                  "[AppDataProvider] Force refresh proxy cache failed:",
+                  error,
+                );
+
+                refreshProxy().catch((e) =>
+                  console.warn(
+                    "[AppDataProvider] Normal refresh also failed:",
+                    e,
+                  ),
+                );
+              }
+            }, 0);
+          });
+        }
 
         // 监听Clash配置刷新事件(enhance操作等)
         const handleRefreshClash = () => {

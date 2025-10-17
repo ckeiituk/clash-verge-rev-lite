@@ -8,7 +8,18 @@ import {
 import { Theme } from "@tauri-apps/api/window";
 
 export const useCustomTheme = () => {
-  const appWindow: WebviewWindow = useMemo(() => getCurrentWebviewWindow(), []);
+  const appWindow: any = useMemo(() => {
+    const isTauriEnv =
+      typeof window !== "undefined" &&
+      ("__TAURI_INTERNALS__" in (window as any) ||
+        "__TAURI__" in (window as any));
+    return isTauriEnv
+      ? getCurrentWebviewWindow()
+      : {
+          setTheme: async () => {},
+          onThemeChanged: async () => () => {},
+        };
+  }, []);
   const { verge } = useVerge();
   const { theme_mode } = verge ?? {};
 

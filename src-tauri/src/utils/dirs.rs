@@ -188,13 +188,13 @@ pub fn profiles_path() -> Result<PathBuf> {
 #[cfg(target_os = "macos")]
 pub fn service_path() -> Result<PathBuf> {
     let res_dir = app_resources_dir()?;
-    Ok(res_dir.join("koala-clash-service"))
+    Ok(res_dir.join("outclash-service"))
 }
 
 #[cfg(windows)]
 pub fn service_path() -> Result<PathBuf> {
     let res_dir = app_resources_dir()?;
-    Ok(res_dir.join("koala-clash-service.exe"))
+    Ok(res_dir.join("outclash-service.exe"))
 }
 
 pub fn service_log_file() -> Result<PathBuf> {

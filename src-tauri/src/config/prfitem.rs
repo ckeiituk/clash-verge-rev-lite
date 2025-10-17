@@ -262,6 +262,7 @@ impl PrfItem {
 
     /// ## Remote type
     /// create a new item from url
+    #[allow(clippy::needless_update)]
     pub async fn from_url(
         url: &str,
         name: Option<String>,

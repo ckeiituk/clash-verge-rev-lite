@@ -1113,9 +1113,9 @@ pub async fn force_reinstall_service() -> Result<()> {
 
     // 2. 检查IPC通信 - 命名管道/Unix套接字
     let socket_path = if cfg!(windows) {
-        r"\\.\pipe\clash-verge-service"
+        r"\\.\pipe\outclash-service"
     } else {
-        "/tmp/clash-verge-service.sock"
+        "/tmp/outclash-service.sock"
     };
 
     logging!(info, Type::Service, true, "IPC通信路径: {}", socket_path);
@@ -1163,7 +1163,7 @@ pub async fn force_reinstall_service() -> Result<()> {
                 logging!(info, Type::Service, true, "尝试检查Windows服务状态...");
 
                 let output = Command::new("sc")
-                    .args(["query", "clash_verge_service"])
+                    .args(["query", "outclash_service"])
                     .output();
 
                 match output {
@@ -1191,7 +1191,7 @@ pub async fn force_reinstall_service() -> Result<()> {
                 logging!(info, Type::Service, true, "尝试检查macOS服务状态...");
 
                 let output = Command::new("launchctl")
-                    .args(["list", "io.github.clash-verge-rev.clash-verge-rev.service"])
+                    .args(["list", "io.github.outclash.service"])
                     .output();
 
                 match output {
@@ -1222,7 +1222,7 @@ pub async fn force_reinstall_service() -> Result<()> {
                 logging!(info, Type::Service, true, "尝试检查Linux服务状态...");
 
                 let output = Command::new("systemctl")
-                    .args(["status", "clash_verge_service"])
+                    .args(["status", "outclash-service"])
                     .output();
 
                 match output {

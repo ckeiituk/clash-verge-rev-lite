@@ -9,10 +9,24 @@ const MAX_ZOOM = 2.0; // 200%
 
 export const useZoomControls = () => {
   const [zoomLevel, setZoomLevel] = useState(1.0);
-  const appWindow = WebviewWindow.getCurrent();
+  const isTauriEnv =
+    typeof window !== "undefined" &&
+    ((window as any).__TAURI_INTERNALS__ || (window as any).__TAURI__);
+  const appWindow: any = isTauriEnv
+    ? WebviewWindow.getCurrent()
+    : {
+        innerSize: async () => ({
+          width: window.innerWidth,
+          height: window.innerHeight,
+        }),
+        scaleFactor: async () => 1,
+        setZoom: async (_z: number) => {},
+      };
 
   useEffect(() => {
     const setInitialZoom = async () => {
+      // Skip in web:dev where Tauri APIs are unavailable
+      if (!isTauriEnv) return;
       // 1. Получаем и физический размер, и коэффициент масштабирования
       const size = await appWindow.innerSize();
       const scaleFactor = await appWindow.scaleFactor();
@@ -47,7 +61,8 @@ export const useZoomControls = () => {
         const clampedZoom = Math.max(MIN_ZOOM, Math.min(newZoom, MAX_ZOOM));
         const roundedZoom = Math.round(clampedZoom * 100) / 100;
 
-        appWindow.setZoom(roundedZoom);
+        // Only set Tauri zoom inside desktop app
+        if (isTauriEnv) appWindow.setZoom(roundedZoom);
         const newStrokeWidth = 2 / roundedZoom;
         document.documentElement.style.setProperty(
           "--icon-stroke-width",

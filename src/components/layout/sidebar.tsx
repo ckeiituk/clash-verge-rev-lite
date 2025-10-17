@@ -54,7 +54,7 @@ export function AppSidebar() {
         >
           <img src={logo} alt="logo" className="h-6 w-6 flex-shrink-0" />
           <span className="font-semibold whitespace-nowrap group-data-[state=collapsed]:hidden">
-            Koala Clash
+            OutClash
           </span>
         </SidebarMenuButton>
       </SidebarHeader>

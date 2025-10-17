@@ -3,7 +3,12 @@ import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
 import { useThemeMode } from "@/services/states";
 import { nanoid } from "nanoid";
-import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import {
+  getCurrentWebviewWindow,
+  type WebviewWindow,
+} from "@tauri-apps/api/webviewWindow";
+import type { EventCallback, UnlistenFn } from "@tauri-apps/api/event";
+import type { PhysicalSize } from "@tauri-apps/api/window";
 import { showNotice } from "@/services/noticeService";
 import getSystem from "@/utils/get-system";
 import debounce from "@/utils/debounce";
@@ -33,7 +38,42 @@ import {
 } from "@/components/ui/tooltip";
 import { Wand2, Maximize, Minimize } from "lucide-react";
 
-const appWindow = getCurrentWebviewWindow();
+type MaybeTauriWindow = Window &
+  typeof globalThis & {
+    __TAURI_INTERNALS__?: unknown;
+    __TAURI__?: unknown;
+  };
+
+const hasTauriInternals = (
+  win: Window & typeof globalThis,
+): win is MaybeTauriWindow =>
+  "__TAURI_INTERNALS__" in (win as MaybeTauriWindow) ||
+  "__TAURI__" in (win as MaybeTauriWindow);
+
+// Guard Tauri API usage for web-only dev (vite preview/web:dev)
+const isTauriEnv = typeof window !== "undefined" && hasTauriInternals(window);
+
+type EditorWindowControls = Pick<
+  WebviewWindow,
+  "onResized" | "isMaximized" | "toggleMaximize"
+>;
+type ResizeHandler = Parameters<WebviewWindow["onResized"]>[0];
+
+const fallbackWindow: EditorWindowControls = {
+  async onResized(_handler: ResizeHandler): Promise<UnlistenFn> {
+    return () => {};
+  },
+  async isMaximized(): Promise<boolean> {
+    return false;
+  },
+  async toggleMaximize(): Promise<void> {
+    return;
+  },
+};
+
+const appWindow: EditorWindowControls = isTauriEnv
+  ? getCurrentWebviewWindow()
+  : fallbackWindow;
 
 // --- Типы и интерфейсы (без изменений) ---
 type Language = "yaml" | "javascript" | "css";
@@ -158,16 +198,21 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
   }, 100);
 
   useEffect(() => {
-    const onResized = debounce(() => {
+    const handleResizeEvent: EventCallback<PhysicalSize> = (_event) => {
       editorResize();
-      appWindow.isMaximized().then((maximized) => {
-        setIsMaximized(() => maximized);
-      });
-    }, 100);
-    const unlistenResized = appWindow.onResized(onResized);
+      void appWindow
+        .isMaximized()
+        .then((maximized) => {
+          setIsMaximized(maximized);
+        })
+        .catch(console.error);
+    };
+
+    const debouncedResize: ResizeHandler = debounce(handleResizeEvent, 100);
+    const unlistenResizedPromise = appWindow.onResized(debouncedResize);
 
     return () => {
-      unlistenResized.then((fn) => fn());
+      void unlistenResizedPromise.then((unlisten) => unlisten());
       editorRef.current?.dispose();
       editorRef.current = undefined;
     };

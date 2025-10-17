@@ -81,7 +81,12 @@ impl NetworkManager {
                 let mut no_proxy_guard = NETWORK_MANAGER.no_proxy_client.lock().unwrap();
                 *no_proxy_guard = Some(no_proxy_client);
 
-                logging!(info, Type::Network, true, "Network manager initialization completed");
+                logging!(
+                    info,
+                    Type::Network,
+                    true,
+                    "Network manager initialization completed"
+                );
             });
         });
     }
@@ -322,14 +327,16 @@ impl NetworkManager {
         } else {
             use crate::utils::resolve::VERSION;
 
-            // Use clash-meta as User-Agent to ensure subscription servers return YAML format
-            // instead of universal proxy URL format (vless://, ss://, etc.)
-            let version = match VERSION.get() {
-                Some(v) => format!("clash-meta/v{v}"),
-                None => "clash-meta/unknown".to_string(),
-            };
+            // Keep 'clash-meta/' prefix to ensure subscription servers return YAML
+            // but append our client identifier for uniqueness.
+            // Example: "clash-meta/v0.2.0 OutClash/0.2.0"
+            let app_ver = VERSION
+                .get()
+                .cloned()
+                .unwrap_or_else(|| "unknown".to_string());
+            let ua = format!("clash-meta/v{app_ver} OutClash/{app_ver}");
 
-            builder = builder.user_agent(version);
+            builder = builder.user_agent(ua);
         }
 
         let client = builder.build().expect("Failed to build custom HTTP client");
@@ -411,7 +418,13 @@ impl NetworkManager {
         let watchdog = tokio::spawn(async move {
             tokio::time::sleep(Duration::from_secs(timeout_duration)).await;
             let _ = cancel_tx.send(());
-            logging!(warn, Type::Network, true, "Request canceled due to timeout: {}", url_clone);
+            logging!(
+                warn,
+                Type::Network,
+                true,
+                "Request canceled due to timeout: {}",
+                url_clone
+            );
         });
 
         let result = tokio::select! {
