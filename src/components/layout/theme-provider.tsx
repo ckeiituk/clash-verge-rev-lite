@@ -1,9 +1,23 @@
 import { useEffect } from "react";
 import { useVerge } from "@/hooks/use-verge";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { Theme as TauriTheme } from "@tauri-apps/api/window";
+import type { UnlistenFn } from "@tauri-apps/api/event";
+import type { Theme as TauriTheme } from "@tauri-apps/api/window";
+import type { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 import { defaultTheme, defaultDarkTheme } from "@/pages/_theme";
+
+type MaybeTauriWindow = Window &
+  typeof globalThis & {
+    __TAURI_INTERNALS__?: unknown;
+    __TAURI__?: unknown;
+  };
+
+const hasTauriInternals = (
+  win: Window & typeof globalThis,
+): win is MaybeTauriWindow =>
+  "__TAURI_INTERNALS__" in (win as MaybeTauriWindow) ||
+  "__TAURI__" in (win as MaybeTauriWindow);
 
 type ThemeProviderProps = {
   children: React.ReactNode;
@@ -54,13 +68,31 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 
   useEffect(() => {
     const root = window.document.documentElement; // <html> тег
-    const appWindow = getCurrentWebviewWindow();
+    const tauriWindow =
+      typeof window !== "undefined" && hasTauriInternals(window)
+        ? getCurrentWebviewWindow()
+        : undefined;
+
+    const safeSetTheme = (theme: TauriTheme): Promise<void> => {
+      if (!tauriWindow) {
+        return Promise.resolve();
+      }
+      return tauriWindow.setTheme(theme);
+    };
+    const listenThemeChange = (
+      handler: Parameters<WebviewWindow["onThemeChanged"]>[0],
+    ): Promise<UnlistenFn> => {
+      if (!tauriWindow) {
+        return Promise.resolve(() => {});
+      }
+      return tauriWindow.onThemeChanged(handler);
+    };
 
     const applyTheme = (mode: "light" | "dark") => {
       root.classList.remove("light", "dark");
       root.classList.add(mode);
 
-      appWindow.setTheme(mode as TauriTheme).catch(console.error);
+      void safeSetTheme(mode as TauriTheme).catch(console.error);
 
       const basePalette = mode === "light" ? defaultTheme : defaultDarkTheme;
 
@@ -125,11 +157,11 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
         ? "dark"
         : "light";
       applyTheme(systemTheme);
-      const unlistenPromise = appWindow.onThemeChanged(({ payload }) => {
+      const unlistenPromise = listenThemeChange(({ payload }) => {
         if (verge?.theme_mode === "system") applyTheme(payload);
       });
       return () => {
-        unlistenPromise.then((f) => f());
+        void unlistenPromise.then((unlisten) => unlisten());
       };
     } else {
       applyTheme(themeModeSetting);

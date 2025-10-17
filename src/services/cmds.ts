@@ -1,5 +1,24 @@
 import { invoke } from "@tauri-apps/api/core";
 import { showNotice } from "@/services/noticeService";
+// Detect Tauri runtime (desktop app) reliably for Tauri 2.x
+type MaybeTauriWindow = Window &
+  typeof globalThis & {
+    __TAURI_INTERNALS__?: unknown;
+    __TAURI__?: { core?: { invoke?: unknown } };
+  };
+
+const hasTauriRuntime = (
+  win: Window & typeof globalThis,
+): win is MaybeTauriWindow => {
+  const w = win as MaybeTauriWindow;
+  return (
+    typeof w !== "undefined" &&
+    ("__TAURI_INTERNALS__" in w ||
+      typeof w.__TAURI__?.core?.invoke === "function")
+  );
+};
+
+const isTauriEnv = typeof window !== "undefined" && hasTauriRuntime(window);
 
 export async function copyClashEnv() {
   return invoke<void>("copy_clash_env");
@@ -66,43 +85,74 @@ export async function patchProfile(
 }
 
 export async function getClashInfo() {
+  if (!isTauriEnv) return null;
   return invoke<IClashInfo | null>("get_clash_info");
 }
 
 // Get runtime config which controlled by verge
 export async function getRuntimeConfig() {
+  if (!isTauriEnv) return null;
   return invoke<IConfigData | null>("get_runtime_config");
 }
 
 export async function getRuntimeYaml() {
+  if (!isTauriEnv) return null;
   return invoke<string | null>("get_runtime_yaml");
 }
 
 export async function getRuntimeExists() {
+  if (!isTauriEnv) return [];
   return invoke<string[]>("get_runtime_exists");
 }
 
 export async function getRuntimeLogs() {
+  if (!isTauriEnv) return {} as Record<string, [string, string][]>;
   return invoke<Record<string, [string, string][]>>("get_runtime_logs");
 }
 
 export async function patchClashConfig(payload: Partial<IConfigData>) {
+  if (!isTauriEnv) return;
   return invoke<void>("patch_clash_config", { payload });
 }
 
 export async function patchClashMode(payload: String) {
+  if (!isTauriEnv) return;
   return invoke<void>("patch_clash_mode", { payload });
 }
 
 export async function getVergeConfig() {
+  if (!isTauriEnv) {
+    try {
+      const raw = localStorage.getItem("web:verge_config");
+      return (raw ? JSON.parse(raw) : {}) as IVergeConfig;
+    } catch {
+      return {} as IVergeConfig;
+    }
+  }
   return invoke<IVergeConfig>("get_verge_config");
 }
 
 export async function patchVergeConfig(payload: IVergeConfig) {
+  if (!isTauriEnv) {
+    try {
+      const prev = await getVergeConfig();
+      const next = { ...prev, ...payload } as IVergeConfig;
+      localStorage.setItem("web:verge_config", JSON.stringify(next));
+    } catch {
+      // ignore
+    }
+    return;
+  }
   return invoke<void>("patch_verge_config", { payload });
 }
 
 export async function getSystemProxy() {
+  if (!isTauriEnv)
+    return {
+      enable: false,
+      server: "-",
+      bypass: "",
+    } as const;
   return invoke<{
     enable: boolean;
     server: string;
@@ -111,6 +161,10 @@ export async function getSystemProxy() {
 }
 
 export async function getAutotemProxy() {
+  if (!isTauriEnv) {
+    // Web/dev fallback without noisy errors
+    return { enable: false, url: "" };
+  }
   try {
     console.log("[API] Start calling get_auto_proxy");
     const result = await invoke<{
@@ -121,14 +175,12 @@ export async function getAutotemProxy() {
     return result;
   } catch (error) {
     console.error("[API] get_auto_proxy failed:", error);
-    return {
-      enable: false,
-      url: "",
-    };
+    return { enable: false, url: "" };
   }
 }
 
 export async function getAutoLaunchStatus() {
+  if (!isTauriEnv) return false;
   try {
     return await invoke<boolean>("get_auto_launch_status");
   } catch (error) {
@@ -348,36 +400,43 @@ export async function validateScriptFile(filePath: string) {
 
 // 获取当前运行模式
 export const getRunningMode = async () => {
+  if (!isTauriEnv) return "";
   return invoke<string>("get_running_mode");
 };
 
 // 获取应用运行时间
 export const getAppUptime = async () => {
+  if (!isTauriEnv) return 0;
   return invoke<number>("get_app_uptime");
 };
 
 // 安装系统服务
 export const installService = async () => {
+  if (!isTauriEnv) return;
   return invoke<void>("install_service");
 };
 
 // 卸载系统服务
 export const uninstallService = async () => {
+  if (!isTauriEnv) return;
   return invoke<void>("uninstall_service");
 };
 
 // 重装系统服务
 export const reinstallService = async () => {
+  if (!isTauriEnv) return;
   return invoke<void>("reinstall_service");
 };
 
 // 修复系统服务
 export const repairService = async () => {
+  if (!isTauriEnv) return;
   return invoke<void>("repair_service");
 };
 
 // 系统服务是否可用
 export const isServiceAvailable = async () => {
+  if (!isTauriEnv) return false;
   try {
     return await invoke<boolean>("is_service_available");
   } catch (error) {
@@ -386,14 +445,17 @@ export const isServiceAvailable = async () => {
   }
 };
 export const entry_lightweight_mode = async () => {
+  if (!isTauriEnv) return;
   return invoke<void>("entry_lightweight_mode");
 };
 
 export const exit_lightweight_mode = async () => {
+  if (!isTauriEnv) return;
   return invoke<void>("exit_lightweight_mode");
 };
 
 export const isAdmin = async () => {
+  if (!isTauriEnv) return false;
   try {
     return await invoke<boolean>("is_admin");
   } catch (error) {

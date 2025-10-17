@@ -146,7 +146,7 @@ impl CoreManager {
         help::save_yaml(
             &runtime_path,
             &Config::clash().latest().0,
-            Some("# Koala Clash Runtime"),
+            Some("# OutClash Runtime"),
         )?;
         handle::Handle::notice_message(msg_type, msg_content);
         Ok(())

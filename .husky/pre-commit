@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# Block committing repository-internal guides (only when added/modified)
+if git diff --cached --diff-filter=AM --name-only | grep -Ei '(^|/)(agents\.md|workflows\.md)$' >/dev/null; then
+    echo "Commit blocked: do not commit AGENTS.md/WORKFLOWS.md (local-only docs)."
+    echo "Add them to .gitignore (already done) and unstage with: git restore --staged <file>"
+    exit 1
+fi
+
 #pnpm pretty-quick --staged
 
 if git diff --cached --name-only | grep -q '^src/'; then

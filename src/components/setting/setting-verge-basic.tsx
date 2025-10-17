@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { open } from "@tauri-apps/plugin-dialog";
 import { copyClashEnv } from "@/services/cmds";
 import { useVerge } from "@/hooks/use-verge";
+import { useSetThemeMode } from "@/services/states";
 import { languages } from "@/services/i18n";
 import { showNotice } from "@/services/noticeService";
 import getSystem from "@/utils/get-system";
@@ -107,6 +108,7 @@ const LabelWithIcon = ({
 const SettingVergeBasic = ({ onError }: Props) => {
   const { t } = useTranslation();
   const { verge, patchVerge, mutateVerge } = useVerge();
+  const setThemeMode = useSetThemeMode();
   const {
     theme_mode,
     language,
@@ -125,7 +127,15 @@ const SettingVergeBasic = ({ onError }: Props) => {
   const backupRef = useRef<DialogRef>(null);
 
   const onChangeData = (patch: any) => {
+    // Optimistically update SWR cache
     mutateVerge({ ...verge, ...patch }, false);
+    // If theme mode is changed, also update local theme context immediately
+    if (Object.prototype.hasOwnProperty.call(patch, "theme_mode")) {
+      const mode = patch.theme_mode as "light" | "dark" | "system" | undefined;
+      if (mode === "light" || mode === "dark" || mode === "system") {
+        setThemeMode(mode);
+      }
+    }
   };
 
   const onCopyClashEnv = useCallback(async () => {

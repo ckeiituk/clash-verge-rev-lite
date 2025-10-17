@@ -118,6 +118,8 @@
   "load-balance": "부하 분산에 따라 프록시 분배",
   "relay": "정의된 프록시 체인을 통과",
   "Group Name": "그룹 이름",
+  "switch_to_system_proxy": "시스템 프록시로 전환",
+  "switch_to_tun_mode": "TUN 모드로 전환",
   "Use Proxies": "프록시 사용",
   "Use Provider": "제공자 사용",
   "Health Check Url": "상태 확인 URL",

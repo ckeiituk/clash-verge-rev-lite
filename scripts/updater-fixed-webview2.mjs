@@ -22,8 +22,8 @@ async function resolveUpdater() {
     page: 1,
   });
 
-  // get the latest publish tag
-  const tag = tags.find((t) => t.name.startsWith("v"));
+  // get the latest publish tag (vX.Y.Z)
+  const tag = tags.find((t) => /^v\d+\.\d+\.\d+$/.test(t.name));
 
   console.log(tag);
   console.log();

@@ -36,6 +36,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install jq
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
       - name: Check tag and package.json version
         id: check_tag
         run: |
@@ -450,7 +455,7 @@ jobs:
       - name: Get Version
         run: |
           sudo apt-get update
-          sudo apt-get install jq
+          sudo apt-get install -y jq
           echo "VERSION=$(cat package.json | jq '.version' | tr -d '"')" >> $GITHUB_ENV
           echo "BUILDTIME=$(TZ=Asia/Shanghai date)" >> $GITHUB_ENV
 
@@ -482,6 +487,9 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+
+      - name: Install Rust Stable
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Add Rust Target
         run: rustup target add ${{ matrix.target }}

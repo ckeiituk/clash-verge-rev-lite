@@ -9,7 +9,8 @@ use std::{fs, os::windows::process::CommandExt, path::Path, path::PathBuf};
 /// Windows 下的开机启动文件夹路径
 #[cfg(target_os = "windows")]
 pub fn get_startup_dir() -> Result<PathBuf> {
-    let appdata = std::env::var("APPDATA").map_err(|_| anyhow!("Unable to obtain APPDATA environment variable"))?;
+    let appdata = std::env::var("APPDATA")
+        .map_err(|_| anyhow!("Unable to obtain APPDATA environment variable"))?;
 
     let startup_dir = Path::new(&appdata)
         .join("Microsoft")
@@ -19,7 +20,10 @@ pub fn get_startup_dir() -> Result<PathBuf> {
         .join("Startup");
 
     if !startup_dir.exists() {
-        return Err(anyhow!("Startup directory does not exist: {:?}", startup_dir));
+        return Err(anyhow!(
+            "Startup directory does not exist: {:?}",
+            startup_dir
+        ));
     }
 
     Ok(startup_dir)
@@ -28,8 +32,12 @@ pub fn get_startup_dir() -> Result<PathBuf> {
 /// 获取当前可执行文件路径
 #[cfg(target_os = "windows")]
 pub fn get_exe_path() -> Result<PathBuf> {
-    let exe_path =
-        std::env::current_exe().map_err(|e| anyhow!("Unable to obtain the path of the current executable file: {}", e))?;
+    let exe_path = std::env::current_exe().map_err(|e| {
+        anyhow!(
+            "Unable to obtain the path of the current executable file: {}",
+            e
+        )
+    })?;
 
     Ok(exe_path)
 }
@@ -39,7 +47,7 @@ pub fn get_exe_path() -> Result<PathBuf> {
 pub fn create_shortcut() -> Result<()> {
     let exe_path = get_exe_path()?;
     let startup_dir = get_startup_dir()?;
-    let shortcut_path = startup_dir.join("Koala-Clash.lnk");
+    let shortcut_path = startup_dir.join("OutClash.lnk");
 
     // If the shortcut already exists, return success directly
     if shortcut_path.exists() {
@@ -77,7 +85,7 @@ pub fn create_shortcut() -> Result<()> {
 #[cfg(target_os = "windows")]
 pub fn remove_shortcut() -> Result<()> {
     let startup_dir = get_startup_dir()?;
-    let shortcut_path = startup_dir.join("Koala-Clash.lnk");
+    let shortcut_path = startup_dir.join("OutClash.lnk");
 
     // If the shortcut does not exist, return success directly
     if !shortcut_path.exists() {
@@ -96,7 +104,7 @@ pub fn remove_shortcut() -> Result<()> {
 #[cfg(target_os = "windows")]
 pub fn is_shortcut_enabled() -> Result<bool> {
     let startup_dir = get_startup_dir()?;
-    let shortcut_path = startup_dir.join("Koala-Clash.lnk");
+    let shortcut_path = startup_dir.join("OutClash.lnk");
 
     Ok(shortcut_path.exists())
 }

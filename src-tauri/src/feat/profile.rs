@@ -91,9 +91,17 @@ pub async fn update_profile(
                     let original_self_proxy = merged_opt.as_ref().and_then(|o| o.self_proxy);
 
                     // 创建使用Clash代理的选项
-                    let mut fallback_opt = merged_opt.unwrap_or_default();
-                    fallback_opt.with_proxy = Some(false);
-                    fallback_opt.self_proxy = Some(true);
+                    let fallback_opt = merged_opt
+                        .map(|mut option_override| {
+                            option_override.with_proxy = Some(false);
+                            option_override.self_proxy = Some(true);
+                            option_override
+                        })
+                        .unwrap_or_else(|| PrfOption {
+                            with_proxy: Some(false),
+                            self_proxy: Some(true),
+                            ..PrfOption::default()
+                        });
 
                     // 使用Clash代理重试
                     match PrfItem::from_url(&url, None, None, Some(fallback_opt)).await {

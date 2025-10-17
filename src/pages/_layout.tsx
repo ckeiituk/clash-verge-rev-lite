@@ -27,7 +27,18 @@ import { AppSidebar } from "@/components/layout/sidebar";
 import { useZoomControls } from "@/hooks/useZoomControls";
 import { HwidErrorDialog } from "@/components/profile/hwid-error-dialog";
 
-const appWindow = getCurrentWebviewWindow();
+// Guard Tauri-specific APIs when running in web:dev
+const isTauriEnv =
+  typeof window !== "undefined" &&
+  ("__TAURI_INTERNALS__" in (window as any) || "__TAURI__" in (window as any));
+
+const appWindow: any = isTauriEnv
+  ? getCurrentWebviewWindow()
+  : {
+      hide: async () => {},
+      show: async () => {},
+      onThemeChanged: async () => () => {},
+    };
 export let portableFlag = false;
 
 dayjs.extend(relativeTime);
@@ -217,6 +228,7 @@ const Layout = () => {
     ];
 
     const setupWindowListeners = async () => {
+      if (!isTauriEnv) return () => {};
       const [hideUnlisten, showUnlisten] = await Promise.all([
         listen("verge://hide-window", () => appWindow.hide()),
         listen("verge://show-window", () => appWindow.show()),
@@ -396,6 +408,7 @@ const Layout = () => {
     const setupEventListener = async () => {
       try {
         console.log("[Layout] Start listening for startup completion events");
+        if (!isTauriEnv) return () => {};
         const unlisten = await listen("verge://startup-completed", () => {
           if (!hasEventTriggered) {
             console.log(

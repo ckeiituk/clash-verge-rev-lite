@@ -545,7 +545,7 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
                           <FormLabel>User Agent</FormLabel>
                           <FormControl>
                             <Input
-                              placeholder={`koala-clash/v${version}`}
+                              placeholder={`outclash/v${version}`}
                               {...field}
                             />
                           </FormControl>

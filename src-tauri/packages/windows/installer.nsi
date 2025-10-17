@@ -818,16 +818,13 @@ Section Install
   !insertmacro StartKoalaService
 
   ; Register URL protocol handlers (deep links)
+  ; Register clash:// for backward compatibility
   WriteRegStr SHCTX "Software\Classes\clash" "" "URL:Clash Protocol"
   WriteRegStr SHCTX "Software\Classes\clash" "URL Protocol" ""
   WriteRegStr SHCTX "Software\Classes\clash\DefaultIcon" "" "$\"$INSTDIR\${MAINBINARYNAME}.exe$\",0"
   WriteRegStr SHCTX "Software\Classes\clash\shell\open\command" "" "$\"$INSTDIR\${MAINBINARYNAME}.exe$\" $\"%1$\""
 
-  WriteRegStr SHCTX "Software\Classes\koala-clash" "" "URL:Koala Clash Protocol"
-  WriteRegStr SHCTX "Software\Classes\koala-clash" "URL Protocol" ""
-  WriteRegStr SHCTX "Software\Classes\koala-clash\DefaultIcon" "" "$\"$INSTDIR\${MAINBINARYNAME}.exe$\",0"
-  WriteRegStr SHCTX "Software\Classes\koala-clash\shell\open\command" "" "$\"$INSTDIR\${MAINBINARYNAME}.exe$\" $\"%1$\""
-
+  ; Register outclash:// as primary scheme
   WriteRegStr SHCTX "Software\Classes\outclash" "" "URL:OutClash Protocol"
   WriteRegStr SHCTX "Software\Classes\outclash" "URL Protocol" ""
   WriteRegStr SHCTX "Software\Classes\outclash\DefaultIcon" "" "$\"$INSTDIR\${MAINBINARYNAME}.exe$\",0"
