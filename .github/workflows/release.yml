@@ -208,7 +208,7 @@ jobs:
       - name: Get Version (Unix)
         if: runner.os != 'Windows'
         shell: bash
-        run: echo "VERSION=$(node -p \"require('./package.json').version\")" >> $GITHUB_ENV
+        run: node -e "console.log('VERSION=' + require('./package.json').version)" >> "$GITHUB_ENV"
 
       - name: Sync version files (Cargo.toml, tauri.conf.json)
         run: pnpm sync-version
@@ -478,7 +478,7 @@ jobs:
       - name: Get Version (Unix)
         if: runner.os != 'Windows'
         shell: bash
-        run: echo "VERSION=$(node -p \"require('./package.json').version\")" >> $GITHUB_ENV
+        run: node -e "console.log('VERSION=' + require('./package.json').version)" >> "$GITHUB_ENV"
 
       - name: Sync version files (Cargo.toml, tauri.conf.json)
         run: pnpm sync-version
