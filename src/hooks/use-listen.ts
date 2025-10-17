@@ -6,7 +6,8 @@ export const useListen = () => {
   const unlistenFns = useRef<UnlistenFn[]>([]);
   const isTauriEnv =
     typeof window !== "undefined" &&
-    ("__TAURI_INTERNALS__" in (window as any) || "__TAURI__" in (window as any));
+    ("__TAURI_INTERNALS__" in (window as any) ||
+      "__TAURI__" in (window as any));
 
   const addListener = async <T>(
     eventName: string,

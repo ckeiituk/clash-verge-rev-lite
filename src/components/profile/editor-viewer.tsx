@@ -51,8 +51,7 @@ const hasTauriInternals = (
   "__TAURI__" in (win as MaybeTauriWindow);
 
 // Guard Tauri API usage for web-only dev (vite preview/web:dev)
-const isTauriEnv =
-  typeof window !== "undefined" && hasTauriInternals(window);
+const isTauriEnv = typeof window !== "undefined" && hasTauriInternals(window);
 
 type EditorWindowControls = Pick<
   WebviewWindow,

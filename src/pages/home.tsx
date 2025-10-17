@@ -151,8 +151,7 @@ const MinimalHomePage: React.FC = () => {
 
   const uiProxyEnabled = useSmoothBoolean(isProxyEnabled, 600, 0);
 
-  const showTunAlert =
-    primaryAction === "tun-mode" && !isTunAvailable;
+  const showTunAlert = primaryAction === "tun-mode" && !isTunAvailable;
 
   // Mode toggle (rule/global)
   const modeList = ["rule", "global"] as const;
@@ -608,7 +607,9 @@ const MinimalHomePage: React.FC = () => {
             <span>{t("clash_mode_rule")}</span>
             <Switch
               checked={isGlobalMode}
-              onCheckedChange={(checked) => onChangeMode(checked ? "global" : "rule")}
+              onCheckedChange={(checked) =>
+                onChangeMode(checked ? "global" : "rule")
+              }
               aria-label={t("clash_mode_global")}
             />
             <span>{t("clash_mode_global")}</span>

@@ -7,11 +7,14 @@ type MaybeTauriWindow = Window &
     __TAURI__?: { core?: { invoke?: unknown } };
   };
 
-const hasTauriRuntime = (win: Window & typeof globalThis): win is MaybeTauriWindow => {
+const hasTauriRuntime = (
+  win: Window & typeof globalThis,
+): win is MaybeTauriWindow => {
   const w = win as MaybeTauriWindow;
   return (
     typeof w !== "undefined" &&
-    ("__TAURI_INTERNALS__" in w || typeof w.__TAURI__?.core?.invoke === "function")
+    ("__TAURI_INTERNALS__" in w ||
+      typeof w.__TAURI__?.core?.invoke === "function")
   );
 };
 

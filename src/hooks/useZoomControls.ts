@@ -15,7 +15,10 @@ export const useZoomControls = () => {
   const appWindow: any = isTauriEnv
     ? WebviewWindow.getCurrent()
     : {
-        innerSize: async () => ({ width: window.innerWidth, height: window.innerHeight }),
+        innerSize: async () => ({
+          width: window.innerWidth,
+          height: window.innerHeight,
+        }),
         scaleFactor: async () => 1,
         setZoom: async (_z: number) => {},
       };
