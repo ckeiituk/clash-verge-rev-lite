@@ -96,31 +96,31 @@ jobs:
 
           <!--
           ### macOS
-          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash_aarch64.dmg"><img src="https://img.shields.io/badge/DMG-default?style=flat&logo=apple&label=Apple%20Silicon"></a><br>
-          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash_x64.dmg"><img src="https://img.shields.io/badge/DMG-default?style=flat&logo=apple&label=Intel"></a><br>
+          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash_${{ env.VERSION }}_aarch64.dmg"><img src="https://img.shields.io/badge/DMG-default?style=flat&logo=apple&label=Apple%20Silicon"></a><br>
+          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash_${{ env.VERSION }}_x64.dmg"><img src="https://img.shields.io/badge/DMG-default?style=flat&logo=apple&label=Intel"></a><br>
           > :warning: **Warning**
           If you get a notification that the application is corrupted when you run it on macOS, run this command:<br>
           <code>sudo xattr -r -c /Applications/OutClash.app</code>
           -->
 
           ### Linux
-          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash_amd64.deb"><img src="https://img.shields.io/badge/x64-default?style=flat&logo=debian&label=DEB"> </a><br>
-          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash.x86_64.rpm"><img src="https://img.shields.io/badge/x64-default?style=flat&logo=fedora&label=RPM"> </a>
+          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash_${{ env.VERSION }}_amd64.deb"><img src="https://img.shields.io/badge/x64-default?style=flat&logo=debian&label=DEB"> </a><br>
+          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash-${{ env.VERSION }}-1.x86_64.rpm"><img src="https://img.shields.io/badge/x64-default?style=flat&logo=fedora&label=RPM"> </a>
 
-          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash_arm64.deb"><img src="https://img.shields.io/badge/arm64-default?style=flat&logo=debian&label=DEB"> </a><br>
-          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash.aarch64.rpm"><img src="https://img.shields.io/badge/aarch64-default?style=flat&logo=fedora&label=RPM"> </a>
+          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash_${{ env.VERSION }}_arm64.deb"><img src="https://img.shields.io/badge/arm64-default?style=flat&logo=debian&label=DEB"> </a><br>
+          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash-${{ env.VERSION }}-1.aarch64.rpm"><img src="https://img.shields.io/badge/aarch64-default?style=flat&logo=fedora&label=RPM"> </a>
 
-          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash_armhf.deb"><img src="https://img.shields.io/badge/armhf-default?style=flat&logo=debian&label=DEB"> </a><br>
-          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash.armhfp.rpm"><img src="https://img.shields.io/badge/armhfp-default?style=flat&logo=fedora&label=RPM"> </a>
+          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash_${{ env.VERSION }}_armhf.deb"><img src="https://img.shields.io/badge/armhf-default?style=flat&logo=debian&label=DEB"> </a><br>
+          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash-${{ env.VERSION }}-1.armhfp.rpm"><img src="https://img.shields.io/badge/armhfp-default?style=flat&logo=fedora&label=RPM"> </a>
 
           ### Windows (Win7 is no longer supported)
           #### Normal version (recommended)
-          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash_x64-setup.exe"><img src="https://badgen.net/badge/icon/x64?icon=windows&label=exe"></a><br>
-          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash_arm64-setup.exe"><img src="https://badgen.net/badge/icon/arm64?icon=windows&label=exe"></a>
+          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash_${{ env.VERSION }}_x64-setup.exe"><img src="https://badgen.net/badge/icon/x64?icon=windows&label=exe"></a><br>
+          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash_${{ env.VERSION }}_arm64-setup.exe"><img src="https://badgen.net/badge/icon/arm64?icon=windows&label=exe"></a>
           #### Portable version is no longer available with many problems
           #### Built-in Webview version 2 (large size, only used in enterprise version of the system or can not install webview2)
-          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash_x64_fixed_webview2-setup.exe"><img src="https://badgen.net/badge/icon/x64?icon=windows&label=exe"></a><br>
-          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash_arm64_fixed_webview2-setup.exe"><img src="https://badgen.net/badge/icon/arm64?icon=windows&label=exe"></a>
+          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash_${{ env.VERSION }}_x64_fixed_webview2-setup.exe"><img src="https://badgen.net/badge/icon/x64?icon=windows&label=exe"></a><br>
+          <a href="https://github.com/ckeiituk/clash-verge-rev-lite/releases/download/v${{ env.VERSION }}/OutClash_${{ env.VERSION }}_arm64_fixed_webview2-setup.exe"><img src="https://badgen.net/badge/icon/arm64?icon=windows&label=exe"></a>
 
           Created at ${{ env.BUILDTIME }}.
           EOF
@@ -232,39 +232,11 @@ jobs:
           tauriScript: pnpm
           args: --target ${{ matrix.target }}
 
-      - name: Rename Artifact (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $files = Get-ChildItem ".\src-tauri\target\${{ matrix.target }}\release\bundle\nsis\*-setup.exe"
-          foreach ($file in $files) {
-            $newName = $file.Name -replace "_$env:VERSION_", "_" 
-            Rename-Item $file.FullName $newName
-          }
+      # Keep original artifact filenames (include version) to match release links
+      # Removed Windows artifact renaming to avoid mismatched links
 
-      - name: Rename Artifact (Linux/macOS)
-        if: runner.os == 'Linux' || runner.os == 'macOS'
-        shell: bash
-        run: |
-          TARGET_DIR="src-tauri/target/${{ matrix.target }}/release/bundle"
-
-          if [ ! -d "$TARGET_DIR" ]; then
-              exit 1
-          fi
-
-          find "$TARGET_DIR" -type f \( -name "*.dmg" -o -name "*.deb" -o -name "*.rpm" \) -print0 | while IFS= read -r -d '' old_path; do
-              dir_path=$(dirname "$old_path")
-              old_filename=$(basename "$old_path")
-              new_filename=$(echo "$old_filename" \
-                  | sed -E 's/_[0-9]+\.[0-9]+\.[0-9]+_/_/' \
-                  | sed -E 's/-[0-9]+\.[0-9]+\.[0-9]+-[0-9]+//' \
-              )
-              new_path="${dir_path}/${new_filename}"
-              if [ "$old_path" != "$new_path" ]; then
-                  echo "   - '$old_filename' -> '$new_filename'"
-                  mv "$old_path" "$new_path"
-              fi
-          done
+      # Keep original artifact filenames (include version) on Linux/macOS
+      # Removed Linux/macOS renaming to avoid mismatched links
 
       - name: Upload Release
         uses: softprops/action-gh-release@v2
@@ -514,19 +486,19 @@ jobs:
         run: |
           $files = Get-ChildItem ".\src-tauri\target\${{ matrix.target }}\release\bundle\nsis\*-setup.exe"
           foreach ($file in $files) {
-            $newName = $file.Name -replace "_$env:VERSION_", "_" -replace "-setup\.exe$", "_fixed_webview2-setup.exe"
+            $newName = $file.Name -replace "-setup\.exe$", "_fixed_webview2-setup.exe"
             Rename-Item $file.FullName $newName
           }
 
           $files = Get-ChildItem ".\src-tauri\target\${{ matrix.target }}\release\bundle\nsis\*.nsis.zip"
           foreach ($file in $files) {
-            $newName = $file.Name -replace "_$env:VERSION_", "_" -replace "-setup\.nsis\.zip$", "_fixed_webview2-setup.nsis.zip"
+            $newName = $file.Name -replace "-setup\.nsis\.zip$", "_fixed_webview2-setup.nsis.zip"
             Rename-Item $file.FullName $newName
           }
 
           $files = Get-ChildItem ".\src-tauri\target\${{ matrix.target }}\release\bundle\nsis\*-setup.exe.sig"
           foreach ($file in $files) {
-            $newName = $file.Name -replace "_$env:VERSION_", "_" -replace "-setup\.exe\.sig$", "_fixed_webview2-setup.exe.sig"
+            $newName = $file.Name -replace "-setup\.exe\.sig$", "_fixed_webview2-setup.exe.sig"
             Rename-Item $file.FullName $newName
           }
 
