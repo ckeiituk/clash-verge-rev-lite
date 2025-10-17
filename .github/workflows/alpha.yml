@@ -297,7 +297,15 @@ jobs:
         if: matrix.os == 'ubuntu-22.04'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libxslt1.1 libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
+          sudo apt-get install -y \
+            build-essential \
+            pkg-config \
+            libc6-dev \
+            libxslt1.1 \
+            libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            patchelf
 
       - name: Install Node
         uses: actions/setup-node@v4
@@ -313,6 +321,12 @@ jobs:
         run: |
           pnpm i
           pnpm run prebuild ${{ matrix.target }}
+
+      - name: Sync version files (Cargo.toml, tauri.conf.json)
+        run: pnpm sync-version
+
+      - name: Verify version files
+        run: pnpm verify-version
 
       # - name: Release ${{ env.TAG_CHANNEL }} Version
       #   run: pnpm release-version ${{ env.TAG_NAME }}
@@ -383,6 +397,14 @@ jobs:
         run: |
           pnpm i
           pnpm run prebuild ${{ matrix.target }}
+
+      - name: Sync version files (Cargo.toml, tauri.conf.json)
+        run: pnpm sync-version
+
+      - name: Verify version files
+        run: pnpm verify-version
+      - name: Sync version files (Cargo.toml, tauri.conf.json)
+        run: pnpm sync-version
 
       # - name: Release ${{ env.TAG_CHANNEL }} Version
       #   run: pnpm release-version ${{ env.TAG_NAME }}

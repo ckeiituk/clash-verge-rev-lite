@@ -1,11 +1,11 @@
 {
   "name": "outclash",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "license": "GPL-3.0-only",
   "scripts": {
     "dev": "cross-env RUST_BACKTRACE=1 tauri dev -f verge-dev",
     "dev:diff": "cross-env RUST_BACKTRACE=1 tauri dev -f verge-dev",
-    "build": "cross-env NODE_OPTIONS='--max-old-space-size=4096' tauri build",
+    "build": "pnpm sync-version && cross-env NODE_OPTIONS='--max-old-space-size=4096' tauri build",
     "build:fast": "cross-env NODE_OPTIONS='--max-old-space-size=4096' tauri build -- --profile fast-release",
     "tauri": "tauri",
     "web:dev": "vite",
@@ -19,6 +19,8 @@
     "fix-alpha-version": "node scripts/fix-alpha_version.mjs",
     "release-version": "node scripts/release-version.mjs",
     "publish-version": "node scripts/publish-version.mjs",
+    "sync-version": "node scripts/sync-version.mjs",
+    "verify-version": "node scripts/verify-version.mjs",
     "fmt": "cargo fmt --manifest-path ./src-tauri/Cargo.toml",
     "clippy": "cargo clippy  --manifest-path ./src-tauri/Cargo.toml",
     "format": "prettier --write .",

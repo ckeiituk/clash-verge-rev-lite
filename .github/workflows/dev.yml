@@ -62,6 +62,12 @@ jobs:
           pnpm i
           pnpm run prebuild ${{ matrix.target }}
 
+      - name: Sync version files (Cargo.toml, tauri.conf.json)
+        run: pnpm sync-version
+
+      - name: Verify version files
+        run: pnpm verify-version
+
       - name: Tauri build
         uses: tauri-apps/tauri-action@v0
         env:
