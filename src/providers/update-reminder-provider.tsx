@@ -49,9 +49,15 @@ const computeSnippet = (body?: string | null): string | undefined => {
   return `${singleLine.slice(0, maxLength - 1)}…`;
 };
 
-const isDebugEnabled =
-  import.meta.env.DEV &&
-  (import.meta.env.VITE_UPDATE_REMINDER_DEBUG ?? "true").toLowerCase() !== "false";
+const DEBUG_FORCE =
+  (import.meta.env.VITE_UPDATE_REMINDER_DEBUG_FORCE ?? "false")
+    .toString()
+    .toLowerCase() === "true";
+const DEBUG_FLAG =
+  (import.meta.env.VITE_UPDATE_REMINDER_DEBUG ?? "true")
+    .toString()
+    .toLowerCase() !== "false";
+const isDebugEnabled = (import.meta.env.DEV && DEBUG_FLAG) || DEBUG_FORCE;
 
 const MIN_RESCHEDULE_DELAY = 5 * 1000;
 const LOCAL_FILE_REFRESH_INTERVAL_MS = 15 * 1000;

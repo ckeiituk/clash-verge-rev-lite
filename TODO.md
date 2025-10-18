@@ -59,7 +59,7 @@
 
 ### Как тестировать (шпаргалка)
 
-- Dev‑сборка (быстрый ручной триггер):
+- Dev‑сборка (быстрый ручной триггер) или форс‑панель в релизе:
   - `pnpm web:dev` (только UI) или `pnpm dev` (полный стек с Tauri).
   - Открой DevTools (F12) и используй глобальные хелперы:
     - `window.__OUTCLASH_UPDATE_REMINDER__.trigger({ version: "v9.9.9", body: "- Added X\n- Fixed Y", titleText: "Internal Test" })`
@@ -103,5 +103,5 @@
 
 - Релизная проверка:
   - `pnpm build` и запусти бинарник из `src-tauri/target/release`.
-  - В релизе нет dev‑панели и триггеров через консоль; для теста используй `UPDATE.txt` и/или флаги окружения.
+  - По умолчанию в релизе dev‑панель выключена; при необходимости можно принудительно включить панель и хелперы: `VITE_UPDATE_REMINDER_DEBUG_FORCE=true pnpm build`.
   - Сбросить состояние: в консоли (`F12`) выполнить `localStorage.removeItem('outclash:updateReminder')`.
