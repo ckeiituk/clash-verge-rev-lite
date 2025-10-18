@@ -7,6 +7,7 @@ import { UserAttentionType } from "@tauri-apps/api/window";
 import { invoke } from "@tauri-apps/api/core";
 import { UpdateReminderCard } from "@/components/update/update-reminder-card";
 import { UpdateReminderToast } from "@/components/update/update-reminder-toast";
+import { UpdateReminderDebugPanel } from "@/components/update/update-reminder-debug-panel";
 import { useVerge } from "@/hooks/use-verge";
 import { useUpdateState } from "@/services/states";
 import {
@@ -490,85 +491,33 @@ export const UpdateReminderProvider = ({ children }: PropsWithChildren) => {
   ]);
 
   const debugPanel = isDebugEnabled ? (
-    <div className="pointer-events-auto fixed bottom-4 left-4 z-40 hidden flex-col gap-2 rounded-md border bg-background/90 p-3 text-xs shadow-lg backdrop-blur md:flex">
-      <span className="font-semibold">Update Reminder Debug</span>
-      {FILE_SOURCE_ENABLED && (
-        <span className="text-muted-foreground">
-          Local feed: {localUpdate ? localUpdate.version : "not available"}
-        </span>
-      )}
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          className="rounded border px-2 py-1"
-          onClick={() =>
-            setMockReminder({
-              version: `v${new Date().toISOString().slice(11, 19)}`,
-              body: "• Feature: Example change\n• Fix: Example fix",
-              titleText: "Dev Mock Update",
-              isMock: true,
-              source: "debug",
-            })
-          }
-        >
-          Mock Update
-        </button>
-        <button
-          type="button"
-          className="rounded border px-2 py-1"
-          onClick={() => setMockReminder(null)}
-        >
-          Clear Mock
-        </button>
-        <button
-          type="button"
-          className="rounded border px-2 py-1"
-          onClick={() =>
-            setPreferredStyle(state.preferredStyle === "card" ? "toast" : "card")
-          }
-        >
-          Style: {state.preferredStyle}
-        </button>
-        <button
-          type="button"
-          className="rounded border px-2 py-1"
-          onClick={() => setPauseWhileFullscreen(!state.pauseWhileFullscreen)}
-        >
-          Fullscreen: {state.pauseWhileFullscreen ? "on" : "off"}
-        </button>
-        <button
-          type="button"
-          className="rounded border px-2 py-1"
-          onClick={() => setManualPauseUntil(Date.now() + 60 * 60 * 1000)}
-        >
-          Pause 1h
-        </button>
-        <button
-          type="button"
-          className="rounded border px-2 py-1"
-          onClick={() => setManualPauseUntil(0)}
-        >
-          Resume
-        </button>
-        <button
-          type="button"
-          className="rounded border px-2 py-1"
-          onClick={() => {
-            resetState();
-            setMockReminder(null);
-          }}
-        >
-          Reset State
-        </button>
-        <button
-          type="button"
-          className="rounded border px-2 py-1"
-          onClick={() => evaluateReminder()}
-        >
-          Re-evaluate
-        </button>
-      </div>
-    </div>
+    <UpdateReminderDebugPanel
+      fileSourceEnabled={FILE_SOURCE_ENABLED}
+      localFeedVersion={localUpdate?.version}
+      onMockUpdate={() =>
+        setMockReminder({
+          version: `v${new Date().toISOString().slice(11, 19)}`,
+          body: "• Feature: Example change\n• Fix: Example fix",
+          titleText: "Dev Mock Update",
+          isMock: true,
+          source: "debug",
+        })
+      }
+      onClearMock={() => setMockReminder(null)}
+      onToggleStyle={() =>
+        setPreferredStyle(state.preferredStyle === "card" ? "toast" : "card")
+      }
+      preferredStyle={state.preferredStyle}
+      onToggleFullscreenGuard={() => setPauseWhileFullscreen(!state.pauseWhileFullscreen)}
+      pauseWhileFullscreen={state.pauseWhileFullscreen}
+      onPauseHour={() => setManualPauseUntil(Date.now() + 60 * 60 * 1000)}
+      onResume={() => setManualPauseUntil(0)}
+      onReset={() => {
+        resetState();
+        setMockReminder(null);
+      }}
+      onReevaluate={evaluateReminder}
+    />
   ) : null;
 
   const changelogSnippet = useMemo(

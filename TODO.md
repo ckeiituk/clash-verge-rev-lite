@@ -72,7 +72,7 @@
 - Локальный UPDATE.txt (без GitHub релизов):
   - Запусти с флагом: `VITE_UPDATE_REMINDER_FILE_SOURCE=true pnpm dev` (или для релиза — `pnpm build` с тем же флагом).
   - Помести файл `UPDATE.txt` в каталог конфигурации Tauri:
-    - Windows: `%APPDATA%/io.github.outclash/UPDATE.txt`
+    - Windows: `%APPDATA%/io.github.outclash/UPDATE.txt`ыва
     - macOS: `~/Library/Application Support/io.github.outclash/UPDATE.txt`
     - Linux: `~/.config/io.github.outclash/UPDATE.txt`
   - Пример содержимого:
@@ -150,3 +150,18 @@
   4) в `src-tauri/` удалить команду `detect_foreground_fullscreen` и её регистрацию (Windows‑специфичное);
   5) в `src/components/layout/update-button.tsx` можно вернуть прямой вызов модала без события `outclash:open-update-viewer`;
   6) пересобрать и проверить `pnpm tsc --noEmit` / `pnpm web:build`.
+
+
+ В PowerShell так “инлайн” переменные не задаются. Используй один из вариантов:
+
+  PowerShell (рекомендуется)
+
+  - Однострочно:
+      - $env:VITE_UPDATE_REMINDER_DEBUG_FORCE='true'; pnpm build
+  - С несколькими флагами:
+      - $env:VITE_UPDATE_REMINDER_DEBUG_FORCE='true';
+  $env:VITE_UPDATE_REMINDER_BACKGROUND='attention'; $env:VITE_UPDATE_REMINDER_FILE_SOURCE='true';
+  pnpm build
+  - Проверить/сбросить:
+      - gci env:VITE_UPDATE_REMINDER_DEBUG_FORCE
+      - Remove-Item Env:VITE_UPDATE_REMINDER_DEBUG_FORCE
