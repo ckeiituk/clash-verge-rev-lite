@@ -14,6 +14,7 @@ import { cn } from "@root/lib/utils";
 interface UpdateReminderToastProps {
   version: string;
   changelog?: string;
+  titleText?: string;
   onDetails: () => void;
   onSnooze: (durationMs: number) => void;
   onSkip: () => void;
@@ -27,6 +28,7 @@ export const UpdateReminderToast = (props: UpdateReminderToastProps) => {
   const {
     version,
     changelog,
+    titleText,
     onDetails,
     onSnooze,
     onSkip,
@@ -64,7 +66,7 @@ export const UpdateReminderToast = (props: UpdateReminderToastProps) => {
           <div className="flex items-start justify-between gap-2">
             <div>
               <p className="text-sm font-semibold">
-                {t("updateReminder.title", { version })}
+                {titleText ?? t("updateReminder.title", { version })}
               </p>
               {changelog && (
                 <p className="text-xs text-muted-foreground" data-testid="update-reminder-toast-changelog">

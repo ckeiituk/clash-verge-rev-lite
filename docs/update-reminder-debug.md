@@ -18,3 +18,19 @@ Background behavior (release and dev)
 Set the build-time env var:
 - Dev: `VITE_UPDATE_REMINDER_BACKGROUND=os|attention|none pnpm dev`
 - Build: `VITE_UPDATE_REMINDER_BACKGROUND=attention pnpm build`
+
+Local update feed (testing only)
+- Enable with `VITE_UPDATE_REMINDER_FILE_SOURCE=true`.
+- Place `UPDATE.txt` in the Tauri config directory (e.g. `%APPDATA%/io.github.outclash/UPDATE.txt` on Windows, `~/Library/Application Support/io.github.outclash/UPDATE.txt` on macOS, `~/.config/io.github.outclash/UPDATE.txt` on Linux).
+- Example:
+
+```
+version=0.9.99-test
+title=Internal Test Build
+staleness=hours:1
+body=• Feature: Try the new banner
+body=• Fix: Background attention mode
+```
+
+- When present, the file overrides the network updater, shows the banner immediately after the usual first-delay window, and re-prompts using `staleness` (defaults to 24h if omitted).
+- Dev helpers expose `setFullscreenGuard`, `pauseFor(ms)`, and `resume()` for quick manual testing.

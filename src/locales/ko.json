@@ -419,5 +419,22 @@
       "title": "Update available ({{version}})",
       "body": "Open OutClash to review and install the update."
     }
+  },
+  "updateReminderSettings": {
+    "fullscreenToggle": "Pause reminders during fullscreen apps",
+    "pauseLabel": "Pause reminders",
+    "pauseMenu": "Pause for...",
+    "resumesIn": "Resumes in {{duration}}",
+    "active": "Active",
+    "resumeNow": "Resume now",
+    "pause": {
+      "30m": "30 minutes",
+      "1h": "1 hour",
+      "4h": "4 hours",
+      "1d": "1 day"
+    },
+    "hours": "{{count}}h",
+    "minutes": "{{count}}m",
+    "seconds": "{{count}}s"
   }
 }

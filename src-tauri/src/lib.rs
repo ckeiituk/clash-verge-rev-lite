@@ -278,6 +278,7 @@ pub fn run() {
             cmd::get_app_uptime,
             cmd::get_auto_launch_status,
             cmd::is_admin,
+            cmd::detect_foreground_fullscreen,
             // 添加轻量模式相关命令
             cmd::entry_lightweight_mode,
             cmd::exit_lightweight_mode,

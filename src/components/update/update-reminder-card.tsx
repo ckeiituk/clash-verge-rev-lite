@@ -13,6 +13,7 @@ import { cn } from "@root/lib/utils";
 export interface UpdateReminderCardProps {
   version: string;
   changelog?: string;
+  titleText?: string;
   onDetails: () => void;
   onSnooze: (durationMs: number) => void;
   onSkip: () => void;
@@ -22,7 +23,7 @@ export interface UpdateReminderCardProps {
 
 export const UpdateReminderCard = (props: UpdateReminderCardProps) => {
   const { t } = useTranslation();
-  const { version, changelog, onDetails, onSnooze, onSkip, onClose, snoozeOptions } = props;
+  const { version, changelog, titleText, onDetails, onSnooze, onSkip, onClose, snoozeOptions } = props;
 
   const handleSnooze = (durationMs: number) => {
     onSnooze(durationMs);
@@ -47,7 +48,7 @@ export const UpdateReminderCard = (props: UpdateReminderCardProps) => {
             <div className="flex items-start justify-between gap-2">
               <div>
                 <p className="text-sm font-semibold">
-                  {t("updateReminder.title", { version })}
+                  {titleText ?? t("updateReminder.title", { version })}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {t("updateReminder.subtitle")}

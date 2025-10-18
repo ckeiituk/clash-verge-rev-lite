@@ -92,3 +92,69 @@ pub fn is_admin() -> CmdResult<bool> {
         Ok(false)
     }
 }
+
+#[tauri::command]
+pub async fn detect_foreground_fullscreen() -> CmdResult<bool> {
+    Ok(detect_foreground_fullscreen_impl())
+}
+
+fn detect_foreground_fullscreen_impl() -> bool {
+    #[cfg(target_os = "windows")]
+    {
+        use std::mem::MaybeUninit;
+        use winapi::shared::windef::RECT;
+        use winapi::um::winuser::{
+            GetForegroundWindow, GetMonitorInfoW, GetWindowRect, MonitorFromWindow, MONITORINFO,
+            MONITOR_DEFAULTTONEAREST,
+        };
+
+        unsafe {
+            let hwnd = GetForegroundWindow();
+            if hwnd.is_null() {
+                return false;
+            }
+
+            let mut window_rect = MaybeUninit::<RECT>::uninit();
+            if GetWindowRect(hwnd, window_rect.as_mut_ptr()) == 0 {
+                return false;
+            }
+            let window_rect = window_rect.assume_init();
+
+            let monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+            if monitor.is_null() {
+                return false;
+            }
+
+            let mut monitor_info = MaybeUninit::<MONITORINFO>::uninit();
+            let monitor_info_ptr = monitor_info.as_mut_ptr();
+            (*monitor_info_ptr).cbSize = std::mem::size_of::<MONITORINFO>() as u32;
+            if GetMonitorInfoW(monitor, monitor_info_ptr) == 0 {
+                return false;
+            }
+            let monitor_info = monitor_info.assume_init();
+
+            let window_width = window_rect.right - window_rect.left;
+            let window_height = window_rect.bottom - window_rect.top;
+            let monitor_width = monitor_info.rcMonitor.right - monitor_info.rcMonitor.left;
+            let monitor_height = monitor_info.rcMonitor.bottom - monitor_info.rcMonitor.top;
+
+            if window_width <= 0 || window_height <= 0 {
+                return false;
+            }
+
+            let tolerance = 4;
+            (window_width - monitor_width).abs() <= tolerance
+                && (window_height - monitor_height).abs() <= tolerance
+        }
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        false
+    }
+
+    #[cfg(all(not(target_os = "windows"), not(target_os = "macos")))]
+    {
+        false
+    }
+}

@@ -16,6 +16,8 @@ const updateReminderSchema = z.object({
   lastShownAtByVersion: z.record(z.number()).default({}),
   lastNotificationAtByVersion: z.record(z.number()).default({}),
   preferredStyle: z.enum(["card", "toast"]).default("card"),
+  pauseWhileFullscreen: z.boolean().default(true),
+  manualPauseUntil: z.number().default(0),
 });
 
 export type UpdateReminderState = z.infer<typeof updateReminderSchema>;
@@ -26,6 +28,8 @@ const defaultState: UpdateReminderState = {
   lastShownAtByVersion: {},
   lastNotificationAtByVersion: {},
   preferredStyle: "card",
+  pauseWhileFullscreen: true,
+  manualPauseUntil: 0,
 };
 
 const safeParseState = (raw: string | null): UpdateReminderState => {
@@ -138,6 +142,20 @@ export const useUpdateReminderState = () => {
     }));
   }, []);
 
+  const setPauseWhileFullscreen = useCallback((value: boolean) => {
+    setState((prev) => ({
+      ...prev,
+      pauseWhileFullscreen: value,
+    }));
+  }, []);
+
+  const setManualPauseUntil = useCallback((timestamp: number) => {
+    setState((prev) => ({
+      ...prev,
+      manualPauseUntil: timestamp,
+    }));
+  }, []);
+
   const resetState = useCallback(() => {
     setState(defaultState);
   }, []);
@@ -151,6 +169,8 @@ export const useUpdateReminderState = () => {
       markShown,
       markNotified,
       setPreferredStyle,
+      setPauseWhileFullscreen,
+      setManualPauseUntil,
       resetState,
     }),
     [
@@ -160,6 +180,8 @@ export const useUpdateReminderState = () => {
       markShown,
       markNotified,
       setPreferredStyle,
+      setPauseWhileFullscreen,
+      setManualPauseUntil,
       resetState,
     ],
   );

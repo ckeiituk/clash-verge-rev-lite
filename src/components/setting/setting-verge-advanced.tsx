@@ -18,6 +18,14 @@ import { showNotice } from "@/services/noticeService";
 import { DialogRef } from "@/components/base";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { Button } from "@/components/ui/button";
+import { Switch as ToggleSwitch } from "@/components/ui/switch";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useUpdateReminderState } from "@/services/update-reminder-state";
 
 // --- НАЧАЛО ИЗМЕНЕНИЙ 1: Импортируем все нужные иконки ---
 import {
@@ -34,6 +42,8 @@ import {
   Feather,
   LogOut,
   ClipboardList,
+  Gamepad2,
+  Clock3,
 } from "lucide-react";
 
 // Модальные окна
@@ -77,6 +87,11 @@ const SettingRow = ({
 
 const SettingVergeAdvanced = ({ onError }: Props) => {
   const { t } = useTranslation();
+  const {
+    state: reminderState,
+    setPauseWhileFullscreen,
+    setManualPauseUntil,
+  } = useUpdateReminderState();
 
   const configRef = useRef<DialogRef>(null);
   const hotkeyRef = useRef<DialogRef>(null);
@@ -104,6 +119,30 @@ const SettingVergeAdvanced = ({ onError }: Props) => {
     await exportDiagnosticInfo();
     showNotice("success", t("Copy Success"), 1000);
   }, []);
+
+  const manualPauseRemaining = Math.max(reminderState.manualPauseUntil - Date.now(), 0);
+
+  const formatDuration = (milliseconds: number) => {
+    if (milliseconds <= 0) return t("updateReminderSettings.active");
+    const totalSeconds = Math.round(milliseconds / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    const parts: string[] = [];
+    if (hours > 0) parts.push(t("updateReminderSettings.hours", { count: hours }));
+    if (minutes > 0) parts.push(t("updateReminderSettings.minutes", { count: minutes }));
+    if (parts.length === 0 && seconds > 0) {
+      parts.push(t("updateReminderSettings.seconds", { count: seconds }));
+    }
+    return parts.join(" ");
+  };
+
+  const pauseOptions = [
+    { label: t("updateReminderSettings.pause.30m"), duration: 30 * 60 * 1000 },
+    { label: t("updateReminderSettings.pause.1h"), duration: 60 * 60 * 1000 },
+    { label: t("updateReminderSettings.pause.4h"), duration: 4 * 60 * 60 * 1000 },
+    { label: t("updateReminderSettings.pause.1d"), duration: 24 * 60 * 60 * 1000 },
+  ];
 
   // Вспомогательная функция для создания лейбла с иконкой
   const LabelWithIcon = ({
@@ -166,6 +205,73 @@ const SettingVergeAdvanced = ({ onError }: Props) => {
             <LabelWithIcon icon={RefreshCw} text={t("Check for Updates")} />
           }
         />
+        <SettingRow
+          label={
+            <LabelWithIcon
+              icon={Gamepad2}
+              text={t("updateReminderSettings.fullscreenToggle")}
+            />
+          }
+        >
+          <ToggleSwitch
+            checked={reminderState.pauseWhileFullscreen}
+            onCheckedChange={(checked) => setPauseWhileFullscreen(checked)}
+          />
+        </SettingRow>
+        <SettingRow
+          label={
+            <LabelWithIcon
+              icon={Clock3}
+              text={t("updateReminderSettings.pauseLabel")}
+            />
+          }
+          extra={
+            manualPauseRemaining > 0 ? (
+              <span className="text-xs text-muted-foreground">
+                {t("updateReminderSettings.resumesIn", {
+                  duration: formatDuration(manualPauseRemaining),
+                })}
+              </span>
+            ) : (
+              <span className="text-xs text-muted-foreground">
+                {t("updateReminderSettings.active")}
+              </span>
+            )
+          }
+        >
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                {manualPauseRemaining > 0
+                  ? t("updateReminderSettings.resumeNow")
+                  : t("updateReminderSettings.pauseMenu")}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {pauseOptions.map((option) => (
+                <DropdownMenuItem
+                  key={option.duration}
+                  onSelect={(event) => {
+                    event.preventDefault();
+                    setManualPauseUntil(Date.now() + option.duration);
+                  }}
+                >
+                  {option.label}
+                </DropdownMenuItem>
+              ))}
+              {manualPauseRemaining > 0 && (
+                <DropdownMenuItem
+                  onSelect={(event) => {
+                    event.preventDefault();
+                    setManualPauseUntil(0);
+                  }}
+                >
+                  {t("updateReminderSettings.resumeNow")}
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </SettingRow>
         <SettingRow
           onClick={openDevTools}
           label={<LabelWithIcon icon={Terminal} text={t("Open Dev Tools")} />}

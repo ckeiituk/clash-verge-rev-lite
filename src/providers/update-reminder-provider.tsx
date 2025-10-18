@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { sendNotification, isPermissionGranted, requestPermission } from "@tauri-apps/plugin-notification";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { UserAttentionType } from "@tauri-apps/api/window";
+import { invoke } from "@tauri-apps/api/core";
 import { UpdateReminderCard } from "@/components/update/update-reminder-card";
 import { UpdateReminderToast } from "@/components/update/update-reminder-toast";
 import { useVerge } from "@/hooks/use-verge";
@@ -22,13 +23,19 @@ import {
 import {
   ensureUpdateInfo,
   getIsTauriEnv,
+  isFileSourceEnabled,
+  loadLocalUpdateInfo,
   safeCheckForUpdate,
 } from "@/services/update-check";
 
 interface ReminderData {
   version: string;
   body?: string | null;
+  titleText?: string;
   isMock?: boolean;
+  intervalOverrideMs?: number;
+  source: "plugin" | "file" | "debug";
+  revision?: number;
 }
 
 const computeSnippet = (body?: string | null): string | undefined => {
@@ -47,12 +54,22 @@ const isDebugEnabled =
   (import.meta.env.VITE_UPDATE_REMINDER_DEBUG ?? "true").toLowerCase() !== "false";
 
 const MIN_RESCHEDULE_DELAY = 5 * 1000;
+const LOCAL_FILE_REFRESH_INTERVAL_MS = 15 * 1000;
 
 type BackgroundBehavior = "os" | "attention" | "none";
 const BACKGROUND_BEHAVIOR: BackgroundBehavior = (() => {
   const v = (import.meta.env.VITE_UPDATE_REMINDER_BACKGROUND as string | undefined)?.toLowerCase();
   return v === "attention" || v === "none" ? (v as BackgroundBehavior) : "os";
 })();
+
+const FILE_SOURCE_ENABLED = isFileSourceEnabled();
+
+const getDetectionKey = (reminder: ReminderData): string => {
+  if (typeof reminder.revision === "number") {
+    return `${reminder.version}:${reminder.revision}`;
+  }
+  return reminder.version;
+};
 
 const getIsWindowActive = (): boolean => {
   if (typeof document === "undefined") return true;
@@ -62,7 +79,17 @@ const getIsWindowActive = (): boolean => {
 };
 
 export const UpdateReminderProvider = ({ children }: PropsWithChildren) => {
-  const { state, dismissVersion, snoozeVersion, markShown, markNotified, setPreferredStyle, resetState } =
+  const {
+    state,
+    dismissVersion,
+    snoozeVersion,
+    markShown,
+    markNotified,
+    setPreferredStyle,
+    setPauseWhileFullscreen,
+    setManualPauseUntil,
+    resetState,
+  } =
     useUpdateReminderState();
   const { verge } = useVerge();
   const updateInProgress = useUpdateState();
@@ -84,28 +111,53 @@ export const UpdateReminderProvider = ({ children }: PropsWithChildren) => {
   const rawUpdateInfo = updateResult ?? null;
   const updateInfo = ensureUpdateInfo(rawUpdateInfo) ? rawUpdateInfo : null;
 
+  const { data: localUpdate } = useSWR(
+    FILE_SOURCE_ENABLED && getIsTauriEnv() ? "localUpdateFile" : null,
+    loadLocalUpdateInfo,
+    {
+      refreshInterval: LOCAL_FILE_REFRESH_INTERVAL_MS,
+      focusThrottleInterval: 5000,
+      revalidateOnFocus: true,
+    },
+  );
+
   const [mockReminder, setMockReminder] = useState<ReminderData | null>(null);
 
   const reminderData: ReminderData | null = useMemo(() => {
     if (mockReminder) return mockReminder;
-    if (!updateInfo) return null;
-    return {
-      version: updateInfo.version,
-      body: updateInfo.body,
-    };
-  }, [mockReminder, updateInfo]);
+    if (FILE_SOURCE_ENABLED && localUpdate) {
+      return {
+        version: localUpdate.version,
+        body: localUpdate.body,
+        titleText: localUpdate.title,
+        isMock: true,
+        intervalOverrideMs: localUpdate.stalenessMs,
+        source: "file",
+        revision: localUpdate.lastModified,
+      };
+    }
+    if (updateInfo) {
+      return {
+        version: updateInfo.version,
+        body: updateInfo.body,
+        source: "plugin",
+      };
+    }
+    return null;
+  }, [mockReminder, localUpdate, updateInfo]);
 
-  const [detectedAtByVersion, setDetectedAtByVersion] = useState<Record<string, number>>({});
+  const [detectedAtByKey, setDetectedAtByKey] = useState<Record<string, number>>({});
   useEffect(() => {
-    if (!reminderData?.version) {
-      setDetectedAtByVersion({});
+    if (!reminderData) {
+      setDetectedAtByKey({});
       return;
     }
-    setDetectedAtByVersion((prev) => {
-      if (prev[reminderData.version]) return prev;
-      return { ...prev, [reminderData.version]: Date.now() };
+    const key = getDetectionKey(reminderData);
+    setDetectedAtByKey((prev) => {
+      if (prev[key]) return prev;
+      return { ...prev, [key]: Date.now() };
     });
-  }, [reminderData?.version]);
+  }, [reminderData]);
 
   const [isWindowActive, setIsWindowActive] = useState(getIsWindowActive);
   useEffect(() => {
@@ -155,6 +207,50 @@ export const UpdateReminderProvider = ({ children }: PropsWithChildren) => {
     };
   }, [notificationPermissionGranted]);
 
+  const [isFullscreenBusy, setIsFullscreenBusy] = useState(false);
+  useEffect(() => {
+    if (!getIsTauriEnv() || !state.pauseWhileFullscreen) {
+      setIsFullscreenBusy(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    const poll = async () => {
+      try {
+        const value = await invoke<boolean>("detect_foreground_fullscreen");
+        if (!cancelled) {
+          setIsFullscreenBusy(Boolean(value));
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.warn("[update-reminder] detect_foreground_fullscreen failed", error);
+          setIsFullscreenBusy(false);
+        }
+      }
+    };
+
+    poll();
+    const handle = window.setInterval(poll, 5000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(handle);
+    };
+  }, [state.pauseWhileFullscreen]);
+
+  useEffect(() => {
+    if (state.manualPauseUntil <= 0) return;
+    const now = Date.now();
+    if (state.manualPauseUntil <= now) {
+      setManualPauseUntil(0);
+      return;
+    }
+    const handle = window.setTimeout(() => {
+      setManualPauseUntil(0);
+    }, state.manualPauseUntil - now);
+    return () => window.clearTimeout(handle);
+  }, [setManualPauseUntil, state.manualPauseUntil]);
+
   const [isVisible, setIsVisible] = useState(false);
   const [activeVersion, setActiveVersion] = useState<string | null>(null);
   const reminderTimeoutRef = useRef<number | null>(null);
@@ -188,11 +284,14 @@ export const UpdateReminderProvider = ({ children }: PropsWithChildren) => {
     }
 
     const { version } = reminderData;
+    const detectionKey = getDetectionKey(reminderData);
+    const intervalMs = reminderData.intervalOverrideMs ?? REMINDER_INTERVAL_MS;
     const now = Date.now();
     const snoozedUntil = getSnoozedUntil(version, state);
     const lastShownAt = getLastShownAt(version, state);
     const lastNotificationAt = getLastNotificationAt(version, state);
-    const detectedAt = detectedAtByVersion[version];
+    const detectedAt = detectedAtByKey[detectionKey];
+    const manualPauseActive = state.manualPauseUntil > now;
 
     if (isVersionDismissed(version, state)) {
       setIsVisible(false);
@@ -200,8 +299,21 @@ export const UpdateReminderProvider = ({ children }: PropsWithChildren) => {
       return;
     }
 
+    if (manualPauseActive) {
+      const remaining = Math.max(state.manualPauseUntil - now, MIN_RESCHEDULE_DELAY);
+      scheduleReminderCheck(remaining);
+      setIsVisible(false);
+      return;
+    }
+
+    if (state.pauseWhileFullscreen && isFullscreenBusy) {
+      scheduleReminderCheck(Math.max(intervalMs / 6, MIN_RESCHEDULE_DELAY * 6));
+      setIsVisible(false);
+      return;
+    }
+
     if (updateInProgress) {
-      scheduleReminderCheck(REMINDER_INTERVAL_MS);
+      scheduleReminderCheck(intervalMs);
       setIsVisible(false);
       return;
     }
@@ -219,17 +331,16 @@ export const UpdateReminderProvider = ({ children }: PropsWithChildren) => {
     }
 
     const timeSinceDetected = now - detectedAt;
-    const timeSinceShown = lastShownAt ? now - lastShownAt : null;
+    const timeSinceShown = typeof lastShownAt === "number" ? now - lastShownAt : null;
 
     const meetsCadence =
       (lastShownAt === undefined || lastShownAt === null) &&
       timeSinceDetected >= FIRST_REMINDER_DELAY_MS;
 
-    const meetsInterval =
-      typeof timeSinceShown === "number" && timeSinceShown >= REMINDER_INTERVAL_MS;
+    const meetsInterval = typeof timeSinceShown === "number" && timeSinceShown >= intervalMs;
 
     if (!isWindowActive) {
-      if (getIsTauriEnv() && (!lastNotificationAt || now - lastNotificationAt >= REMINDER_INTERVAL_MS)) {
+      if (getIsTauriEnv() && (!lastNotificationAt || now - lastNotificationAt >= intervalMs)) {
         try {
           if (BACKGROUND_BEHAVIOR === "os" && notificationPermissionGranted) {
             sendNotification({
@@ -258,9 +369,9 @@ export const UpdateReminderProvider = ({ children }: PropsWithChildren) => {
           return Math.max(FIRST_REMINDER_DELAY_MS - timeSinceDetected, MIN_RESCHEDULE_DELAY);
         }
         if (timeSinceShown !== null) {
-          return Math.max(REMINDER_INTERVAL_MS - timeSinceShown, MIN_RESCHEDULE_DELAY);
+          return Math.max(intervalMs - timeSinceShown, MIN_RESCHEDULE_DELAY);
         }
-        return REMINDER_INTERVAL_MS;
+        return intervalMs;
       })();
       scheduleReminderCheck(nextDelay);
       setIsVisible(false);
@@ -274,7 +385,7 @@ export const UpdateReminderProvider = ({ children }: PropsWithChildren) => {
     reminderData,
     state,
     updateInProgress,
-    detectedAtByVersion,
+    detectedAtByKey,
     isWindowActive,
     scheduleReminderCheck,
     markNotified,
@@ -296,16 +407,19 @@ export const UpdateReminderProvider = ({ children }: PropsWithChildren) => {
   );
 
   const handleDetails = useCallback(() => {
-    if (mockReminder?.isMock) {
-      console.info("[update-reminder] Mock update details requested");
+    if (reminderData?.isMock) {
+      console.info(
+        `[update-reminder] ${reminderData.source} update details requested`,
+      );
       setIsVisible(false);
-      scheduleReminderCheck(REMINDER_INTERVAL_MS);
+      scheduleReminderCheck(reminderData?.intervalOverrideMs ?? REMINDER_INTERVAL_MS);
       return;
     }
+    if (!reminderData) return;
     window.dispatchEvent(new CustomEvent("outclash:open-update-viewer"));
     setIsVisible(false);
-    scheduleReminderCheck(REMINDER_INTERVAL_MS);
-  }, [mockReminder?.isMock, scheduleReminderCheck]);
+    scheduleReminderCheck(reminderData?.intervalOverrideMs ?? REMINDER_INTERVAL_MS);
+  }, [mockReminder?.isMock, reminderData, scheduleReminderCheck]);
 
   const handleSnooze = useCallback(
     (durationMs: number) => {
@@ -318,15 +432,16 @@ export const UpdateReminderProvider = ({ children }: PropsWithChildren) => {
   );
 
   const handleSkip = useCallback(() => {
-    if (!reminderData?.version) return;
+    if (!reminderData || !reminderData.version) return;
     dismissVersion(reminderData.version);
     setIsVisible(false);
-  }, [dismissVersion, reminderData?.version]);
+    scheduleReminderCheck(reminderData.intervalOverrideMs ?? REMINDER_INTERVAL_MS);
+  }, [dismissVersion, reminderData, scheduleReminderCheck]);
 
   const handleClose = useCallback(() => {
     setIsVisible(false);
-    scheduleReminderCheck(REMINDER_INTERVAL_MS);
-  }, [scheduleReminderCheck]);
+    scheduleReminderCheck(reminderData?.intervalOverrideMs ?? REMINDER_INTERVAL_MS);
+  }, [reminderData?.intervalOverrideMs, scheduleReminderCheck]);
 
   useEffect(() => {
     if (!isVisible || !activeVersion) return;
@@ -336,13 +451,17 @@ export const UpdateReminderProvider = ({ children }: PropsWithChildren) => {
   useEffect(() => {
     if (!isDebugEnabled) return;
     const api = {
-      trigger: (payload: { version: string; body?: string }) =>
-        setMockReminder({ ...payload, isMock: true }),
+      trigger: (payload: { version: string; body?: string; titleText?: string }) =>
+        setMockReminder({ ...payload, isMock: true, source: "debug" }),
       clear: () => setMockReminder(null),
       setStyle: (style: UpdateReminderStyle) => setPreferredStyle(style),
       reset: () => resetState(),
       showNow: () => evaluateReminder(),
       getState: () => state,
+      setFullscreenGuard: (value: boolean) => setPauseWhileFullscreen(value),
+      pauseFor: (durationMs: number) =>
+        setManualPauseUntil(Date.now() + Math.max(durationMs, 0)),
+      resume: () => setManualPauseUntil(0),
     };
 
     const globalObject = window as Window & typeof globalThis & {
@@ -355,11 +474,23 @@ export const UpdateReminderProvider = ({ children }: PropsWithChildren) => {
         delete globalObject.__OUTCLASH_UPDATE_REMINDER__;
       }
     };
-  }, [evaluateReminder, resetState, setPreferredStyle, state]);
+  }, [
+    evaluateReminder,
+    resetState,
+    setPreferredStyle,
+    setPauseWhileFullscreen,
+    setManualPauseUntil,
+    state,
+  ]);
 
   const debugPanel = isDebugEnabled ? (
     <div className="pointer-events-auto fixed bottom-4 left-4 z-40 hidden flex-col gap-2 rounded-md border bg-background/90 p-3 text-xs shadow-lg backdrop-blur md:flex">
       <span className="font-semibold">Update Reminder Debug</span>
+      {FILE_SOURCE_ENABLED && (
+        <span className="text-muted-foreground">
+          Local feed: {localUpdate ? localUpdate.version : "not available"}
+        </span>
+      )}
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
@@ -368,7 +499,9 @@ export const UpdateReminderProvider = ({ children }: PropsWithChildren) => {
             setMockReminder({
               version: `v${new Date().toISOString().slice(11, 19)}`,
               body: "• Feature: Example change\n• Fix: Example fix",
+              titleText: "Dev Mock Update",
               isMock: true,
+              source: "debug",
             })
           }
         >
@@ -389,6 +522,27 @@ export const UpdateReminderProvider = ({ children }: PropsWithChildren) => {
           }
         >
           Style: {state.preferredStyle}
+        </button>
+        <button
+          type="button"
+          className="rounded border px-2 py-1"
+          onClick={() => setPauseWhileFullscreen(!state.pauseWhileFullscreen)}
+        >
+          Fullscreen: {state.pauseWhileFullscreen ? "on" : "off"}
+        </button>
+        <button
+          type="button"
+          className="rounded border px-2 py-1"
+          onClick={() => setManualPauseUntil(Date.now() + 60 * 60 * 1000)}
+        >
+          Pause 1h
+        </button>
+        <button
+          type="button"
+          className="rounded border px-2 py-1"
+          onClick={() => setManualPauseUntil(0)}
+        >
+          Resume
         </button>
         <button
           type="button"
@@ -422,13 +576,14 @@ export const UpdateReminderProvider = ({ children }: PropsWithChildren) => {
         key={`update-reminder-toast-${toastDismissKey}`}
         version={reminderData.version}
         changelog={changelogSnippet}
+        titleText={reminderData.titleText}
         onDetails={handleDetails}
         onSnooze={handleSnooze}
         onSkip={handleSkip}
         onClose={handleClose}
         onAutoDismiss={() => {
           setIsVisible(false);
-          scheduleReminderCheck(REMINDER_INTERVAL_MS);
+          scheduleReminderCheck(reminderData.intervalOverrideMs ?? REMINDER_INTERVAL_MS);
         }}
         snoozeOptions={SNOOZE_OPTIONS}
       />
@@ -436,6 +591,7 @@ export const UpdateReminderProvider = ({ children }: PropsWithChildren) => {
       <UpdateReminderCard
         version={reminderData.version}
         changelog={changelogSnippet}
+        titleText={reminderData.titleText}
         onDetails={handleDetails}
         onSnooze={handleSnooze}
         onSkip={handleSkip}
