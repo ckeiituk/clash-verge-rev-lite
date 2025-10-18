@@ -563,5 +563,24 @@
   "Copy to clipboard": "點擊我複製",
   "Port Config": "端口設置",
   "Configuration saved successfully": "配置保存完成",
-  "Enable one-click random API port and key. Click to randomize the port and key": "開啟一鍵隨機 API 端口和密鑰，點進去就可以隨機端口和密鑰"
+  "Enable one-click random API port and key. Click to randomize the port and key": "開啟一鍵隨機 API 端口和密鑰，點進去就可以隨機端口和密鑰",
+  "updateReminder": {
+    "title": "Update available ({{version}})",
+    "subtitle": "Install the latest OutClash version to get improvements and fixes.",
+    "actions": {
+      "install": "Install update",
+      "snooze": "Remind me later",
+      "skip": "Skip this version",
+      "dismiss": "Dismiss",
+      "snoozeOptions": {
+        "1h": "Remind me in 1 hour",
+        "1d": "Remind me tomorrow",
+        "1w": "Remind me next week"
+      }
+    },
+    "notification": {
+      "title": "Update available ({{version}})",
+      "body": "Open OutClash to review and install the update."
+    }
+  }
 }

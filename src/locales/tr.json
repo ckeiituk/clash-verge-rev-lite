@@ -607,5 +607,24 @@
   "Originals Only": "Yalnızca Orijinaller",
   "No (IP Banned By Disney+)": "Hayır (IP Disney+ Tarafından Yasaklandı)",
   "Unsupported Country/Region": "Desteklenmeyen Ülke/Bölge",
-  "Failed (Network Connection)": "Başarısız (Ağ Bağlantısı)"
+  "Failed (Network Connection)": "Başarısız (Ağ Bağlantısı)",
+  "updateReminder": {
+    "title": "Update available ({{version}})",
+    "subtitle": "Install the latest OutClash version to get improvements and fixes.",
+    "actions": {
+      "install": "Install update",
+      "snooze": "Remind me later",
+      "skip": "Skip this version",
+      "dismiss": "Dismiss",
+      "snoozeOptions": {
+        "1h": "Remind me in 1 hour",
+        "1d": "Remind me tomorrow",
+        "1w": "Remind me next week"
+      }
+    },
+    "notification": {
+      "title": "Update available ({{version}})",
+      "body": "Open OutClash to review and install the update."
+    }
+  }
 }

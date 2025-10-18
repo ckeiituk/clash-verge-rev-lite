@@ -26,6 +26,7 @@ import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/sidebar";
 import { useZoomControls } from "@/hooks/useZoomControls";
 import { HwidErrorDialog } from "@/components/profile/hwid-error-dialog";
+import { UpdateReminderProvider } from "@/providers/update-reminder-provider";
 
 // Guard Tauri-specific APIs when running in web:dev
 const isTauriEnv =
@@ -519,8 +520,10 @@ const Layout = () => {
   return (
     <SWRConfig value={{ errorRetryCount: 3 }}>
       <SidebarProvider defaultOpen={false}>
-        <AppLayout />
-        <Toaster />
+        <UpdateReminderProvider>
+          <AppLayout />
+          <Toaster />
+        </UpdateReminderProvider>
       </SidebarProvider>
     </SWRConfig>
   );

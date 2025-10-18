@@ -454,5 +454,24 @@
   "TUN requires Service Mode": "Mode TUN memerlukan layanan",
   "Install Service": "Instal Layanan",
   "Installing Service...": "Memasang Layanan...",
-  "Service Administrator Prompt": "OutClash memerlukan hak administrator untuk menginstal ulang layanan sistem"
+  "Service Administrator Prompt": "OutClash memerlukan hak administrator untuk menginstal ulang layanan sistem",
+  "updateReminder": {
+    "title": "Update available ({{version}})",
+    "subtitle": "Install the latest OutClash version to get improvements and fixes.",
+    "actions": {
+      "install": "Install update",
+      "snooze": "Remind me later",
+      "skip": "Skip this version",
+      "dismiss": "Dismiss",
+      "snoozeOptions": {
+        "1h": "Remind me in 1 hour",
+        "1d": "Remind me tomorrow",
+        "1w": "Remind me next week"
+      }
+    },
+    "notification": {
+      "title": "Update available ({{version}})",
+      "body": "Open OutClash to review and install the update."
+    }
+  }
 }

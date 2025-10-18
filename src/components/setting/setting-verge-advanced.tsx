@@ -1,7 +1,7 @@
 import { useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { check as checkUpdate } from "@tauri-apps/plugin-updater";
 import { version } from "@root/package.json";
+import { checkForUpdate } from "@/services/update-check";
 
 // Сервисы и хуки
 import {
@@ -89,7 +89,7 @@ const SettingVergeAdvanced = ({ onError }: Props) => {
 
   const onCheckUpdate = async () => {
     try {
-      const info = await checkUpdate();
+      const info = await checkForUpdate();
       if (!info?.available) {
         showNotice("success", t("Currently on the Latest Version"));
       } else {

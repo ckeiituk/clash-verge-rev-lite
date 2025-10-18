@@ -454,5 +454,24 @@
   "TUN requires Service Mode": "TUN режимы хезмәт күрсәтүне таләп итә",
   "Install Service": "Хезмәтне урнаштыру",
   "Installing Service...": "Хезмәт урнаштырыла...",
-  "Service Administrator Prompt": "OutClash система хезмәтен яңадан урнаштыру өчен администратор хокукларын таләп итә"
+  "Service Administrator Prompt": "OutClash система хезмәтен яңадан урнаштыру өчен администратор хокукларын таләп итә",
+  "updateReminder": {
+    "title": "Update available ({{version}})",
+    "subtitle": "Install the latest OutClash version to get improvements and fixes.",
+    "actions": {
+      "install": "Install update",
+      "snooze": "Remind me later",
+      "skip": "Skip this version",
+      "dismiss": "Dismiss",
+      "snoozeOptions": {
+        "1h": "Remind me in 1 hour",
+        "1d": "Remind me tomorrow",
+        "1w": "Remind me next week"
+      }
+    },
+    "notification": {
+      "title": "Update available ({{version}})",
+      "body": "Open OutClash to review and install the update."
+    }
+  }
 }

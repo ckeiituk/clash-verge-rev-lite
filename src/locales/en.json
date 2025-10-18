@@ -687,5 +687,24 @@
   "Update Interval (mins)": "Update Interval (mins)",
   "Profile Name": "Profile Name",
   "Profile Description": "Profile Description",
-  "Constructor": "Group constructor"
+  "Constructor": "Group constructor",
+  "updateReminder": {
+    "title": "Update available ({{version}})",
+    "subtitle": "Install the latest OutClash version to get improvements and fixes.",
+    "actions": {
+      "install": "Install update",
+      "snooze": "Remind me later",
+      "skip": "Skip this version",
+      "dismiss": "Dismiss",
+      "snoozeOptions": {
+        "1h": "Remind me in 1 hour",
+        "1d": "Remind me tomorrow",
+        "1w": "Remind me next week"
+      }
+    },
+    "notification": {
+      "title": "Update available ({{version}})",
+      "body": "Open OutClash to review and install the update."
+    }
+  }
 }

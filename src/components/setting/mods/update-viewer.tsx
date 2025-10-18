@@ -9,7 +9,7 @@ import {
 import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
 import { relaunch } from "@tauri-apps/plugin-process";
-import { check as checkUpdate } from "@tauri-apps/plugin-updater";
+import { safeCheckForUpdate } from "@/services/update-check";
 import { Event, UnlistenFn } from "@tauri-apps/api/event";
 import { open as openUrl } from "@tauri-apps/plugin-shell";
 import ReactMarkdown from "react-markdown";
@@ -44,7 +44,7 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
   const setUpdateState = useSetUpdateState();
   const { addListener } = useListen();
 
-  const { data: updateInfo } = useSWR("checkUpdate", checkUpdate, {
+  const { data: updateInfo } = useSWR("checkUpdate", safeCheckForUpdate, {
     errorRetryCount: 2,
     revalidateIfStale: false,
     focusThrottleInterval: 36e5,

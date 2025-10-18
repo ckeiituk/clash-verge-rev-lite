@@ -22,11 +22,11 @@ import { getSystemInfo } from "@/services/cmds";
 import { useNavigate } from "react-router-dom";
 import { version as appVersion } from "@root/package.json";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { check as checkUpdate } from "@tauri-apps/plugin-updater";
 import { useLockFn } from "ahooks";
 import { showNotice } from "@/services/noticeService";
 import { useSystemState } from "@/hooks/use-system-state";
 import { useServiceInstaller } from "@/hooks/useServiceInstaller";
+import { checkForUpdate } from "@/services/update-check";
 
 export const SystemInfoCard = () => {
   const { t } = useTranslation();
@@ -90,7 +90,7 @@ export const SystemInfoCard = () => {
 
       setTimeout(() => {
         if (verge?.auto_check_update) {
-          checkUpdate().catch(console.error);
+          checkForUpdate().catch(console.error);
         }
       }, 5000);
     }
@@ -106,7 +106,7 @@ export const SystemInfoCard = () => {
         ...prev,
         lastCheckUpdate: new Date(now).toLocaleString(),
       }));
-      return await checkUpdate();
+      return await checkForUpdate();
     },
     {
       revalidateOnFocus: false,
@@ -140,7 +140,7 @@ export const SystemInfoCard = () => {
   // 检查更新
   const onCheckUpdate = useLockFn(async () => {
     try {
-      const info = await checkUpdate();
+      const info = await checkForUpdate();
       if (!info?.available) {
         showNotice("success", t("Currently on the Latest Version"));
       } else {

@@ -560,5 +560,24 @@
   "Copy to clipboard": "Klicken Sie hier, um zu kopieren",
   "Port Config": "Port-Konfiguration",
   "Configuration saved successfully": "Zufalls-Konfiguration erfolgreich gespeichert",
-  "Enable one-click random API port and key. Click to randomize the port and key": "Einstellsichere Zufalls-API-Port- und Schlüsselgenerierung aktivieren. Klicken Sie, um Port und Schlüssel zu randomisieren"
+  "Enable one-click random API port and key. Click to randomize the port and key": "Einstellsichere Zufalls-API-Port- und Schlüsselgenerierung aktivieren. Klicken Sie, um Port und Schlüssel zu randomisieren",
+  "updateReminder": {
+    "title": "Update available ({{version}})",
+    "subtitle": "Install the latest OutClash version to get improvements and fixes.",
+    "actions": {
+      "install": "Install update",
+      "snooze": "Remind me later",
+      "skip": "Skip this version",
+      "dismiss": "Dismiss",
+      "snoozeOptions": {
+        "1h": "Remind me in 1 hour",
+        "1d": "Remind me tomorrow",
+        "1w": "Remind me next week"
+      }
+    },
+    "notification": {
+      "title": "Update available ({{version}})",
+      "body": "Open OutClash to review and install the update."
+    }
+  }
 }
