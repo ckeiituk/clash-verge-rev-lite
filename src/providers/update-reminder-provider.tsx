@@ -346,8 +346,8 @@ export const UpdateReminderProvider = ({ children }: PropsWithChildren) => {
 
     const meetsInterval = typeof timeSinceShown === "number" && timeSinceShown >= intervalMs;
 
-    if (!isWindowActive) {
-      if (getIsTauriEnv() && (!lastNotificationAt || now - lastNotificationAt >= intervalMs)) {
+    if (!isWindowActive && getIsTauriEnv()) {
+      if (!lastNotificationAt || now - lastNotificationAt >= intervalMs) {
         try {
           if (BACKGROUND_BEHAVIOR === "os" && notificationPermissionGranted) {
             sendNotification({
@@ -366,8 +366,6 @@ export const UpdateReminderProvider = ({ children }: PropsWithChildren) => {
         }
       }
       scheduleReminderCheck(MIN_RESCHEDULE_DELAY * 6);
-      setIsVisible(false);
-      return;
     }
 
     if (!meetsCadence && !meetsInterval) {
@@ -451,9 +449,9 @@ export const UpdateReminderProvider = ({ children }: PropsWithChildren) => {
   }, [reminderData?.intervalOverrideMs, scheduleReminderCheck]);
 
   useEffect(() => {
-    if (!isVisible || !activeVersion) return;
+    if (!isVisible || !activeVersion || !isWindowActive) return;
     markShown(activeVersion);
-  }, [isVisible, activeVersion, markShown]);
+  }, [isVisible, activeVersion, markShown, isWindowActive]);
 
   useEffect(() => {
     if (!isDebugEnabled) return;
