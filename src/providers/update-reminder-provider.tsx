@@ -331,20 +331,27 @@ export const UpdateReminderProvider = ({ children }: PropsWithChildren) => {
       return;
     }
 
-    if (!detectedAt) {
+    const shouldBypassCadence =
+      reminderData.isMock === true || reminderData.source === "debug";
+
+    if (!detectedAt && !shouldBypassCadence) {
       scheduleReminderCheck(FIRST_REMINDER_DELAY_MS);
       setIsVisible(false);
       return;
     }
 
-    const timeSinceDetected = now - detectedAt;
+    const effectiveDetectedAt = detectedAt ?? now;
+    const timeSinceDetected = now - effectiveDetectedAt;
     const timeSinceShown = typeof lastShownAt === "number" ? now - lastShownAt : null;
 
     const meetsCadence =
-      (lastShownAt === undefined || lastShownAt === null) &&
-      timeSinceDetected >= FIRST_REMINDER_DELAY_MS;
+      shouldBypassCadence ||
+      ((lastShownAt === undefined || lastShownAt === null) &&
+        timeSinceDetected >= FIRST_REMINDER_DELAY_MS);
 
-    const meetsInterval = typeof timeSinceShown === "number" && timeSinceShown >= intervalMs;
+    const meetsInterval =
+      shouldBypassCadence ||
+      (typeof timeSinceShown === "number" && timeSinceShown >= intervalMs);
 
     if (!isWindowActive && getIsTauriEnv()) {
       if (!lastNotificationAt || now - lastNotificationAt >= intervalMs) {
