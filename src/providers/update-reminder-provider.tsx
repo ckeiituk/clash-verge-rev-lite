@@ -2,6 +2,8 @@ import { PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } 
 import useSWR from "swr";
 import { useTranslation } from "react-i18next";
 import { sendNotification, isPermissionGranted, requestPermission } from "@tauri-apps/plugin-notification";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { UserAttentionType } from "@tauri-apps/api/window";
 import { UpdateReminderCard } from "@/components/update/update-reminder-card";
 import { UpdateReminderToast } from "@/components/update/update-reminder-toast";
 import { useVerge } from "@/hooks/use-verge";
@@ -45,6 +47,12 @@ const isDebugEnabled =
   (import.meta.env.VITE_UPDATE_REMINDER_DEBUG ?? "true").toLowerCase() !== "false";
 
 const MIN_RESCHEDULE_DELAY = 5 * 1000;
+
+type BackgroundBehavior = "os" | "attention" | "none";
+const BACKGROUND_BEHAVIOR: BackgroundBehavior = (() => {
+  const v = (import.meta.env.VITE_UPDATE_REMINDER_BACKGROUND as string | undefined)?.toLowerCase();
+  return v === "attention" || v === "none" ? (v as BackgroundBehavior) : "os";
+})();
 
 const getIsWindowActive = (): boolean => {
   if (typeof document === "undefined") return true;
@@ -221,19 +229,22 @@ export const UpdateReminderProvider = ({ children }: PropsWithChildren) => {
       typeof timeSinceShown === "number" && timeSinceShown >= REMINDER_INTERVAL_MS;
 
     if (!isWindowActive) {
-      if (
-        notificationPermissionGranted &&
-        getIsTauriEnv() &&
-        (!lastNotificationAt || now - lastNotificationAt >= REMINDER_INTERVAL_MS)
-      ) {
+      if (getIsTauriEnv() && (!lastNotificationAt || now - lastNotificationAt >= REMINDER_INTERVAL_MS)) {
         try {
-          sendNotification({
-            title: t("updateReminder.notification.title", { version }),
-            body: t("updateReminder.notification.body"),
-          });
-          markNotified(version);
+          if (BACKGROUND_BEHAVIOR === "os" && notificationPermissionGranted) {
+            sendNotification({
+              title: t("updateReminder.notification.title", { version }),
+              body: t("updateReminder.notification.body"),
+            });
+            markNotified(version);
+          } else if (BACKGROUND_BEHAVIOR === "attention") {
+            void getCurrentWebviewWindow().requestUserAttention(
+              UserAttentionType.Informational,
+            );
+            markNotified(version);
+          }
         } catch (error) {
-          console.warn("[update-reminder] Failed to send notification", error);
+          console.warn("[update-reminder] Background behavior failed:", error);
         }
       }
       scheduleReminderCheck(MIN_RESCHEDULE_DELAY * 6);
