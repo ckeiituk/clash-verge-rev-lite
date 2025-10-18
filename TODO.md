@@ -105,3 +105,48 @@
   - `pnpm build` и запусти бинарник из `src-tauri/target/release`.
   - По умолчанию в релизе dev‑панель выключена; при необходимости можно принудительно включить панель и хелперы: `VITE_UPDATE_REMINDER_DEBUG_FORCE=true pnpm build`.
   - Сбросить состояние: в консоли (`F12`) выполнить `localStorage.removeItem('outclash:updateReminder')`.
+
+### Фичефлаги и где что находится (для будущей «зачистки»)
+
+- Переменные окружения (Vite):
+  - `VITE_UPDATE_REMINDER_BACKGROUND=os|attention|none` — фоновые напоминания при свернутом окне:
+    - `os` — нативный тост ОС;
+    - `attention` — лишь мигание таскбара/дока (без тоста);
+    - `none` — ничего.
+  - `VITE_UPDATE_REMINDER_FILE_SOURCE=true` — включить локальный источник обновления `UPDATE.txt` в `appConfigDir/io.github.outclash/UPDATE.txt`.
+  - `VITE_UPDATE_REMINDER_DEBUG` — по умолчанию `true` в dev; если задать `false`, панель в dev скрыта.
+  - `VITE_UPDATE_REMINDER_DEBUG_FORCE=true` — форс‑включить debug‑панель и хелперы даже в релизной сборке.
+
+- Основные файлы/модули фичи:
+  - Провайдер логики и рендер баннера: `src/providers/update-reminder-provider.tsx`.
+  - Состояние/хранилище баннера: `src/services/update-reminder-state.ts` (ключ `outclash:updateReminder`).
+  - Источники данных об обновлениях: `src/services/update-check.ts` (плагин + локальный `UPDATE.txt`).
+  - UI баннера:
+    - карточка: `src/components/update/update-reminder-card.tsx`;
+    - тост: `src/components/update/update-reminder-toast.tsx`.
+  - Интеграции:
+    - обертка провайдера: `src/pages/_layout.tsx` (оборачиваем приложение);
+    - кнопка обновления открывает модал по событию: `src/components/layout/update-button.tsx`.
+  - Настройки (переключатели/пауза): `src/components/setting/setting-verge-advanced.tsx`.
+  - Tauri‑команда (гард фуллскрина — Windows): `src-tauri/src/cmd/system.rs` (+ регистрация в `src-tauri/src/lib.rs` и фича `winuser` в `src-tauri/Cargo.toml`).
+  - Документация: `docs/update-reminder-debug.md` (env‑флаги, UPDATE.txt, режимы фона).
+
+- Что отключить, если нужно быстро «заморозить» фичу без удаления кода:
+  - Снять провайдер в `src/pages/_layout.tsx` (вернуть без `<UpdateReminderProvider>`).
+  - Выключить локальный источник и панель флагами: не задавать `VITE_UPDATE_REMINDER_FILE_SOURCE`, `VITE_UPDATE_REMINDER_DEBUG_FORCE`.
+  - Поставить `VITE_UPDATE_REMINDER_BACKGROUND=none`, чтобы не было фоновых уведомлений.
+
+- Полная зачистка (если потребуется):
+  1) удалить `UpdateReminderProvider` из `src/pages/_layout.tsx`;
+  2) удалить файлы:
+     - `src/providers/update-reminder-provider.tsx`
+     - `src/services/update-reminder-state.ts`
+     - `src/services/update-check.ts` (либо оставить общий чекер, но убрать локальный `UPDATE.txt`)
+     - `src/components/update/update-reminder-card.tsx`
+     - `src/components/update/update-reminder-toast.tsx`
+     - строки `updateReminder*` и `updateReminderSettings*` из локалей `src/locales/*.json`
+     - раздел в `docs/update-reminder-debug.md`
+  3) в `src/components/setting/setting-verge-advanced.tsx` убрать блоки «Пауза напоминаний…» и меню паузы;
+  4) в `src-tauri/` удалить команду `detect_foreground_fullscreen` и её регистрацию (Windows‑специфичное);
+  5) в `src/components/layout/update-button.tsx` можно вернуть прямой вызов модала без события `outclash:open-update-viewer`;
+  6) пересобрать и проверить `pnpm tsc --noEmit` / `pnpm web:build`.
