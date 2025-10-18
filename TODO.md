@@ -56,3 +56,52 @@
 - Всё тестовое поведение переключается env‑флагами; в проде локальный файл и dev‑панель выключены.
 - Для полного отката фичи: удалить `UpdateReminderProvider`, связанный стейт/сервисы, UI‑компоненты и строки i18n,
   вернуть прямое использование плагина‑апдейтера в местах, где переключили на общий чекер.
+
+### Как тестировать (шпаргалка)
+
+- Dev‑сборка (быстрый ручной триггер):
+  - `pnpm web:dev` (только UI) или `pnpm dev` (полный стек с Tauri).
+  - Открой DevTools (F12) и используй глобальные хелперы:
+    - `window.__OUTCLASH_UPDATE_REMINDER__.trigger({ version: "v9.9.9", body: "- Added X\n- Fixed Y", titleText: "Internal Test" })`
+    - `window.__OUTCLASH_UPDATE_REMINDER__.showNow()` — показать сразу, без ожидания таймеров
+    - `window.__OUTCLASH_UPDATE_REMINDER__.setStyle("card" | "toast")` — переключить вид
+    - `window.__OUTCLASH_UPDATE_REMINDER__.setFullscreenGuard(true|false)` — включить/выключить гард
+    - `window.__OUTCLASH_UPDATE_REMINDER__.pauseFor(60*60*1000)` / `resume()` — пауза/возобновление
+    - `window.__OUTCLASH_UPDATE_REMINDER__.reset()` — сброс локального состояния
+
+- Локальный UPDATE.txt (без GitHub релизов):
+  - Запусти с флагом: `VITE_UPDATE_REMINDER_FILE_SOURCE=true pnpm dev` (или для релиза — `pnpm build` с тем же флагом).
+  - Помести файл `UPDATE.txt` в каталог конфигурации Tauri:
+    - Windows: `%APPDATA%/io.github.outclash/UPDATE.txt`
+    - macOS: `~/Library/Application Support/io.github.outclash/UPDATE.txt`
+    - Linux: `~/.config/io.github.outclash/UPDATE.txt`
+  - Пример содержимого:
+    ```
+    version=0.9.99-test
+    title=Internal Test Build
+    staleness=minutes:5
+    body=• Feature: Try the new banner
+    body=• Fix: Background attention mode
+    ```
+  - Обнови `version` или просто перезапиши файл (mtime) — это считается «новым релизом». `staleness` задаёт интервал повторных напоминаний (по умолчанию 24ч).
+
+- Поведение в фоне (без тоста ОС или с ним):
+  - Сборочный флаг `VITE_UPDATE_REMINDER_BACKGROUND=os|attention|none`.
+    - `os`: нативный тост ОС, когда окно в фоне/скрыто.
+    - `attention`: только мигание таскбара/дока (`requestUserAttention`), без тостов.
+    - `none`: ничего не делать в фоне.
+  - Для проверки сверни окно и дождись напоминания.
+
+- Фуллскрин‑гард / «режим игры»:
+  - В Настройках → Advanced включи «Пауза напоминаний при полноэкранных приложениях».
+  - Открой любое полноэкранное приложение (или игру) — баннер не должен появляться; напоминания откладываются.
+  - Проверь ручную паузу: меню «Пауза на…» (30м/1ч/4ч/1д) и «Возобновить».
+
+- Каденс и повторные напоминания:
+  - Первый показ через ~10 минут после обнаружения. Чтобы не ждать — используй `showNow()` или поставь `staleness=minutes:1` в UPDATE.txt.
+  - Повторы — раз в 24ч (или по `staleness`).
+
+- Релизная проверка:
+  - `pnpm build` и запусти бинарник из `src-tauri/target/release`.
+  - В релизе нет dev‑панели и триггеров через консоль; для теста используй `UPDATE.txt` и/или флаги окружения.
+  - Сбросить состояние: в консоли (`F12`) выполнить `localStorage.removeItem('outclash:updateReminder')`.
