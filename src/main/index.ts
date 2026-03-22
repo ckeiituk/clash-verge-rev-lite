@@ -1,7 +1,7 @@
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { registerIpcMainHandlers } from './utils/ipc'
 import windowStateKeeper from 'electron-window-state'
-import { app, BrowserWindow, dialog, ipcMain, Menu, Notification, powerMonitor, shell } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, Menu, Notification, powerMonitor, screen, shell } from 'electron'
 import { addProfileItem, getAppConfig, patchControledMihomoConfig } from './config'
 import { quitWithoutCore, startCore, stopCore } from './core/manager'
 import { triggerSysProxy } from './sys/sysproxy'
@@ -262,6 +262,23 @@ app.on('before-quit', async (e) => {
   }
 })
 
+powerMonitor.on('resume', () => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.reload()
+  }
+})
+
+let displayChangeDebounce: NodeJS.Timeout | null = null
+screen.on('display-metrics-changed', () => {
+  if (displayChangeDebounce) return
+  displayChangeDebounce = setTimeout(() => {
+    displayChangeDebounce = null
+    if (mainWindow && !mainWindow.isDestroyed() && mainWindow.webContents.isCrashed()) {
+      mainWindow.webContents.reload()
+    }
+  }, 2000)
+})
+
 powerMonitor.on('shutdown', async () => {
   if (quitTimeout) {
     clearTimeout(quitTimeout)
@@ -490,7 +507,8 @@ export async function createWindow(appConfig?: AppConfig): Promise<void> {
       webPreferences: {
         preload: join(__dirname, '../preload/index.js'),
         spellcheck: false,
-        sandbox: false
+        sandbox: false,
+        backgroundThrottling: false
       }
     })
     mainWindowState.manage(mainWindow)
@@ -515,6 +533,12 @@ export async function createWindow(appConfig?: AppConfig): Promise<void> {
     })
     mainWindow.webContents.on('did-fail-load', () => {
       mainWindow?.webContents.reload()
+    })
+
+    mainWindow.webContents.on('render-process-gone', (_event, details) => {
+      if (details.reason !== 'clean-exit') {
+        mainWindow?.webContents.reload()
+      }
     })
 
     mainWindow.webContents.once('did-finish-load', () => {
@@ -550,6 +574,22 @@ export async function createWindow(appConfig?: AppConfig): Promise<void> {
 
     mainWindow.on('move', () => {
       if (mainWindow) mainWindowState.saveState(mainWindow)
+    })
+
+    let unresponsiveTimer: NodeJS.Timeout | null = null
+
+    mainWindow.on('unresponsive', () => {
+      unresponsiveTimer = setTimeout(() => {
+        mainWindow?.webContents.reload()
+        unresponsiveTimer = null
+      }, 5000)
+    })
+
+    mainWindow.on('responsive', () => {
+      if (unresponsiveTimer) {
+        clearTimeout(unresponsiveTimer)
+        unresponsiveTimer = null
+      }
     })
 
     mainWindow.on('session-end', async () => {
@@ -597,6 +637,9 @@ export async function showMainWindow(): Promise<void> {
     }
   }
   if (mainWindow) {
+    if (mainWindow.webContents.isCrashed()) {
+      mainWindow.webContents.reload()
+    }
     windowShown = true
     mainWindow.show()
     mainWindow.focusOnWebView()
