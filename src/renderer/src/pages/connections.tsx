@@ -1,6 +1,6 @@
 import BasePage from '@renderer/components/base/base-page'
 import { mihomoCloseAllConnections, mihomoCloseConnection } from '@renderer/utils/ipc'
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import { Badge } from '@renderer/components/ui/badge'
 import { Button } from '@renderer/components/ui/button'
 import {
@@ -53,6 +53,13 @@ import {
 
 let cachedConnections: ControllerConnectionDetail[] = []
 
+// Limits for in-memory icon/name caches (FIFO eviction once exceeded)
+const MAX_ICON_CACHE = 200
+const MAX_NAME_CACHE = 500
+// Prefix to isolate connection-icon entries in localStorage from other caches
+const CONN_ICON_LS_PREFIX = '__conn_icon__'
+const MAX_ICON_LS_ENTRIES = 200
+
 const Connections: React.FC = () => {
   const { t } = useTranslation()
   const { controledMihomoConfig } = useControledMihomoConfig()
@@ -93,8 +100,13 @@ const Connections: React.FC = () => {
   const [isSettingModalOpen, setIsSettingModalOpen] = useState(false)
   const [selected, setSelected] = useState<ControllerConnectionDetail>()
 
-  const [iconMap, setIconMap] = useState<Record<string, string>>({})
-  const [appNameCache, setAppNameCache] = useState<Record<string, string>>({})
+  // Mutable caches stored in refs so that writes don't cause the expensive
+  // processGroupsBase memo to recompute. Version counters signal React that
+  // the decoration layer (processGroups) and the connection list need updating.
+  const iconCacheRef = useRef(new Map<string, string>())
+  const [iconCacheVersion, bumpIconCache] = useReducer((v: number) => v + 1, 0)
+  const nameCacheRef = useRef(new Map<string, string>())
+  const [nameCacheVersion, bumpNameCache] = useReducer((v: number) => v + 1, 0)
   const [firstItemRefreshTrigger, setFirstItemRefreshTrigger] = useState(0)
 
   const [tab, setTab] = useState('active')
@@ -141,23 +153,25 @@ const Connections: React.FC = () => {
   const processingAppNames = useRef(new Set<string>())
   const processAppNameTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Build process groups from connections
-  const processGroups = useMemo(() => {
-    const groupMap = new Map<
-      string,
-      {
-        processPath: string
-        processName: string
-        activeCount: number
-        closedCount: number
-        totalUpload: number
-        totalDownload: number
-        totalUploadSpeed: number
-        totalDownloadSpeed: number
-      }
-    >()
+  // On mount: evict oldest localStorage icon entries if the cache grew too large.
+  useEffect(() => {
+    const keys: string[] = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i)
+      if (k?.startsWith(CONN_ICON_LS_PREFIX)) keys.push(k)
+    }
+    if (keys.length > MAX_ICON_LS_ENTRIES) {
+      keys.slice(0, keys.length - MAX_ICON_LS_ENTRIES).forEach((k) => localStorage.removeItem(k))
+    }
+  }, [])
 
-    const addToGroup = (conn: ControllerConnectionDetail, isActive: boolean) => {
+  // Stage 1: build structural data from connections only.
+  // Does NOT read icon/name caches, so icon or name loads never trigger this.
+  const processGroupsBase = useMemo(() => {
+    type GroupEntry = Omit<ProcessGroup, 'iconUrl' | 'displayName'>
+    const groupMap = new Map<string, GroupEntry>()
+
+    const addToGroup = (conn: ControllerConnectionDetail, isActive: boolean): void => {
       const processPath =
         conn.metadata.processPath || conn.metadata.process || conn.metadata.sourceIP || ''
       const processName = conn.metadata.process || conn.metadata.sourceIP || ''
@@ -189,28 +203,31 @@ const Connections: React.FC = () => {
     activeConnections.forEach((conn) => addToGroup(conn, true))
     closedConnections.forEach((conn) => addToGroup(conn, false))
 
-    const groups: ProcessGroup[] = Array.from(groupMap.values()).map((g) => ({
-      ...g,
-      displayName: displayAppName && g.processPath ? appNameCache[g.processPath] : undefined,
-      iconUrl: (displayIcon && findProcessMode !== 'off' && iconMap[g.processPath]) || ''
-    }))
-
-    // Sort by active count descending, then by total traffic
+    const groups = Array.from(groupMap.values())
     groups.sort((a, b) => {
       if (b.activeCount !== a.activeCount) return b.activeCount - a.activeCount
       return b.totalUpload + b.totalDownload - (a.totalUpload + a.totalDownload)
     })
-
     return groups
-  }, [
-    activeConnections,
-    closedConnections,
-    appNameCache,
-    iconMap,
-    displayIcon,
-    displayAppName,
-    findProcessMode
-  ])
+  }, [activeConnections, closedConnections])
+
+  // Stage 2: decorate with icons and display names.
+  // Cheap — just a .map() over the sorted base array.
+  // Runs when caches update (via version counters) without rebuilding the Map.
+  const processGroups = useMemo(
+    () =>
+      processGroupsBase.map((g) => ({
+        ...g,
+        displayName: displayAppName && g.processPath
+          ? nameCacheRef.current.get(g.processPath)
+          : undefined,
+        iconUrl:
+          (displayIcon && findProcessMode !== 'off' && iconCacheRef.current.get(g.processPath)) ||
+          ''
+      })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [processGroupsBase, iconCacheVersion, nameCacheVersion, displayIcon, displayAppName, findProcessMode]
+  )
 
   // Filter process groups by search
   const filteredProcessGroups = useMemo(() => {
@@ -440,7 +457,11 @@ const Connections: React.FC = () => {
       try {
         const appName = await getAppName(path)
         if (appName) {
-          setAppNameCache((prev) => ({ ...prev, [path]: appName }))
+          if (nameCacheRef.current.size >= MAX_NAME_CACHE) {
+            nameCacheRef.current.delete(nameCacheRef.current.keys().next().value!)
+          }
+          nameCacheRef.current.set(path, appName)
+          bumpNameCache()
         }
       } catch {
         // ignore
@@ -480,12 +501,16 @@ const Connections: React.FC = () => {
         }
 
         try {
-          localStorage.setItem(path, processedDataURL)
+          localStorage.setItem(CONN_ICON_LS_PREFIX + path, processedDataURL)
         } catch {
-          // ignore
+          // ignore storage quota errors
         }
 
-        setIconMap((prev) => ({ ...prev, [path]: processedDataURL }))
+        if (iconCacheRef.current.size >= MAX_ICON_CACHE) {
+          iconCacheRef.current.delete(iconCacheRef.current.keys().next().value!)
+        }
+        iconCacheRef.current.set(path, processedDataURL)
+        bumpIconCache()
 
         const firstConnection = filteredConnections[0]
         if (firstConnection?.metadata.processPath === path) {
@@ -530,11 +555,15 @@ const Connections: React.FC = () => {
     collectPaths(closedConnections)
 
     const loadIcon = (path: string, isVisible: boolean = false): void => {
-      if (iconMap[path] || processingIcons.current.has(path)) return
+      if (iconCacheRef.current.has(path) || processingIcons.current.has(path)) return
 
-      const fromStorage = localStorage.getItem(path)
+      const fromStorage = localStorage.getItem(CONN_ICON_LS_PREFIX + path)
       if (fromStorage) {
-        setIconMap((prev) => ({ ...prev, [path]: fromStorage }))
+        if (iconCacheRef.current.size >= MAX_ICON_CACHE) {
+          iconCacheRef.current.delete(iconCacheRef.current.keys().next().value!)
+        }
+        iconCacheRef.current.set(path, fromStorage)
+        bumpIconCache()
         if (isVisible && filteredConnections[0]?.metadata.processPath === path) {
           setFirstItemRefreshTrigger((prev) => prev + 1)
         }
@@ -545,7 +574,7 @@ const Connections: React.FC = () => {
     }
 
     const loadAppName = (path: string): void => {
-      if (appNameCache[path] || processingAppNames.current.has(path)) return
+      if (nameCacheRef.current.has(path) || processingAppNames.current.has(path)) return
       appNameRequestQueue.current.add(path)
     }
 
@@ -580,8 +609,6 @@ const Connections: React.FC = () => {
   }, [
     activeConnections,
     closedConnections,
-    iconMap,
-    appNameCache,
     displayIcon,
     filteredConnections,
     processIconQueue,
@@ -671,12 +698,11 @@ const Connections: React.FC = () => {
   const renderConnectionItem = useCallback(
     (i: number, connection: ControllerConnectionDetail) => {
       const path = connection.metadata.processPath || ''
-      const iconUrl = (displayIcon && findProcessMode !== 'off' && iconMap[path]) || ''
+      const iconUrl =
+        (displayIcon && findProcessMode !== 'off' && iconCacheRef.current.get(path)) || ''
       const itemKey = i === 0 ? `${connection.id}-${firstItemRefreshTrigger}` : connection.id
       const displayName =
-        displayAppName && connection.metadata.processPath
-          ? appNameCache[connection.metadata.processPath]
-          : undefined
+        displayAppName && path ? nameCacheRef.current.get(path) : undefined
 
       return (
         <ConnectionItem
@@ -693,13 +719,14 @@ const Connections: React.FC = () => {
         />
       )
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       displayIcon,
-      iconMap,
+      iconCacheVersion,
       firstItemRefreshTrigger,
       selected,
       closeConnection,
-      appNameCache,
+      nameCacheVersion,
       findProcessMode,
       displayAppName
     ]
