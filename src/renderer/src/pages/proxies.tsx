@@ -62,6 +62,7 @@ const Proxies: React.FC = () => {
   const [searchValue, setSearchValue] = useState(Array(groups.length).fill(''))
   const [isSettingModalOpen, setIsSettingModalOpen] = useState(false)
   const virtuosoRef = useRef<GroupedVirtuosoHandle>(null)
+  const fetchingIconsRef = useRef<Set<string>>(new Set())
   const { groupCounts, allProxies } = useMemo(() => {
     const groupCounts: number[] = []
     const allProxies: (ControllerProxiesDetail | ControllerGroupDetail)[][] = []
@@ -237,15 +238,16 @@ const Proxies: React.FC = () => {
 
   const groupContent = useCallback(
     (index: number) => {
-      if (
-        groups[index] &&
-        groups[index].icon &&
-        groups[index].icon.startsWith('http') &&
-        !localStorage.getItem(groups[index].icon)
-      ) {
-        getImageDataURL(groups[index].icon).then((dataURL) => {
-          localStorage.setItem(groups[index].icon, dataURL)
+      const iconUrl = groups[index]?.icon
+      if (iconUrl && iconUrl.startsWith('http') && !localStorage.getItem(iconUrl) && !fetchingIconsRef.current.has(iconUrl)) {
+        fetchingIconsRef.current.add(iconUrl)
+        getImageDataURL(iconUrl).then((dataURL) => {
+          localStorage.setItem(iconUrl, dataURL)
           mutate()
+        }).catch(() => {
+          // allow retry next time the component mounts
+        }).finally(() => {
+          fetchingIconsRef.current.delete(iconUrl)
         })
       }
       const group = groups[index]
