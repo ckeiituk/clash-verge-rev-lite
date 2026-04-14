@@ -319,13 +319,25 @@ const Connections: React.FC = () => {
     selectedProcess
   ])
 
+  // deletedIds prevents re-appearance of manually removed connections on the next WS tick.
+  // Cap at 2000 entries: any connection absent from mihomo for that long is truly gone.
+  const MAX_DELETED_IDS = 2000
+
   const trashAllClosedConnection = useCallback((): void => {
     if (closedConnections.length === 0) return
 
     const trashIds = closedConnections.map((conn) => conn.id)
-    setDeletedIds((prev) => new Set([...prev, ...trashIds]))
+    setDeletedIds((prev) => {
+      const next = new Set([...prev, ...trashIds])
+      if (next.size > MAX_DELETED_IDS) {
+        const iter = next.values()
+        for (let i = 0; i < next.size - MAX_DELETED_IDS; i++) next.delete(iter.next().value!)
+      }
+      return next
+    })
     setAllConnections((allConns) => {
-      const updatedConnections = allConns.filter((conn) => !trashIds.includes(conn.id))
+      const trashSet = new Set(trashIds)
+      const updatedConnections = allConns.filter((conn) => !trashSet.has(conn.id))
       cachedConnections = updatedConnections
       return updatedConnections
     })
@@ -333,7 +345,13 @@ const Connections: React.FC = () => {
   }, [closedConnections])
 
   const trashClosedConnection = useCallback((id: string): void => {
-    setDeletedIds((prev) => new Set([...prev, id]))
+    setDeletedIds((prev) => {
+      const next = new Set([...prev, id])
+      if (next.size > MAX_DELETED_IDS) {
+        next.delete(next.values().next().value!)
+      }
+      return next
+    })
     setAllConnections((allConns) => {
       const updatedConnections = allConns.filter((conn) => conn.id !== id)
       cachedConnections = updatedConnections
@@ -380,6 +398,10 @@ const Connections: React.FC = () => {
         }
       })
 
+      // O(1) lookup: reuse the already-built prevActiveMap to decorate allConnections.
+      // Both branches previously used activeConns.find() — O(n²) per tick.
+      const activeConnsMap = new Map(activeConns.map((conn) => [conn.id, conn]))
+
       const newConnections = activeConns.filter(
         (conn) => !existingConnectionIds.has(conn.id) && !deletedIds.has(conn.id)
       )
@@ -387,13 +409,12 @@ const Connections: React.FC = () => {
       if (newConnections.length > 0) {
         const updatedAllConnections = [...allConnections, ...newConnections]
 
-        const activeConnIds = new Set(activeConns.map((conn) => conn.id))
         const allConns = updatedAllConnections.map((conn) => {
-          const activeConn = activeConns.find((ac) => ac.id === conn.id)
+          const activeConn = activeConnsMap.get(conn.id)
           return activeConn || { ...conn, isActive: false, downloadSpeed: 0, uploadSpeed: 0 }
         })
 
-        const closedConns = allConns.filter((conn) => !activeConnIds.has(conn.id))
+        const closedConns = allConns.filter((conn) => !activeConnsMap.has(conn.id))
 
         setActiveConnections(activeConns)
         setClosedConnections(closedConns)
@@ -401,13 +422,12 @@ const Connections: React.FC = () => {
         setAllConnections(finalAllConnections)
         cachedConnections = finalAllConnections
       } else {
-        const activeConnIds = new Set(activeConns.map((conn) => conn.id))
         const allConns = allConnections.map((conn) => {
-          const activeConn = activeConns.find((ac) => ac.id === conn.id)
+          const activeConn = activeConnsMap.get(conn.id)
           return activeConn || { ...conn, isActive: false, downloadSpeed: 0, uploadSpeed: 0 }
         })
 
-        const closedConns = allConns.filter((conn) => !activeConnIds.has(conn.id))
+        const closedConns = allConns.filter((conn) => !activeConnsMap.has(conn.id))
 
         setActiveConnections(activeConns)
         setClosedConnections(closedConns)
