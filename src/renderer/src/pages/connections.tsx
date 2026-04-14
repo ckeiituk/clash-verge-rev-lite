@@ -100,6 +100,15 @@ const Connections: React.FC = () => {
   const [isSettingModalOpen, setIsSettingModalOpen] = useState(false)
   const [selected, setSelected] = useState<ControllerConnectionDetail>()
 
+  // Refs that mirror the corresponding state values so the IPC handler closure
+  // can read the latest data without capturing state directly. This keeps the
+  // closure stable (registered once per isPaused change, not every 500ms tick),
+  // eliminating the closure-per-tick churn that caused gradual heap growth.
+  const allConnectionsRef = useRef<ControllerConnectionDetail[]>(cachedConnections)
+  const activeConnectionsRef = useRef<ControllerConnectionDetail[]>([])
+  const closedConnectionsRef = useRef<ControllerConnectionDetail[]>([])
+  const deletedIdsRef = useRef<Set<string>>(new Set())
+
   // Mutable caches stored in refs so that writes don't cause the expensive
   // processGroupsBase memo to recompute. Version counters signal React that
   // the decoration layer (processGroups) and the connection list need updating.
@@ -112,6 +121,11 @@ const Connections: React.FC = () => {
   const [tab, setTab] = useState('active')
   const [isPaused, setIsPaused] = useState(false)
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set())
+  // Sync state → ref after each render so the stable closure always reads current values.
+  allConnectionsRef.current = allConnections
+  activeConnectionsRef.current = activeConnections
+  closedConnectionsRef.current = closedConnections
+  deletedIdsRef.current = deletedIds
   const [viewMode, setViewMode] = useState<'list' | 'table'>(connectionViewMode)
   const [visibleColumns, setVisibleColumns] = useState<Set<string>>(new Set(connectionTableColumns))
 
@@ -324,40 +338,45 @@ const Connections: React.FC = () => {
   const MAX_DELETED_IDS = 2000
 
   const trashAllClosedConnection = useCallback((): void => {
-    if (closedConnections.length === 0) return
+    const closed = closedConnectionsRef.current
+    if (closed.length === 0) return
 
-    const trashIds = closedConnections.map((conn) => conn.id)
-    setDeletedIds((prev) => {
-      const next = new Set([...prev, ...trashIds])
-      if (next.size > MAX_DELETED_IDS) {
-        const iter = next.values()
-        for (let i = 0; i < next.size - MAX_DELETED_IDS; i++) next.delete(iter.next().value!)
-      }
-      return next
-    })
-    setAllConnections((allConns) => {
-      const trashSet = new Set(trashIds)
-      const updatedConnections = allConns.filter((conn) => !trashSet.has(conn.id))
-      cachedConnections = updatedConnections
-      return updatedConnections
-    })
+    const trashSet = new Set(closed.map((conn) => conn.id))
+    const prev = deletedIdsRef.current
+    const next = new Set([...prev, ...trashSet])
+    if (next.size > MAX_DELETED_IDS) {
+      const iter = next.values()
+      for (let i = 0; i < next.size - MAX_DELETED_IDS; i++) next.delete(iter.next().value!)
+    }
+    deletedIdsRef.current = next
+    setDeletedIds(next)
+
+    const updatedAll = allConnectionsRef.current.filter((conn) => !trashSet.has(conn.id))
+    allConnectionsRef.current = updatedAll
+    cachedConnections = updatedAll
+    setAllConnections(updatedAll)
+
+    closedConnectionsRef.current = []
     setClosedConnections([])
-  }, [closedConnections])
+  }, [])
 
   const trashClosedConnection = useCallback((id: string): void => {
-    setDeletedIds((prev) => {
-      const next = new Set([...prev, id])
-      if (next.size > MAX_DELETED_IDS) {
-        next.delete(next.values().next().value!)
-      }
-      return next
-    })
-    setAllConnections((allConns) => {
-      const updatedConnections = allConns.filter((conn) => conn.id !== id)
-      cachedConnections = updatedConnections
-      return updatedConnections
-    })
-    setClosedConnections((closedConns) => closedConns.filter((conn) => conn.id !== id))
+    const prev = deletedIdsRef.current
+    const next = new Set([...prev, id])
+    if (next.size > MAX_DELETED_IDS) {
+      next.delete(next.values().next().value!)
+    }
+    deletedIdsRef.current = next
+    setDeletedIds(next)
+
+    const updatedAll = allConnectionsRef.current.filter((conn) => conn.id !== id)
+    allConnectionsRef.current = updatedAll
+    cachedConnections = updatedAll
+    setAllConnections(updatedAll)
+
+    const updatedClosed = closedConnectionsRef.current.filter((conn) => conn.id !== id)
+    closedConnectionsRef.current = updatedClosed
+    setClosedConnections(updatedClosed)
   }, [])
 
   const closeAllConnections = useCallback((): void => {
@@ -372,10 +391,19 @@ const Connections: React.FC = () => {
   )
 
   useEffect(() => {
+    // Reads connection arrays via refs — not captured in the closure. This makes
+    // the closure stable: it is created once per isPaused toggle, not every
+    // 500ms tick. Previously, capturing allConnections/activeConnections/
+    // closedConnections in deps caused a new closure + cleanup every WS tick,
+    // creating constant old-generation GC pressure and gradual heap growth.
     const handleConnections = (_e: unknown, info: ControllerConnections): void => {
       setConnectionsInfo(info)
 
       if (!info.connections) return
+
+      const allConnections = allConnectionsRef.current
+      const activeConnections = activeConnectionsRef.current
+      const deletedIds = deletedIdsRef.current
 
       const prevActiveMap = new Map(activeConnections.map((conn) => [conn.id, conn]))
       const existingConnectionIds = new Set(allConnections.map((conn) => conn.id))
@@ -398,8 +426,6 @@ const Connections: React.FC = () => {
         }
       })
 
-      // O(1) lookup: reuse the already-built prevActiveMap to decorate allConnections.
-      // Both branches previously used activeConns.find() — O(n²) per tick.
       const activeConnsMap = new Map(activeConns.map((conn) => [conn.id, conn]))
 
       const newConnections = activeConns.filter(
@@ -415,12 +441,18 @@ const Connections: React.FC = () => {
         })
 
         const closedConns = allConns.filter((conn) => !activeConnsMap.has(conn.id))
+        const finalAllConnections = allConns.slice(-(activeConns.length + 200))
+
+        // Write to refs first so next tick reads fresh values immediately,
+        // even before React commits the state update.
+        activeConnectionsRef.current = activeConns
+        closedConnectionsRef.current = closedConns
+        allConnectionsRef.current = finalAllConnections
+        cachedConnections = finalAllConnections
 
         setActiveConnections(activeConns)
         setClosedConnections(closedConns)
-        const finalAllConnections = allConns.slice(-(activeConns.length + 200))
         setAllConnections(finalAllConnections)
-        cachedConnections = finalAllConnections
       } else {
         const allConns = allConnections.map((conn) => {
           const activeConn = activeConnsMap.get(conn.id)
@@ -429,10 +461,14 @@ const Connections: React.FC = () => {
 
         const closedConns = allConns.filter((conn) => !activeConnsMap.has(conn.id))
 
+        activeConnectionsRef.current = activeConns
+        closedConnectionsRef.current = closedConns
+        allConnectionsRef.current = allConns
+        cachedConnections = allConns
+
         setActiveConnections(activeConns)
         setClosedConnections(closedConns)
         setAllConnections(allConns)
-        cachedConnections = allConns
       }
     }
     if (!isPaused) {
@@ -442,7 +478,7 @@ const Connections: React.FC = () => {
     return (): void => {
       window.electron.ipcRenderer.removeAllListeners('mihomoConnections')
     }
-  }, [allConnections, activeConnections, closedConnections, deletedIds, isPaused])
+  }, [isPaused])
   const togglePause = useCallback(() => {
     setIsPaused((prev) => !prev)
   }, [])
