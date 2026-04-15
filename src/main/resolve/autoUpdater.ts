@@ -13,12 +13,18 @@ import { setNotQuitDialog, mainWindow } from '..'
 import { disableSysProxy } from '../sys/sysproxy'
 import { stopCore } from '../core/manager'
 import { t } from '../utils/i18n'
+import { getAppConfig } from '../config/app'
 
 let downloadCancelToken: CancelTokenSource | null = null
+let lastCheckedUpdate: AppVersion | undefined
 
 export async function checkUpdate(): Promise<AppVersion | undefined> {
   const { 'mixed-port': mixedPort = 7897 } = await getControledMihomoConfig()
-  const url = 'https://github.com/ckeiituk/outclash/releases/latest/download/latest.yml'
+  const { updateChannel = 'stable' } = await getAppConfig()
+  const url =
+    updateChannel === 'alpha'
+      ? 'https://github.com/ckeiituk/outclash/releases/download/alpha/alpha.yml'
+      : 'https://github.com/ckeiituk/outclash/releases/latest/download/latest.yml'
   const res = await axios.get(url, {
     headers: { 'Content-Type': 'application/octet-stream' },
     ...(mixedPort != 0 && {
@@ -33,15 +39,18 @@ export async function checkUpdate(): Promise<AppVersion | undefined> {
   const latest = parseYaml<AppVersion>(res.data)
   const currentVersion = app.getVersion()
   if (latest.version !== currentVersion) {
+    lastCheckedUpdate = latest
     return latest
   } else {
+    lastCheckedUpdate = undefined
     return undefined
   }
 }
 
 export async function downloadAndInstallUpdate(version: string): Promise<void> {
   const { 'mixed-port': mixedPort = 7897 } = await getControledMihomoConfig()
-  const releaseTag = version.startsWith('v') ? version.slice(1) : version
+  const rawTag = lastCheckedUpdate?.releaseTag ?? version
+  const releaseTag = rawTag.startsWith('v') ? rawTag.slice(1) : rawTag
   const baseUrl = `https://github.com/ckeiituk/outclash/releases/download/${releaseTag}/`
   const fileMap = {
     'win32-x64': `OutClash_x64-setup.exe`,

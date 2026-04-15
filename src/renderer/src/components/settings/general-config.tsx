@@ -11,6 +11,7 @@ import { useAppConfig } from '@renderer/hooks/use-app-config'
 import ConfirmModal from '../base/base-confirm'
 import { useTranslation } from 'react-i18next'
 import { MessageCircleQuestionMark } from 'lucide-react'
+import { Badge } from '@renderer/components/ui/badge'
 
 interface GeneralConfigProps {
   showHiddenSettings: boolean
@@ -24,7 +25,7 @@ const GeneralConfig: React.FC<GeneralConfigProps> = (props) => {
   const {
     silentStart = false,
     autoCheckUpdate,
-
+    updateChannel,
     disableGPU = false
   } = appConfig || {}
 
@@ -83,12 +84,17 @@ const GeneralConfig: React.FC<GeneralConfigProps> = (props) => {
           />
         </SettingItem>
         <SettingItem title={t('settings.general.autoCheckUpdate')} divider={showHiddenSettings}>
-          <Switch
-            checked={autoCheckUpdate}
-            onCheckedChange={(value) => {
-              patchAppConfig({ autoCheckUpdate: value })
-            }}
-          />
+          <div className="flex items-center gap-2">
+            {updateChannel === 'alpha' && (
+              <Badge variant="secondary" className="text-xs">Alpha</Badge>
+            )}
+            <Switch
+              checked={autoCheckUpdate}
+              onCheckedChange={(value) => {
+                patchAppConfig({ autoCheckUpdate: value })
+              }}
+            />
+          </div>
         </SettingItem>
         {showHiddenSettings && (
           <SettingItem

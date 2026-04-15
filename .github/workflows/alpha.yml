@@ -208,6 +208,19 @@ jobs:
           Created at ${{ env.BUILDTIME }}.
           EOF
 
+      - name: Install Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v5
+        with:
+          run_install: false
+
+      - name: Generate alpha feed
+        run: SKIP_CHANGELOG=1 CHANNEL=alpha node scripts/updater.mjs
+
       - name: Upload Release
         uses: softprops/action-gh-release@v2
         with:
@@ -217,6 +230,7 @@ jobs:
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
           generate_release_notes: true
+          files: alpha.yml
 
   alpha-build:
     name: Alpha Build

@@ -10,7 +10,7 @@ import {
 import { addProfileUpdater, delProfileUpdater } from '../core/profileUpdater'
 import { mkdir, readFile, rm, writeFile } from 'fs/promises'
 import { restartCore } from '../core/manager'
-import { getAppConfig } from './app'
+import { getAppConfig, patchAppConfig } from './app'
 import { existsSync } from 'fs'
 import axios, { AxiosResponse } from 'axios'
 import https from 'https'
@@ -294,6 +294,12 @@ export async function createProfile(item: Partial<ProfileItem>): Promise<Profile
           newItem.announce = announceValue
         }
       }
+      const updateChannelKey = Object.keys(headers).find((k) =>
+        k.toLowerCase() === 'outclash-update-channel'
+      )
+      const updateChannel =
+        updateChannelKey && headers[updateChannelKey].toLowerCase() === 'alpha' ? 'alpha' : 'stable'
+      await patchAppConfig({ updateChannel })
       if (newItem.verify) {
         let parsed: MihomoConfig
         try {
