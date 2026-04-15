@@ -32,7 +32,8 @@ const App: React.FC = () => {
   const {
     appTheme = 'system',
     customTheme,
-    autoCheckUpdate
+    autoCheckUpdate,
+    updateChannel
   } = appConfig || {}
   const { setTheme, systemTheme, resolvedTheme } = useTheme()
   const mapBg = resolvedTheme === 'dark' ? mapDark : mapLight
@@ -57,6 +58,13 @@ const App: React.FC = () => {
       setDebugLatest((prev) => prev ? null : { version: v || '99.0.0', changelog: 'Test update banner' })
     }
   }, [])
+  useEffect(() => {
+    ;(window as any).__updateChannel = () => {
+      const ch = updateChannel ?? 'stable'
+      console.log(`[update] channel: ${ch}`)
+      return ch
+    }
+  }, [updateChannel])
   const effectiveLatest = debugLatest || latest
 
   useEffect(() => {

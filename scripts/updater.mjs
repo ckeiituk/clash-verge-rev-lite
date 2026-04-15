@@ -4,9 +4,13 @@ import { readFileSync, writeFileSync } from 'fs'
 const pkg = readFileSync('package.json', 'utf-8')
 let changelog = readFileSync('changelog.md', 'utf-8')
 const { version } = JSON.parse(pkg)
-const downloadUrl = `https://github.com/ckeiituk/outclash/releases/download/${version}`
+const isAlpha = process.env.CHANNEL === 'alpha'
+const downloadUrl = isAlpha
+  ? `https://github.com/ckeiituk/outclash/releases/download/alpha`
+  : `https://github.com/ckeiituk/outclash/releases/download/${version}`
 const latest = {
   version,
+  ...(isAlpha && { releaseTag: 'alpha' }),
   changelog
 }
 
@@ -31,5 +35,6 @@ if (process.env.SKIP_CHANGELOG !== '1') {
   changelog += link(`${downloadUrl}/OutClash_x64.pkg.tar.xz`, 'PACMAN', '64-bit', 'archlinux') + ' '
   changelog += link(`${downloadUrl}/OutClash_aarch64.pkg.tar.xz`, 'PACMAN', 'ARM64', 'archlinux')
 }
-writeFileSync('latest.yml', yaml.stringify(latest))
+const outFile = isAlpha ? 'alpha.yml' : 'latest.yml'
+writeFileSync(outFile, yaml.stringify(latest))
 writeFileSync('changelog.md', changelog)
