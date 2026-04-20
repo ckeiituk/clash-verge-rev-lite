@@ -31,7 +31,8 @@ import {
   Tray
 } from 'electron'
 import { triggerSysProxy } from '../sys/sysproxy'
-import { quitWithoutCore, restartCore } from '../core/manager'
+import { quitWithoutCore } from '../core/manager'
+import { mihomoHotReloadConfig } from '../core/mihomoApi'
 import { floatingWindow } from './floatingWindow'
 import { is } from '@electron-toolkit/utils'
 import { join } from 'path'
@@ -239,14 +240,13 @@ export const buildContextMenu = async (): Promise<Menu> => {
             }
             mainWindow?.webContents.send('controledMihomoConfigUpdated')
             floatingWindow?.webContents.send('controledMihomoConfigUpdated')
-            await restartCore()
           } else {
             if (enable && sysProxy.enable && (sysProxy.mode ?? 'manual') == 'manual' && mixedPort == 0) {
               return
             }
             if (enable) {
               await patchAppConfig({ proxyMode: true })
-              await restartCore()
+              await mihomoHotReloadConfig()
               if (sysProxy.enable) {
                 await triggerSysProxy(true, onlyActiveDevice)
               }
@@ -255,7 +255,7 @@ export const buildContextMenu = async (): Promise<Menu> => {
                 await triggerSysProxy(false, onlyActiveDevice)
               }
               await patchAppConfig({ proxyMode: false })
-              await restartCore()
+              await mihomoHotReloadConfig()
             }
             mainWindow?.webContents.send('appConfigUpdated')
             floatingWindow?.webContents.send('appConfigUpdated')

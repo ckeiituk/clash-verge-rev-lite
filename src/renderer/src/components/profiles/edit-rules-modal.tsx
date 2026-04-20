@@ -78,7 +78,7 @@ import React, {
   useRef
 } from 'react'
 import { createPortal, flushSync } from 'react-dom'
-import { getProfileStr, setRuleStr, getRuleStr, restartCore } from '@renderer/utils/ipc'
+import { getProfileStr, setRuleStr, getRuleStr, mihomoHotReloadConfig } from '@renderer/utils/ipc'
 import { useProfileConfig } from '@renderer/hooks/use-profile-config'
 import { useTranslation } from 'react-i18next'
 import yaml from 'js-yaml'
@@ -2083,7 +2083,7 @@ const EditRulesModal: React.FC<Props> = (props) => {
               if (saved) {
                 closeWithAnimation()
                 if (isCurrentProfile) {
-                  await restartCore()
+                  await mihomoHotReloadConfig()
                 }
               }
             }}

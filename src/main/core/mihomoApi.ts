@@ -64,6 +64,27 @@ export const patchMihomoConfig = async (patch: Partial<ControllerConfigs>): Prom
   return await instance.patch('/configs', patch)
 }
 
+const waitForMihomoReloadReady = async (): Promise<void> => {
+  const maxRetries = 30
+  const retryInterval = 100
+
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      await mihomoConfig()
+      await mihomoGroups()
+      return
+    } catch {
+      await new Promise<void>((resolve) => setTimeout(resolve, retryInterval))
+    }
+  }
+}
+
+const notifyProfileReloaded = (): void => {
+  setTimeout(() => {
+    safeSend(mainWindow, 'profile-reloaded')
+  }, 100)
+}
+
 export const mihomoCloseConnection = async (id: string): Promise<void> => {
   const instance = await getAxios()
   return await instance.delete(`/connections/${encodeURIComponent(id)}`)
@@ -111,7 +132,10 @@ export const mihomoGroups = async (): Promise<ControllerMixedGroup[]> => {
 
   const serverDescriptionMap = new Map<string, string>()
   if (runtime?.proxies) {
-    for (const p of runtime.proxies as { name?: string; serverDescription?: string }[]) {
+    for (const p of runtime.proxies as {
+      name?: string
+      serverDescription?: string
+    }[]) {
       if (p.name && p.serverDescription) {
         serverDescriptionMap.set(p.name, p.serverDescription)
       }
@@ -179,7 +203,9 @@ export const mihomoChangeProxy = async (
   proxy: string
 ): Promise<ControllerProxiesDetail> => {
   const instance = await getAxios()
-  return await instance.put(`/proxies/${encodeURIComponent(group)}`, { name: proxy })
+  return await instance.put(`/proxies/${encodeURIComponent(group)}`, {
+    name: proxy
+  })
 }
 
 export const mihomoUnfixedProxy = async (group: string): Promise<ControllerProxiesDetail> => {
@@ -231,6 +257,22 @@ export const mihomoUpgradeGeo = async (): Promise<void> => {
 export const mihomoUpgradeUI = async (): Promise<void> => {
   const instance = await getAxios()
   return await instance.post('/upgrade/ui')
+}
+
+export const mihomoHotReloadConfig = async (): Promise<void> => {
+  const { generateProfile } = await import('./factory')
+  const { getProfileConfig } = await import('../config')
+  const { resetProviderTracking } = await import('./manager')
+  await generateProfile()
+  const { current } = await getProfileConfig()
+  const { diffWorkDir = false } = await getAppConfig()
+  const { mihomoWorkConfigPath } = await import('../utils/dirs')
+  const configPath = diffWorkDir ? mihomoWorkConfigPath(current) : mihomoWorkConfigPath('work')
+  await resetProviderTracking()
+  const instance = await getAxios()
+  await instance.put('/configs?force=true', { path: configPath })
+  await waitForMihomoReloadReady()
+  notifyProfileReloaded()
 }
 
 export const startMihomoTraffic = async (): Promise<void> => {

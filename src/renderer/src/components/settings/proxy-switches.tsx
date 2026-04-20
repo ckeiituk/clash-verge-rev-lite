@@ -7,7 +7,7 @@ import { Switch } from '@renderer/components/ui/switch'
 import { Tabs, TabsList, TabsTrigger } from '@renderer/components/ui/tabs'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
-import { restartCore, triggerSysProxy, updateTrayIcon } from '@renderer/utils/ipc'
+import { triggerSysProxy, updateTrayIcon, mihomoHotReloadConfig } from '@renderer/utils/ipc'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Settings } from 'lucide-react'
@@ -64,7 +64,6 @@ const ProxySwitches: React.FC = () => {
             } else {
               await patchControledMihomoConfig({ tun: { enable } })
             }
-            await restartCore()
             window.electron.ipcRenderer.send('updateFloatingWindow')
             window.electron.ipcRenderer.send('updateTrayMenu')
             await updateTrayIcon()
@@ -91,7 +90,7 @@ const ProxySwitches: React.FC = () => {
             try {
               if (enable) {
                 await patchAppConfig({ proxyMode: true })
-                await restartCore()
+                await mihomoHotReloadConfig()
                 if (writeSysProxy) {
                   await triggerSysProxy(true, onlyActiveDevice)
                 }
@@ -100,7 +99,7 @@ const ProxySwitches: React.FC = () => {
                   await triggerSysProxy(false, onlyActiveDevice)
                 }
                 await patchAppConfig({ proxyMode: false })
-                await restartCore()
+                await mihomoHotReloadConfig()
               }
               window.electron.ipcRenderer.send('updateFloatingWindow')
               window.electron.ipcRenderer.send('updateTrayMenu')

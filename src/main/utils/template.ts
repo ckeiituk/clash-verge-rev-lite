@@ -27,7 +27,8 @@ export const defaultConfig: AppConfig = {
   proxyDisplayLayout: 'double',
   groupDisplayLayout: 'double',
   autoLightweightMode: 'core',
-  mainSwitchMode: 'tun'
+  mainSwitchMode: 'tun',
+  useHotReloadProfile: true
 }
 
 export const defaultControledMihomoConfig: Partial<MihomoConfig> = {

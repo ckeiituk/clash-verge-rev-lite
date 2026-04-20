@@ -549,6 +549,9 @@ export default {
       stopCoreOnDisconnect: '断网时停止内核',
       stopCoreOnDisconnectHelp:
         '开启后，应用会在检测到网络断开时自动停止内核，并在网络恢复后自动重启内核',
+      useHotReloadProfile: '切换订阅时热重载配置',
+      useHotReloadProfileHelp:
+        '启用后切换或保存订阅时通过 API 热重载配置而无需重启内核，禁用时仍使用重启方式切换',
       disconnectDetectInterval: '断网检测间隔',
       bypassDetectInterfaces: '绕过检测的接口',
       directOnSpecificWifi: '在特定的 WiFi SSID 下直连'

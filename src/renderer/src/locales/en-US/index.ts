@@ -485,6 +485,9 @@ export default {
       stopCoreOnDisconnect: 'Stop core on disconnect',
       stopCoreOnDisconnectHelp:
         'When enabled, app will automatically stop core when network is disconnected and restart when network is restored',
+      useHotReloadProfile: 'Hot reload config on profile switch',
+      useHotReloadProfileHelp:
+        'When enabled, switching profiles or saving them reloads the config via API without restarting the core. When disabled, the core restarts.',
       disconnectDetectInterval: 'Disconnect detect interval',
       bypassDetectInterfaces: 'Bypass detect interfaces',
       directOnSpecificWifi: 'Direct mode on specific WiFi SSID'

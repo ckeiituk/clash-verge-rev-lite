@@ -60,9 +60,13 @@ const Tun: React.FC = () => {
   }
 
   const onSave = async (patch: Partial<MihomoConfig>): Promise<void> => {
-    await patchControledMihomoConfig(patch)
-    await restartCore()
-    setChanged(false)
+    try {
+      await patchControledMihomoConfig(patch)
+    } catch (e) {
+      toast.error(`${e}`)
+    } finally {
+      setChanged(false)
+    }
   }
 
   return (
@@ -104,7 +108,6 @@ const Tun: React.FC = () => {
                 try {
                   await patchAppConfig({ controlTun: value })
                   await patchControledMihomoConfig(value ? {} : { tun: { enable: false } })
-                  await restartCore()
                 } catch (e) {
                   toast.error(`${e}`)
                 }

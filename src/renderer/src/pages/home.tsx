@@ -4,7 +4,7 @@ import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { useProfileConfig } from '@renderer/hooks/use-profile-config'
 import { useGroups } from '@renderer/hooks/use-groups'
-import { restartCore, triggerSysProxy, updateTrayIcon } from '@renderer/utils/ipc'
+import { triggerSysProxy, updateTrayIcon, mihomoHotReloadConfig } from '@renderer/utils/ipc'
 import NumberFlow from '@number-flow/react'
 import { useTranslation } from 'react-i18next'
 import { useEffect, useMemo, useState } from 'react'
@@ -172,11 +172,11 @@ const Home: React.FC = () => {
       if (enable) {
         if (mainSwitchMode === 'tun') {
           await patchControledMihomoConfig({ tun: { enable: true }, dns: { enable: true } })
-          await restartCore()
+          await mihomoHotReloadConfig()
         } else {
           if (writeSysProxy && mode == 'manual' && sysProxyDisabled) return
           await patchAppConfig({ proxyMode: true })
-          await restartCore()
+          await mihomoHotReloadConfig()
           if (writeSysProxy) {
             await triggerSysProxy(true, onlyActiveDevice)
           }
@@ -194,7 +194,7 @@ const Home: React.FC = () => {
           await patchAppConfig({ proxyMode: false })
         }
         if (tunWasEnabled || proxyModeWasEnabled) {
-          await restartCore()
+          await mihomoHotReloadConfig()
         }
       }
       window.electron.ipcRenderer.send('updateFloatingWindow')
