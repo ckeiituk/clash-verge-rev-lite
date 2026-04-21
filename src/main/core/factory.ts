@@ -77,6 +77,7 @@ export async function generateProfile(): Promise<void> {
     currentProfile.tun.enable = controledMihomoConfig.tun?.enable ?? false
     delete configToMerge.tun
   }
+  preserveProfileStoreFakeIp(currentProfile, configToMerge)
 
   const ruleFilePath = rulePath(current || 'default')
   if (existsSync(ruleFilePath)) {
@@ -190,6 +191,20 @@ function cleanBooleanConfigs(profile: MihomoConfig): void {
     const profileConfig = profile.profile as MihomoProfileConfig
     if (!hasStoreSelected) delete profileConfig['store-selected']
     if (!hasStoreFakeIp) delete profileConfig['store-fake-ip']
+  }
+}
+
+function preserveProfileStoreFakeIp(
+  currentProfile: MihomoConfig,
+  configToMerge: Partial<MihomoConfig>
+): void {
+  if (!currentProfile.profile || !configToMerge.profile) return
+  if (!Object.prototype.hasOwnProperty.call(currentProfile.profile, 'store-fake-ip')) return
+
+  // Keep the app default from replacing an explicit subscription value.
+  delete configToMerge.profile['store-fake-ip']
+  if (Object.keys(configToMerge.profile).length === 0) {
+    delete configToMerge.profile
   }
 }
 
