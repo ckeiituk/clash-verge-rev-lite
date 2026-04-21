@@ -7,40 +7,14 @@ import { Input } from '@renderer/components/ui/input'
 import { cn } from '@renderer/lib/utils'
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso'
 import { useTranslation } from 'react-i18next'
-import dayjs from 'dayjs'
-
+import { useLogsStore } from '@renderer/store/logs-store'
 import { includesIgnoreCase } from '@renderer/utils/includes'
 import { MapPin, Trash2 } from 'lucide-react'
 
-const cachedLogs: {
-  log: ControllerLog[]
-  trigger: ((i: ControllerLog[]) => void) | null
-  clean: () => void
-} = {
-  log: [],
-  trigger: null,
-  clean(): void {
-    this.log = []
-    if (this.trigger !== null) {
-      this.trigger(this.log)
-    }
-  }
-}
-
-window.electron.ipcRenderer.on('mihomoLogs', (_e, log: ControllerLog) => {
-  log.time = dayjs().format('L LTS')
-  cachedLogs.log.push(log)
-  if (cachedLogs.log.length >= 500) {
-    cachedLogs.log.shift()
-  }
-  if (cachedLogs.trigger !== null) {
-    cachedLogs.trigger(cachedLogs.log)
-  }
-})
-
 const Logs: React.FC = () => {
   const { t } = useTranslation()
-  const [logs, setLogs] = useState<ControllerLog[]>([...cachedLogs.log])
+  const clearLogs = useLogsStore((state) => state.clear)
+  const [logs, setLogs] = useState<ControllerLog[]>(() => useLogsStore.getState().logs)
   const [filter, setFilter] = useState('')
   const [trace, setTrace] = useState(true)
   const traceRef = useRef(trace)
@@ -58,7 +32,7 @@ const Logs: React.FC = () => {
       const next = !prev
       traceRef.current = next
       if (next) {
-        setLogs([...cachedLogs.log])
+        setLogs([...useLogsStore.getState().logs])
       }
       return next
     })
@@ -75,15 +49,11 @@ const Logs: React.FC = () => {
   }, [filteredLogs, trace])
 
   useEffect(() => {
-    const old = cachedLogs.trigger
-    cachedLogs.trigger = (a): void => {
+    return useLogsStore.subscribe((state) => {
       if (traceRef.current) {
-        setLogs([...a])
+        setLogs([...state.logs])
       }
-    }
-    return (): void => {
-      cachedLogs.trigger = old
-    }
+    })
   }, [])
 
   return (
@@ -99,7 +69,7 @@ const Logs: React.FC = () => {
             />
             <Button
               size="icon-sm"
-              className={cn('ml-2', trace && 'bg-primary text-primary-foreground')}
+              className={cn('ml-2 p-0 bg-clip-border', trace && 'bg-primary text-primary-foreground')}
               variant={trace ? 'default' : 'outline'}
               title={t('logs.autoScroll')}
               onClick={toggleTrace}
@@ -109,10 +79,11 @@ const Logs: React.FC = () => {
             <Button
               size="icon-sm"
               title={t('pages.logs.clearLogs')}
-              className="ml-2"
+              className="ml-2 p-0 bg-clip-border"
               variant="ghost"
               onClick={() => {
-                cachedLogs.clean()
+                clearLogs()
+                setLogs([])
               }}
             >
               <Trash2 className="text-lg text-destructive" />
