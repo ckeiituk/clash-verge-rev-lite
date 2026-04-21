@@ -108,7 +108,7 @@ const Home: React.FC = () => {
   }, [isSelected])
 
   const isDisabled =
-    loading || (mainSwitchMode === 'sysproxy' && mode == 'manual' && sysProxyDisabled)
+    loading || (!isSelected && mainSwitchMode === 'sysproxy' && mode == 'manual' && sysProxyDisabled)
 
   const status = loading
     ? loadingDirection === 'connecting'
@@ -182,19 +182,22 @@ const Home: React.FC = () => {
           await restartCore()
         } else {
           if (mode == 'manual' && sysProxyDisabled) return
-          await triggerSysProxy(true, onlyActiveDevice)
           await patchAppConfig({ sysProxy: { enable: true } })
+          await restartCore()
+          await triggerSysProxy(true, onlyActiveDevice)
         }
       } else {
         const tunWasEnabled = tun?.enable ?? false
         const sysProxyWasEnabled = sysProxyEnable ?? false
         if (tunWasEnabled) {
           await patchControledMihomoConfig({ tun: { enable: false } })
-          await restartCore()
         }
         if (sysProxyWasEnabled) {
           await triggerSysProxy(false, onlyActiveDevice)
           await patchAppConfig({ sysProxy: { enable: false } })
+        }
+        if (tunWasEnabled || sysProxyWasEnabled) {
+          await restartCore()
         }
       }
       window.electron.ipcRenderer.send('updateFloatingWindow')

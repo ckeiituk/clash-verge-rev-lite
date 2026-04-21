@@ -132,7 +132,7 @@ async function handleTrayClick(): Promise<void> {
 }
 
 export const buildContextMenu = async (): Promise<Menu> => {
-  const { mode, tun } = await getControledMihomoConfig()
+  const { mode, tun, 'mixed-port': mixedPort } = await getControledMihomoConfig()
   const {
     sysProxy,
     onlyActiveDevice = false,
@@ -240,8 +240,16 @@ export const buildContextMenu = async (): Promise<Menu> => {
             floatingWindow?.webContents.send('controledMihomoConfigUpdated')
             await restartCore()
           } else {
-            await triggerSysProxy(enable, onlyActiveDevice)
-            await patchAppConfig({ sysProxy: { enable } })
+            if (enable && (sysProxy.mode ?? 'manual') == 'manual' && mixedPort == 0) return
+            if (enable) {
+              await patchAppConfig({ sysProxy: { enable: true } })
+              await restartCore()
+              await triggerSysProxy(true, onlyActiveDevice)
+            } else {
+              await triggerSysProxy(false, onlyActiveDevice)
+              await patchAppConfig({ sysProxy: { enable: false } })
+              await restartCore()
+            }
             mainWindow?.webContents.send('appConfigUpdated')
             floatingWindow?.webContents.send('appConfigUpdated')
           }
