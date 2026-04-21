@@ -12,7 +12,7 @@ import PacEditorModal from '@renderer/components/sysproxy/pac-editor-modal'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { platform } from '@renderer/utils/init'
-import { openUWPTool, restartCore, triggerSysProxy } from '@renderer/utils/ipc'
+import { openUWPTool, triggerSysProxy } from '@renderer/utils/ipc'
 import React, { useEffect, useState } from 'react'
 import ByPassEditorModal from '@renderer/components/sysproxy/bypass-editor-modal'
 import { useTranslation } from 'react-i18next'
@@ -111,12 +111,10 @@ const Sysproxy: React.FC = () => {
     if (!proxyMode) return
     if (values.enable) {
       try {
-        await restartCore()
         await triggerSysProxy(true, onlyActiveDevice)
       } catch (e) {
         toast.error(`${e}`)
         await patchAppConfig({ sysProxy: { enable: false } })
-        await restartCore()
       }
     } else if (prevEnable) {
       try {
@@ -124,15 +122,14 @@ const Sysproxy: React.FC = () => {
       } catch (e) {
         toast.error(`${e}`)
       }
-      await restartCore()
     }
   }
 
   const onToggleSysProxy = async (enable: boolean): Promise<void> => {
     if (enable && values.mode == 'manual' && mixedPort == 0) return
-    setValues({ ...values, enable })
-    await patchAppConfig({ sysProxy: { ...values, enable } })
+    originSetValues({ ...values, enable })
     setChanged(false)
+    await patchAppConfig({ sysProxy: { ...values, enable } })
     if (!proxyMode) return
     try {
       if (enable) {
@@ -230,7 +227,10 @@ const Sysproxy: React.FC = () => {
               <Tabs
                 value={values.settingMode}
                 onValueChange={(value) => {
-                  setValues({ ...values, settingMode: value as 'exec' | 'service' })
+                  setValues({
+                    ...values,
+                    settingMode: value as 'exec' | 'service'
+                  })
                 }}
               >
                 <TabsList>

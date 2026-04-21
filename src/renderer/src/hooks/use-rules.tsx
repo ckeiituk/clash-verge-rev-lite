@@ -1,7 +1,10 @@
 import React, { createContext, useContext, ReactNode } from 'react'
 import useSWR from 'swr'
 import { mihomoRules } from '@renderer/utils/ipc'
-import { subscribeCoreStarted } from '@renderer/store/core-lifecycle-store'
+import {
+  subscribeCoreStarted,
+  subscribeProfileReloaded
+} from '@renderer/store/core-lifecycle-store'
 
 interface RulesContextType {
   rules: ControllerRules | undefined
@@ -22,13 +25,17 @@ export const RulesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
 
     window.electron.ipcRenderer.on('rulesUpdated', onRulesUpdated)
-    const unsubscribe = subscribeCoreStarted(() => {
+    const unsubscribeCoreStarted = subscribeCoreStarted(() => {
+      mutate()
+    })
+    const unsubscribeProfileReloaded = subscribeProfileReloaded(() => {
       mutate()
     })
 
     return (): void => {
       window.electron.ipcRenderer.removeListener('rulesUpdated', onRulesUpdated)
-      unsubscribe()
+      unsubscribeCoreStarted()
+      unsubscribeProfileReloaded()
     }
   }, [mutate])
 

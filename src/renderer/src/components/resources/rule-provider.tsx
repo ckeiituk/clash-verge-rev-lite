@@ -3,7 +3,10 @@ import {
   mihomoUpdateRuleProviders,
   getRuntimeConfig
 } from '@renderer/utils/ipc'
-import { subscribeCoreStarted } from '@renderer/store/core-lifecycle-store'
+import {
+  subscribeCoreStarted,
+  subscribeProfileReloaded
+} from '@renderer/store/core-lifecycle-store'
 import { getHash } from '@renderer/utils/hash'
 import Viewer from './viewer'
 import { Fragment, useEffect, useMemo, useState } from 'react'
@@ -55,9 +58,16 @@ const RuleProvider: React.FC = () => {
   })
 
   useEffect(() => {
-    return subscribeCoreStarted(() => {
+    const unsubscribeCoreStarted = subscribeCoreStarted(() => {
       mutate()
     })
+    const unsubscribeProfileReloaded = subscribeProfileReloaded(() => {
+      mutate()
+    })
+    return (): void => {
+      unsubscribeCoreStarted()
+      unsubscribeProfileReloaded()
+    }
   }, [mutate])
 
   const providers = useMemo(() => {
@@ -130,18 +140,12 @@ const RuleProvider: React.FC = () => {
         <Fragment key={provider.name}>
           <SettingItem
             title={provider.name}
-            actions={
-              <Badge className="ml-2">
-                {provider.ruleCount}
-              </Badge>
-            }
+            actions={<Badge className="ml-2">{provider.ruleCount}</Badge>}
           >
             <div className="flex h-8 leading-8 text-foreground-500">
               <div>{dayjs(provider.updatedAt).fromNow()}</div>
               <Button
-                title={
-                  provider.vehicleType == 'File' ? t('resources.edit') : t('resources.view')
-                }
+                title={provider.vehicleType == 'File' ? t('resources.edit') : t('resources.view')}
                 className="ml-2"
                 size="icon-sm"
                 variant="ghost"

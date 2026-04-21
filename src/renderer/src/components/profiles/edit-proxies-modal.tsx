@@ -13,7 +13,7 @@ import { Button } from '@renderer/components/ui/button'
 import { Textarea } from '@renderer/components/ui/textarea'
 import { Separator } from '@renderer/components/ui/separator'
 import { useTranslation } from 'react-i18next'
-import { getProfileStr, setProfileStr, restartCore } from '@renderer/utils/ipc'
+import { getProfileStr, setProfileStr } from '@renderer/utils/ipc'
 import parseUri from '@renderer/utils/uri-parser'
 import { ArrowDownToLine, Trash2, Undo2 } from 'lucide-react'
 import { Spinner } from '@renderer/components/ui/spinner'
@@ -31,7 +31,7 @@ interface ProxyEntry {
   raw: Record<string, any>
 }
 
-const EditProxiesModal: React.FC<Props> = ({ id, isCurrent, onClose }) => {
+const EditProxiesModal: React.FC<Props> = ({ id, onClose }) => {
   const { t } = useTranslation()
   const [proxyUri, setProxyUri] = useState('')
   const [proxies, setProxies] = useState<ProxyEntry[]>([])
@@ -71,7 +71,10 @@ const EditProxiesModal: React.FC<Props> = ({ id, isCurrent, onClose }) => {
       // not base64, use as-is
     }
 
-    const lines = uris.trim().split('\n').filter((l) => l.trim())
+    const lines = uris
+      .trim()
+      .split('\n')
+      .filter((l) => l.trim())
     const parsed: ProxyEntry[] = []
     const errors: string[] = []
     const existingNames = new Set(proxies.map((p) => p.name))
@@ -148,7 +151,6 @@ const EditProxiesModal: React.FC<Props> = ({ id, isCurrent, onClose }) => {
 
       const yamlStr = yaml.stringify(config)
       await setProfileStr(id, yamlStr)
-      if (isCurrent) await restartCore()
       toast.success(t('profile.proxiesSaved'))
       onClose()
     } catch (e) {
@@ -161,7 +163,12 @@ const EditProxiesModal: React.FC<Props> = ({ id, isCurrent, onClose }) => {
   const originalCount = profileData?.proxies?.length ?? 0
 
   return (
-    <Dialog open={true} onOpenChange={(open) => { if (!open) onClose() }}>
+    <Dialog
+      open={true}
+      onOpenChange={(open) => {
+        if (!open) onClose()
+      }}
+    >
       <DialogContent className="sm:max-w-3xl h-[70vh] flex flex-col" showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>{t('profile.editProxies')}</DialogTitle>
@@ -176,14 +183,8 @@ const EditProxiesModal: React.FC<Props> = ({ id, isCurrent, onClose }) => {
               value={proxyUri}
               onChange={(e) => setProxyUri(e.target.value)}
             />
-            {parseError && (
-              <p className="text-xs text-destructive">{parseError}</p>
-            )}
-            <Button
-              size="sm"
-              onClick={handleParse}
-              disabled={!proxyUri.trim()}
-            >
+            {parseError && <p className="text-xs text-destructive">{parseError}</p>}
+            <Button size="sm" onClick={handleParse} disabled={!proxyUri.trim()}>
               <ArrowDownToLine className="size-4 mr-2" />
               {t('profile.addToProfile')}
             </Button>
@@ -216,14 +217,14 @@ const EditProxiesModal: React.FC<Props> = ({ id, isCurrent, onClose }) => {
                           <span className={isDeleted ? 'line-through text-muted-foreground' : ''}>
                             {proxy.name}
                           </span>
-                          <span className="text-xs text-muted-foreground ml-2">
-                            {proxy.type}
-                          </span>
+                          <span className="text-xs text-muted-foreground ml-2">{proxy.type}</span>
                         </div>
                         <Button
                           size="icon-sm"
                           variant="ghost"
-                          onClick={() => isNew ? handleRemoveNew(proxy.name) : handleDeleteToggle(proxy.name)}
+                          onClick={() =>
+                            isNew ? handleRemoveNew(proxy.name) : handleDeleteToggle(proxy.name)
+                          }
                         >
                           {isDeleted ? (
                             <Undo2 className="size-3.5" />
@@ -249,9 +250,7 @@ const EditProxiesModal: React.FC<Props> = ({ id, isCurrent, onClose }) => {
           <Button size="sm" onClick={handleSave} disabled={saving}>
             <span className="relative inline-flex items-center justify-center">
               {saving && <Spinner className="size-4 absolute" />}
-              <span className={saving ? 'invisible' : undefined}>
-                {t('common.save')}
-              </span>
+              <span className={saving ? 'invisible' : undefined}>{t('common.save')}</span>
             </span>
           </Button>
         </DialogFooter>
