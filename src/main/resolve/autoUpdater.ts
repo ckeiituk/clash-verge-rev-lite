@@ -1,7 +1,7 @@
 import axios, { AxiosRequestConfig, CancelTokenSource } from 'axios'
 import { parseYaml } from '../utils/yaml'
 import { app, shell } from 'electron'
-import { getControledMihomoConfig } from '../config'
+import { getRuntimeConfig } from '../core/factory'
 import { dataDir, exeDir, exePath, isPortable, resourcesFilesDir } from '../utils/dirs'
 import { copyFile, rm, writeFile, readFile } from 'fs/promises'
 import path from 'path'
@@ -16,7 +16,7 @@ import { t } from '../utils/i18n'
 let downloadCancelToken: CancelTokenSource | null = null
 
 export async function checkUpdate(): Promise<AppVersion | undefined> {
-  const { 'mixed-port': mixedPort = 7897 } = await getControledMihomoConfig()
+  const { 'mixed-port': mixedPort = 0 } = (await getRuntimeConfig()) ?? {}
   const url = 'https://github.com/ckeiituk/outclash/releases/latest/download/latest.yml'
   const res = await axios.get(url, {
     headers: { 'Content-Type': 'application/octet-stream' },
@@ -39,7 +39,7 @@ export async function checkUpdate(): Promise<AppVersion | undefined> {
 }
 
 export async function downloadAndInstallUpdate(version: string): Promise<void> {
-  const { 'mixed-port': mixedPort = 7897 } = await getControledMihomoConfig()
+  const { 'mixed-port': mixedPort = 0 } = (await getRuntimeConfig()) ?? {}
   const releaseTag = version.startsWith('v') ? version.slice(1) : version
   const baseUrl = `https://github.com/ckeiituk/outclash/releases/download/${releaseTag}/`
   const fileMap = {
