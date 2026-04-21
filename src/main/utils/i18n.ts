@@ -83,8 +83,8 @@ const zhCN: LocaleTranslations = {
     ok: '确定'
   },
   notification: {
-    sysProxyEnabled: '代理模式已开启',
-    sysProxyDisabled: '代理模式已关闭',
+    sysProxyEnabled: '系统代理已开启',
+    sysProxyDisabled: '系统代理已关闭',
     tunEnabled: '虚拟网卡已开启',
     tunDisabled: '虚拟网卡已关闭',
     switchedToRuleMode: '已切换至规则模式',
@@ -223,8 +223,8 @@ const enUS: LocaleTranslations = {
     ok: 'OK'
   },
   notification: {
-    sysProxyEnabled: 'Proxy Mode Enabled',
-    sysProxyDisabled: 'Proxy Mode Disabled',
+    sysProxyEnabled: 'System Proxy Enabled',
+    sysProxyDisabled: 'System Proxy Disabled',
     tunEnabled: 'Virtual Network Interface Enabled',
     tunDisabled: 'Virtual Network Interface Disabled',
     switchedToRuleMode: 'Switched to Rule Mode',
@@ -363,8 +363,8 @@ const ruRU: LocaleTranslations = {
     ok: 'ОК'
   },
   notification: {
-    sysProxyEnabled: 'Режим прокси включён',
-    sysProxyDisabled: 'Режим прокси отключён',
+    sysProxyEnabled: 'Системный прокси включён',
+    sysProxyDisabled: 'Системный прокси отключён',
     tunEnabled: 'Режим TUN включён',
     tunDisabled: 'Режим TUN отключён',
     switchedToRuleMode: 'Включён режим правил',

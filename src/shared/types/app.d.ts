@@ -75,6 +75,7 @@ interface AppConfig {
   expandProxyGroups?: boolean
   sysProxy: ISysProxyConfig
   proxyMode?: boolean
+  proxyModeBehaviorMigrated?: boolean
   maxLogDays: number
   userAgent?: string
   delayTestConcurrency?: number

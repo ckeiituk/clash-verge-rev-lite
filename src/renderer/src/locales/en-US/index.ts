@@ -470,6 +470,9 @@ export default {
       autoEnterLightModeDelay: 'Auto enter light mode delay',
       seconds: 's',
       copyEnvType: 'Copy environment variable type',
+      legacyAlwaysEnableProxyPorts: 'Always keep local ports active',
+      legacyAlwaysEnableProxyPortsHelp:
+        'Restores the old behavior: configured mixed/http/socks and other local ports stay active even when both TUN and System Proxy are disabled.',
       corePriority: 'Core process priority',
       realtime: 'Realtime',
       high: 'High',

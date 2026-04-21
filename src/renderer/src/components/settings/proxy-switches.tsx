@@ -20,11 +20,10 @@ const ProxySwitches: React.FC = () => {
   const { appConfig, patchAppConfig } = useAppConfig()
   const {
     sysProxy,
-    proxyMode = false,
     onlyActiveDevice = false,
     mainSwitchMode = 'tun'
   } = appConfig || {}
-  const { enable: writeSysProxy = true, mode } = sysProxy || {}
+  const { enable: sysProxyEnable = true, mode } = sysProxy || {}
   const { 'mixed-port': mixedPort } = controledMihomoConfig || {}
   const sysProxyDisabled = mixedPort == 0
 
@@ -71,7 +70,7 @@ const ProxySwitches: React.FC = () => {
         />
       </SettingItem>
       <SettingItem
-        title={t('sider.proxyMode')}
+        title={t('sider.systemProxy')}
         actions={
           <Button
             size="icon-sm"
@@ -83,22 +82,18 @@ const ProxySwitches: React.FC = () => {
         }
       >
         <Switch
-          checked={proxyMode}
-          disabled={!proxyMode && writeSysProxy && mode == 'manual' && sysProxyDisabled}
+          checked={sysProxyEnable}
+          disabled={mode == 'manual' && sysProxyDisabled}
           onCheckedChange={async (enable: boolean) => {
-            if (enable && writeSysProxy && mode == 'manual' && sysProxyDisabled) return
+            if (mode == 'manual' && sysProxyDisabled) return
             try {
               if (enable) {
-                await patchAppConfig({ proxyMode: true })
+                await patchAppConfig({ sysProxy: { enable: true } })
                 await mihomoHotReloadConfig()
-                if (writeSysProxy) {
-                  await triggerSysProxy(true, onlyActiveDevice)
-                }
+                await triggerSysProxy(true, onlyActiveDevice)
               } else {
-                if (writeSysProxy) {
-                  await triggerSysProxy(false, onlyActiveDevice)
-                }
-                await patchAppConfig({ proxyMode: false })
+                await triggerSysProxy(false, onlyActiveDevice)
+                await patchAppConfig({ sysProxy: { enable: false } })
                 await mihomoHotReloadConfig()
               }
               window.electron.ipcRenderer.send('updateFloatingWindow')

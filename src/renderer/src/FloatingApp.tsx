@@ -5,11 +5,12 @@ import { showContextMenu, triggerMainWindow } from './utils/ipc'
 import { useAppConfig } from './hooks/use-app-config'
 import { useControledMihomoConfig } from './hooks/use-controled-mihomo-config'
 
-  const FloatingApp: React.FC = () => {
+const FloatingApp: React.FC = () => {
   const { appConfig } = useAppConfig()
   const { controledMihomoConfig } = useControledMihomoConfig()
-  const { proxyMode = false, spinFloatingIcon = true } = appConfig || {}
+  const { sysProxy, spinFloatingIcon = true } = appConfig || {}
   const { tun } = controledMihomoConfig || {}
+  const sysProxyEnabled = sysProxy?.enable
   const tunEnabled = tun?.enable
 
   const [upload, setUpload] = useState(0)
@@ -77,7 +78,7 @@ import { useControledMihomoConfig } from './hooks/use-controled-mihomo-config'
                   }
                 : {}
             }
-            className={`app-nodrag cursor-pointer floating-thumb ${tunEnabled ? 'bg-gradient-end-power-on' : proxyMode ? 'bg-primary' : 'bg-muted'} hover:opacity-80 rounded-full h-[calc(100%-4px)] aspect-square`}
+            className={`app-nodrag cursor-pointer floating-thumb ${tunEnabled ? 'bg-gradient-end-power-on' : sysProxyEnabled ? 'bg-primary' : 'bg-muted'} hover:opacity-80 rounded-full h-[calc(100%-4px)] aspect-square`}
           >
             <MihomoIcon className="floating-icon text-primary-foreground h-full leading-full text-[22px] mx-auto" />
           </div>

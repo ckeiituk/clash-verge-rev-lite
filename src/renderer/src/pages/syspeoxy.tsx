@@ -12,7 +12,7 @@ import PacEditorModal from '@renderer/components/sysproxy/pac-editor-modal'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { platform } from '@renderer/utils/init'
-import { openUWPTool, triggerSysProxy } from '@renderer/utils/ipc'
+import { openUWPTool, triggerSysProxy, mihomoHotReloadConfig, updateTrayIcon } from '@renderer/utils/ipc'
 import React, { useEffect, useState } from 'react'
 import ByPassEditorModal from '@renderer/components/sysproxy/bypass-editor-modal'
 import { useTranslation } from 'react-i18next'
@@ -77,9 +77,8 @@ const Sysproxy: React.FC = () => {
   const { 'mixed-port': mixedPort } = controledMihomoConfig || {}
   const {
     sysProxy,
-    proxyMode = false,
     onlyActiveDevice = false
-  } = appConfig || ({ sysProxy: { enable: true }, proxyMode: false } as AppConfig)
+  } = appConfig || ({ sysProxy: { enable: true } } as AppConfig)
   const [changed, setChanged] = useState(false)
   const [values, originSetValues] = useState({
     enable: sysProxy.enable,
@@ -108,19 +107,23 @@ const Sysproxy: React.FC = () => {
     const prevEnable = sysProxy.enable ?? false
     await patchAppConfig({ sysProxy: values })
     setChanged(false)
-    if (!proxyMode) return
-    if (values.enable) {
-      try {
-        await triggerSysProxy(true, onlyActiveDevice)
-      } catch (e) {
-        toast.error(`${e}`)
-        await patchAppConfig({ sysProxy: { enable: false } })
+    try {
+      if (values.enable && !prevEnable) {
+        await mihomoHotReloadConfig()
       }
-    } else if (prevEnable) {
-      try {
+      if (values.enable) {
+        await triggerSysProxy(true, onlyActiveDevice)
+      } else if (prevEnable) {
         await triggerSysProxy(false, onlyActiveDevice)
-      } catch (e) {
-        toast.error(`${e}`)
+        await mihomoHotReloadConfig()
+      }
+      window.electron.ipcRenderer.send('updateFloatingWindow')
+      window.electron.ipcRenderer.send('updateTrayMenu')
+      await updateTrayIcon()
+    } catch (e) {
+      toast.error(`${e}`)
+      if (values.enable) {
+        await patchAppConfig({ sysProxy: { enable: false } })
       }
     }
   }
@@ -129,16 +132,19 @@ const Sysproxy: React.FC = () => {
     if (enable && values.mode == 'manual' && mixedPort == 0) return
     originSetValues({ ...values, enable })
     setChanged(false)
-    await patchAppConfig({ sysProxy: { ...values, enable } })
-    if (!proxyMode) return
     try {
       if (enable) {
+        await patchAppConfig({ sysProxy: { ...values, enable: true } })
+        await mihomoHotReloadConfig()
         await triggerSysProxy(true, onlyActiveDevice)
       } else {
         await triggerSysProxy(false, onlyActiveDevice)
+        await patchAppConfig({ sysProxy: { ...values, enable: false } })
+        await mihomoHotReloadConfig()
       }
       window.electron.ipcRenderer.send('updateFloatingWindow')
       window.electron.ipcRenderer.send('updateTrayMenu')
+      await updateTrayIcon()
     } catch (e) {
       toast.error(`${e}`)
     }

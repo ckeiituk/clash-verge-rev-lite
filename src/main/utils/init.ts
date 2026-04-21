@@ -175,14 +175,17 @@ async function migration(): Promise<void> {
     }
   }
 
-  // Migrate the old sysProxy.enable runtime toggle to proxyMode.
-  // sysProxy.enable now only controls whether the OS proxy is written.
   const legacyAppConfig = appConfig as Partial<AppConfig>
-  if (!('proxyMode' in legacyAppConfig)) {
-    appConfigPatch.proxyMode = legacyAppConfig.sysProxy?.enable ?? false
-    if (!legacyAppConfig.sysProxy?.enable) {
-      appConfigPatch.sysProxy = { ...(legacyAppConfig.sysProxy ?? {}), enable: true }
+  if (!legacyAppConfig.proxyModeBehaviorMigrated) {
+    if ('proxyMode' in legacyAppConfig) {
+      const currentSysProxy = { ...defaultConfig.sysProxy, ...(legacyAppConfig.sysProxy ?? {}) }
+      appConfigPatch.sysProxy = {
+        ...currentSysProxy,
+        enable: Boolean(legacyAppConfig.proxyMode) && currentSysProxy.enable
+      }
     }
+    appConfigPatch.proxyMode = false
+    appConfigPatch.proxyModeBehaviorMigrated = true
   }
 
   if (Object.keys(appConfigPatch).length > 0) {
@@ -226,11 +229,9 @@ export async function init(): Promise<void> {
 
   const {
     sysProxy,
-    proxyMode = false,
     onlyActiveDevice = false,
     networkDetection = false
   } = appConfig
-  const writeSysProxy = proxyMode && sysProxy.enable
 
   const initTasks: Promise<void>[] = [
     startSSIDCheck()
@@ -243,10 +244,10 @@ export async function init(): Promise<void> {
   initTasks.push(
     (async (): Promise<void> => {
       try {
-        if (writeSysProxy) {
+        if (sysProxy.enable) {
           await startPacServer()
         }
-        await triggerSysProxy(writeSysProxy, onlyActiveDevice)
+        await triggerSysProxy(sysProxy.enable, onlyActiveDevice)
       } catch {
         // ignore
       }

@@ -37,25 +37,21 @@ export async function registerShortcut(
     }
     case 'triggerSysProxyShortcut': {
       return globalShortcut.register(newShortcut, async () => {
-        const { proxyMode = false, sysProxy, onlyActiveDevice = false } = await getAppConfig()
-        const { enable: writeSysProxy = true, mode } = sysProxy
+        const { sysProxy, onlyActiveDevice = false } = await getAppConfig()
+        const { enable, mode } = sysProxy
         const { 'mixed-port': mixedPort } = await getControledMihomoConfig()
         try {
-          const nextEnable = !proxyMode
-          if (nextEnable && writeSysProxy && (mode ?? 'manual') == 'manual' && mixedPort == 0) {
+          const nextEnable = !enable
+          if (nextEnable && (mode ?? 'manual') == 'manual' && mixedPort == 0) {
             return
           }
           if (nextEnable) {
-            await patchAppConfig({ proxyMode: true })
+            await patchAppConfig({ sysProxy: { enable: true } })
             await mihomoHotReloadConfig()
-            if (writeSysProxy) {
-              await triggerSysProxy(true, onlyActiveDevice)
-            }
+            await triggerSysProxy(true, onlyActiveDevice)
           } else {
-            if (writeSysProxy) {
-              await triggerSysProxy(false, onlyActiveDevice)
-            }
-            await patchAppConfig({ proxyMode: false })
+            await triggerSysProxy(false, onlyActiveDevice)
+            await patchAppConfig({ sysProxy: { enable: false } })
             await mihomoHotReloadConfig()
           }
           new Notification({

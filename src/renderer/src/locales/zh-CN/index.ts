@@ -534,6 +534,9 @@ export default {
       autoEnterLightModeDelay: '自动开启轻量模式延时',
       seconds: '秒',
       copyEnvType: '复制环境变量类型',
+      legacyAlwaysEnableProxyPorts: '始终保持本地端口启用',
+      legacyAlwaysEnableProxyPortsHelp:
+        '恢复旧行为：即使 TUN 和系统代理都关闭，已配置的 mixed/http/socks 等本地端口仍然保持启用。',
       corePriority: '内核进程优先级',
       realtime: '实时',
       high: '高',

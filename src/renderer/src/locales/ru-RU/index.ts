@@ -469,6 +469,9 @@ export default {
       autoEnterLightModeDelay: 'Задержка перед переходом в облегчённый режим',
       seconds: 'с',
       copyEnvType: 'Формат копирования переменных окружения',
+      legacyAlwaysEnableProxyPorts: 'Всегда держать локальные порты активными',
+      legacyAlwaysEnableProxyPortsHelp:
+        'Возвращает старое поведение: настроенные mixed/http/socks и другие локальные порты остаются активными даже при выключенных TUN и системном прокси.',
       corePriority: 'Приоритет процесса ядра',
       realtime: 'Реальное время',
       high: 'Высокий',

@@ -36,10 +36,9 @@ const Home: React.FC = () => {
   const {
     mainSwitchMode = 'tun',
     sysProxy,
-    proxyMode = false,
     onlyActiveDevice = false,
   } = appConfig || {}
-  const { enable: writeSysProxy = true, mode } = sysProxy || {}
+  const { enable: sysProxyEnable = true, mode } = sysProxy || {}
   const { controledMihomoConfig, patchControledMihomoConfig } = useControledMihomoConfig()
   const { tun } = controledMihomoConfig || {}
   const { 'mixed-port': mixedPort } = controledMihomoConfig || {}
@@ -80,7 +79,7 @@ const Home: React.FC = () => {
     return 0
   })
 
-  const isSelected = (tun?.enable ?? false) || proxyMode
+  const isSelected = (tun?.enable ?? false) || sysProxyEnable
 
   useEffect(() => {
     if (isSelected) {
@@ -99,9 +98,7 @@ const Home: React.FC = () => {
     }
   }, [isSelected])
 
-  const isDisabled =
-    loading ||
-    (!isSelected && mainSwitchMode === 'sysproxy' && writeSysProxy && mode == 'manual' && sysProxyDisabled)
+  const isDisabled = loading || (mainSwitchMode === 'sysproxy' && mode == 'manual' && sysProxyDisabled)
 
   const status = loading
     ? loadingDirection === 'connecting'
@@ -169,31 +166,22 @@ const Home: React.FC = () => {
     setLoading(true)
     setLoadingDirection(enable ? 'connecting' : 'disconnecting')
     try {
-      if (enable) {
-        if (mainSwitchMode === 'tun') {
+      if (mainSwitchMode === 'tun') {
+        if (enable) {
           await patchControledMihomoConfig({ tun: { enable: true }, dns: { enable: true } })
-          await mihomoHotReloadConfig()
         } else {
-          if (writeSysProxy && mode == 'manual' && sysProxyDisabled) return
-          await patchAppConfig({ proxyMode: true })
-          await mihomoHotReloadConfig()
-          if (writeSysProxy) {
-            await triggerSysProxy(true, onlyActiveDevice)
-          }
-        }
-      } else {
-        const tunWasEnabled = tun?.enable ?? false
-        const proxyModeWasEnabled = proxyMode
-        if (tunWasEnabled) {
           await patchControledMihomoConfig({ tun: { enable: false } })
         }
-        if (proxyModeWasEnabled) {
-          if (writeSysProxy) {
-            await triggerSysProxy(false, onlyActiveDevice)
-          }
-          await patchAppConfig({ proxyMode: false })
-        }
-        if (tunWasEnabled || proxyModeWasEnabled) {
+        await mihomoHotReloadConfig()
+      } else {
+        if (mode == 'manual' && sysProxyDisabled) return
+        if (enable) {
+          await patchAppConfig({ sysProxy: { enable: true } })
+          await mihomoHotReloadConfig()
+          await triggerSysProxy(true, onlyActiveDevice)
+        } else {
+          await triggerSysProxy(false, onlyActiveDevice)
+          await patchAppConfig({ sysProxy: { enable: false } })
           await mihomoHotReloadConfig()
         }
       }

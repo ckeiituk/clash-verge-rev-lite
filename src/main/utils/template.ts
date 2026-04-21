@@ -18,6 +18,7 @@ export const defaultConfig: AppConfig = {
   hosts: [],
   sysProxy: { enable: true, mode: 'manual' },
   proxyMode: false,
+  proxyModeBehaviorMigrated: true,
   disableLoopbackDetector: false,
   disableEmbedCA: false,
   disableSystemCA: false,
