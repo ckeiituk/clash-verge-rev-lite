@@ -176,22 +176,29 @@ const Home: React.FC = () => {
     setLoading(true)
     setLoadingDirection(enable ? 'connecting' : 'disconnecting')
     try {
-      if (mainSwitchMode === 'tun') {
-        if (enable) {
-          await patchControledMihomoConfig({ tun: { enable }, dns: { enable: true } })
+      if (enable) {
+        if (mainSwitchMode === 'tun') {
+          await patchControledMihomoConfig({ tun: { enable: true }, dns: { enable: true } })
+          await restartCore()
         } else {
-          await patchControledMihomoConfig({ tun: { enable } })
+          if (mode == 'manual' && sysProxyDisabled) return
+          await triggerSysProxy(true, onlyActiveDevice)
+          await patchAppConfig({ sysProxy: { enable: true } })
         }
-        await restartCore()
-        window.electron.ipcRenderer.send('updateFloatingWindow')
-        window.electron.ipcRenderer.send('updateTrayMenu')
       } else {
-        if (mode == 'manual' && sysProxyDisabled) return
-        await triggerSysProxy(enable, onlyActiveDevice)
-        await patchAppConfig({ sysProxy: { enable } })
-        window.electron.ipcRenderer.send('updateFloatingWindow')
-        window.electron.ipcRenderer.send('updateTrayMenu')
+        const tunWasEnabled = tun?.enable ?? false
+        const sysProxyWasEnabled = sysProxyEnable ?? false
+        if (tunWasEnabled) {
+          await patchControledMihomoConfig({ tun: { enable: false } })
+          await restartCore()
+        }
+        if (sysProxyWasEnabled) {
+          await triggerSysProxy(false, onlyActiveDevice)
+          await patchAppConfig({ sysProxy: { enable: false } })
+        }
       }
+      window.electron.ipcRenderer.send('updateFloatingWindow')
+      window.electron.ipcRenderer.send('updateTrayMenu')
       await updateTrayIcon()
     } catch (e) {
       toast.error(`${e}`)
