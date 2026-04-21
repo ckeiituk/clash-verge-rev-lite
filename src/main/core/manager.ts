@@ -620,8 +620,10 @@ export async function startNetworkDetection(): Promise<void> {
     onlyActiveDevice = false,
     networkDetectionBypass = [],
     networkDetectionInterval = 10,
+    proxyMode = false,
     sysProxy = { enable: false }
   } = await getAppConfig()
+  const writeSysProxy = proxyMode && sysProxy.enable
   const { tun: { device = process.platform === 'darwin' ? undefined : 'mihomo' } = {} } =
     await getControledMihomoConfig()
   if (networkDetectionTimer) {
@@ -636,12 +638,12 @@ export async function startNetworkDetection(): Promise<void> {
       if ((networkDownHandled && !child) || (child && child.killed)) {
         const promises = await startCore()
         await Promise.all(promises)
-        if (sysProxy.enable) triggerSysProxy(true, onlyActiveDevice)
+        if (writeSysProxy) triggerSysProxy(true, onlyActiveDevice)
         networkDownHandled = false
       }
     } else {
       if (!networkDownHandled) {
-        if (sysProxy.enable) disableSysProxy(onlyActiveDevice)
+        if (writeSysProxy) disableSysProxy(onlyActiveDevice)
         await stopCore()
         networkDownHandled = true
       }

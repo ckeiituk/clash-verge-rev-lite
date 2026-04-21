@@ -61,7 +61,7 @@ export async function generateProfile(): Promise<void> {
     controlSniff = true,
     controlTun = false
   } = appConfig
-  const sysProxyEnabled = appConfig.sysProxy?.enable ?? false
+  const proxyModeEnabled = appConfig.proxyMode ?? false
   const currentProfile = await getProfile(current)
   rawProfileStr = await getProfileStr(current)
   currentProfileStr = stringifyYaml(currentProfile)
@@ -133,7 +133,7 @@ export async function generateProfile(): Promise<void> {
   const profile = deepMerge(JSON.parse(JSON.stringify(currentProfile)), configToMerge)
 
   const tunEnabled = profile.tun?.enable ?? false
-  if (!tunEnabled && !sysProxyEnabled) {
+  if (!tunEnabled && !proxyModeEnabled) {
     profile.port = 0
     profile['socks-port'] = 0
     profile['redir-port'] = 0

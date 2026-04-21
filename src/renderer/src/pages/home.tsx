@@ -36,9 +36,10 @@ const Home: React.FC = () => {
   const {
     mainSwitchMode = 'tun',
     sysProxy,
+    proxyMode = false,
     onlyActiveDevice = false,
   } = appConfig || {}
-  const { enable: sysProxyEnable, mode } = sysProxy || {}
+  const { enable: writeSysProxy = true, mode } = sysProxy || {}
   const { controledMihomoConfig, patchControledMihomoConfig } = useControledMihomoConfig()
   const { tun } = controledMihomoConfig || {}
   const { 'mixed-port': mixedPort } = controledMihomoConfig || {}
@@ -79,7 +80,7 @@ const Home: React.FC = () => {
     return 0
   })
 
-  const isSelected = (tun?.enable ?? false) || (sysProxyEnable ?? false)
+  const isSelected = (tun?.enable ?? false) || proxyMode
 
   useEffect(() => {
     if (isSelected) {
@@ -99,7 +100,8 @@ const Home: React.FC = () => {
   }, [isSelected])
 
   const isDisabled =
-    loading || (!isSelected && mainSwitchMode === 'sysproxy' && mode == 'manual' && sysProxyDisabled)
+    loading ||
+    (!isSelected && mainSwitchMode === 'sysproxy' && writeSysProxy && mode == 'manual' && sysProxyDisabled)
 
   const status = loading
     ? loadingDirection === 'connecting'
@@ -172,22 +174,26 @@ const Home: React.FC = () => {
           await patchControledMihomoConfig({ tun: { enable: true }, dns: { enable: true } })
           await restartCore()
         } else {
-          if (mode == 'manual' && sysProxyDisabled) return
-          await patchAppConfig({ sysProxy: { enable: true } })
+          if (writeSysProxy && mode == 'manual' && sysProxyDisabled) return
+          await patchAppConfig({ proxyMode: true })
           await restartCore()
-          await triggerSysProxy(true, onlyActiveDevice)
+          if (writeSysProxy) {
+            await triggerSysProxy(true, onlyActiveDevice)
+          }
         }
       } else {
         const tunWasEnabled = tun?.enable ?? false
-        const sysProxyWasEnabled = sysProxyEnable ?? false
+        const proxyModeWasEnabled = proxyMode
         if (tunWasEnabled) {
           await patchControledMihomoConfig({ tun: { enable: false } })
         }
-        if (sysProxyWasEnabled) {
-          await triggerSysProxy(false, onlyActiveDevice)
-          await patchAppConfig({ sysProxy: { enable: false } })
+        if (proxyModeWasEnabled) {
+          if (writeSysProxy) {
+            await triggerSysProxy(false, onlyActiveDevice)
+          }
+          await patchAppConfig({ proxyMode: false })
         }
-        if (tunWasEnabled || sysProxyWasEnabled) {
+        if (tunWasEnabled || proxyModeWasEnabled) {
           await restartCore()
         }
       }
