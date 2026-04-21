@@ -1,5 +1,4 @@
 import { mihomoProfileWorkDir, mihomoWorkDir, profileConfigPath, profilePath, rulePath } from '../utils/dirs'
-import { addProfileUpdater, delProfileUpdater } from '../core/profileUpdater'
 import { mkdir, readFile, rm, writeFile } from 'fs/promises'
 import { restartCore } from '../core/manager'
 import { getRuntimeConfig } from '../core/factory'
@@ -59,7 +58,6 @@ export async function updateProfileItem(item: ProfileItem): Promise<void> {
     throw new Error('Profile not found')
   }
   config.items[index] = item
-  if (!item.autoUpdate) await delProfileUpdater(item.id)
   await setProfileConfig(config)
 }
 
@@ -85,7 +83,6 @@ export async function addProfileItem(item: Partial<ProfileItem>): Promise<void> 
   if (!isExisting || !config.current) {
     await changeCurrentProfile(newItem.id)
   }
-  await addProfileUpdater(newItem)
 }
 
 export async function removeProfileItem(id: string): Promise<void> {
@@ -110,7 +107,6 @@ export async function removeProfileItem(id: string): Promise<void> {
   if (existsSync(mihomoProfileWorkDir(id))) {
     await rm(mihomoProfileWorkDir(id), { recursive: true })
   }
-  await delProfileUpdater(id)
 }
 
 export async function getCurrentProfileItem(): Promise<ProfileItem> {
