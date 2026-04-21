@@ -18,6 +18,7 @@ import EditInfoModal from '@renderer/components/profiles/edit-info-modal'
 import { Spinner } from '@renderer/components/ui/spinner'
 import { CharacterMorph } from '@renderer/components/ui/character-morph'
 import { calcTraffic } from '@renderer/utils/calc'
+import { useTrafficStore } from '@renderer/store/traffic-store'
 
 function formatBytes(bytes: number): string {
   if (bytes <= 0) return '0 B'
@@ -64,32 +65,7 @@ const Home: React.FC = () => {
     setShowEditModal(true)
   }
 
-  const [trafficInfo, setTrafficInfo] = useState<ControllerTraffic>({
-    up: 0,
-    down: 0,
-    upTotal: 0,
-    downTotal: 0
-  })
-
-  useEffect(() => {
-    const handleTraffic = (_e: unknown, info: ControllerTraffic): void => {
-      setTrafficInfo((prev) => {
-        if (prev.upTotal === info.upTotal && prev.downTotal === info.downTotal) {
-          return prev
-        }
-        return {
-          up: info.up,
-          down: info.down,
-          upTotal: info.upTotal,
-          downTotal: info.downTotal
-        }
-      })
-    }
-    window.electron.ipcRenderer.on('mihomoTraffic', handleTraffic)
-    return (): void => {
-      window.electron.ipcRenderer.removeListener('mihomoTraffic', handleTraffic)
-    }
-  }, [])
+  const trafficInfo = useTrafficStore((state) => state.traffic)
 
   const [loading, setLoading] = useState(false)
   const [loadingDirection, setLoadingDirection] = useState<'connecting' | 'disconnecting'>(

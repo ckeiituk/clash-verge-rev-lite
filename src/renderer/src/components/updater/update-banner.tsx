@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { CircleFadingArrowUp, X } from 'lucide-react'
 import UpdaterModal from './updater-modal'
 import { cancelUpdate } from '@renderer/utils/ipc'
+import { useUpdaterStore } from '@renderer/store/updater-store'
 
 interface Props {
   version: string
@@ -13,24 +14,12 @@ interface Props {
 const UpdateBanner: React.FC<Props> = ({ version, changelog, onDismiss }) => {
   const { t } = useTranslation()
   const [openModal, setOpenModal] = useState(false)
-  const [updateStatus, setUpdateStatus] = useState<{
-    downloading: boolean
-    progress: number
-    error?: string
-  }>({ downloading: false, progress: 0 })
-
-  React.useEffect(() => {
-    const handleUpdateStatus = (
-      _: Electron.IpcRendererEvent,
-      status: typeof updateStatus
-    ): void => {
-      setUpdateStatus(status)
-    }
-    window.electron.ipcRenderer.on('update-status', handleUpdateStatus)
-    return (): void => {
-      window.electron.ipcRenderer.removeAllListeners('update-status')
-    }
-  }, [])
+  const updateStatus = {
+    downloading: useUpdaterStore((state) => state.downloading),
+    progress: useUpdaterStore((state) => state.progress),
+    error: useUpdaterStore((state) => state.error)
+  }
+  const resetUpdateStatus = useUpdaterStore((state) => state.reset)
 
   return (
     <>
@@ -42,7 +31,7 @@ const UpdateBanner: React.FC<Props> = ({ version, changelog, onDismiss }) => {
           onCancel={async () => {
             try {
               await cancelUpdate()
-              setUpdateStatus({ downloading: false, progress: 0 })
+              resetUpdateStatus()
             } catch {}
           }}
           onClose={() => setOpenModal(false)}
