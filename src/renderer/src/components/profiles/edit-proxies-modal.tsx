@@ -20,7 +20,6 @@ import { Spinner } from '@renderer/components/ui/spinner'
 
 interface Props {
   id: string
-  isCurrent: boolean
   onClose: () => void
 }
 
