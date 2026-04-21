@@ -205,7 +205,7 @@ function getDeepLinkFromArgs(argv: string[]): string | undefined {
 
 app.on('second-instance', async (_event, commandline) => {
   showMainWindow()
-  const url = commandline.pop()
+  const url = getDeepLinkFromArgs(commandline)
   if (url) {
     if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.webContents.isLoading()) {
       await handleDeepLink(url)
@@ -355,6 +355,14 @@ app.whenReady().then(async () => {
     const deepLinkArg = getDeepLinkFromArgs(process.argv)
     if (deepLinkArg) {
       pendingDeepLink = deepLinkArg
+    }
+  }
+
+  if (process.platform === 'win32') {
+    try {
+      writeFileSync(path.join(taskDir(), 'param.txt'), 'empty')
+    } catch {
+      // ignore
     }
   }
 
