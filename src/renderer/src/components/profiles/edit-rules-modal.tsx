@@ -78,7 +78,8 @@ import React, {
   useRef
 } from 'react'
 import { createPortal, flushSync } from 'react-dom'
-import { getProfileStr, setRuleStr, getRuleStr } from '@renderer/utils/ipc'
+import { getProfileStr, setRuleStr, getRuleStr, restartCore } from '@renderer/utils/ipc'
+import { useProfileConfig } from '@renderer/hooks/use-profile-config'
 import { useTranslation } from 'react-i18next'
 import yaml from 'js-yaml'
 import { platform } from '@renderer/utils/init'
@@ -989,6 +990,8 @@ RuleListItem.displayName = 'RuleListItem'
 
 const EditRulesModal: React.FC<Props> = (props) => {
   const { id, onClose } = props
+  const { profileConfig } = useProfileConfig()
+  const isCurrentProfile = profileConfig?.current === id
   const dialogCloseRef = useRef<HTMLButtonElement>(null)
   const [rules, setRules] = useState<RuleItem[]>([])
   const [, setProfileContent] = useState('')
@@ -1501,7 +1504,7 @@ const EditRulesModal: React.FC<Props> = (props) => {
         return
       }
 
-      const newRuleItem: RuleItem = { ...newRule, id: createRuleId() }
+      let newRuleItem: RuleItem = { ...newRule, id: createRuleId() }
 
       // Cancel any inline editing
       setEditingIndex(null)
@@ -1536,7 +1539,12 @@ const EditRulesModal: React.FC<Props> = (props) => {
           } else {
             // Insert before the last MATCH rule, or at the end if no MATCH
             const lastMatchIndex = rules.findLastIndex((r) => r.type === 'MATCH')
-            insertPosition = lastMatchIndex !== -1 ? lastMatchIndex : rules.length
+            if (lastMatchIndex !== -1) {
+              insertPosition = lastMatchIndex
+              newRuleItem = { ...newRuleItem, offset: rules.length - lastMatchIndex }
+            } else {
+              insertPosition = rules.length
+            }
           }
 
           updatedRules = [...rules]
@@ -2072,6 +2080,9 @@ const EditRulesModal: React.FC<Props> = (props) => {
             onClick={async () => {
               const saved = await handleSave()
               if (saved) {
+                if (isCurrentProfile) {
+                  await restartCore()
+                }
                 closeWithAnimation()
               }
             }}

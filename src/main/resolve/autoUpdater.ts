@@ -85,6 +85,7 @@ export async function downloadAndInstallUpdate(version: string): Promise<void> {
       downloading: true,
       progress: 0
     })
+    mainWindow?.setProgressBar(0)
 
     const releaseRes = await axios.get(apiUrl, apiRequestConfig)
     const assets: Array<{ name: string; digest?: string }> = releaseRes.data.assets || []
@@ -116,6 +117,7 @@ export async function downloadAndInstallUpdate(version: string): Promise<void> {
             downloading: true,
             progress: percentCompleted
           })
+          mainWindow?.setProgressBar(percentCompleted / 100)
         }
       })
       await writeFile(path.join(dataDir(), file), res.data)
@@ -136,6 +138,7 @@ export async function downloadAndInstallUpdate(version: string): Promise<void> {
       downloading: false,
       progress: 100
     })
+    mainWindow?.setProgressBar(-1)
 
     disableSysProxy(false)
     if (file.endsWith('.exe')) {
@@ -184,6 +187,7 @@ export async function downloadAndInstallUpdate(version: string): Promise<void> {
         progress: 0,
         error: t('error.downloadCancelled')
       })
+      mainWindow?.setProgressBar(-1)
       return
     } else {
       mainWindow?.webContents.send('update-status', {
@@ -191,6 +195,7 @@ export async function downloadAndInstallUpdate(version: string): Promise<void> {
         progress: 0,
         error: e instanceof Error ? e.message : t('error.downloadFailed')
       })
+      mainWindow?.setProgressBar(-1)
     }
     throw e
   } finally {

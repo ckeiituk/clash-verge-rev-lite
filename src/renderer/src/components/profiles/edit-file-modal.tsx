@@ -107,10 +107,12 @@ const EditFileModal: React.FC<Props> = (props) => {
               <Switch checked={isDiff} onCheckedChange={setIsDiff} />
               {t('profile.showChanges')}
             </label>
-            <label className="flex items-center gap-2 text-sm">
-              <Switch checked={sideBySide} onCheckedChange={setSideBySide} />
-              {t('sider.sideBySide')}
-            </label>
+            {isDiff && (
+              <label className="flex items-center gap-2 text-sm">
+                <Switch checked={sideBySide} onCheckedChange={setSideBySide} />
+                {t('sider.sideBySide')}
+              </label>
+            )}
           </div>
           <div className="flex gap-2">
             <Button
