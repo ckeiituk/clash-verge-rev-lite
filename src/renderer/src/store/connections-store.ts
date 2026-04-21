@@ -1,4 +1,4 @@
-import { createStore } from './create-store'
+import { create } from 'zustand'
 
 export interface ConnectionsInfo {
   uploadTotal: number
@@ -26,7 +26,7 @@ const initialInfo: ConnectionsInfo = {
 
 let previousActiveMap = new Map<string, ControllerConnectionDetail>()
 
-export const useConnectionsStore = createStore<ConnectionsStore>((set) => ({
+export const useConnectionsStore = create<ConnectionsStore>((set) => ({
   active: [],
   closed: [],
   info: initialInfo,

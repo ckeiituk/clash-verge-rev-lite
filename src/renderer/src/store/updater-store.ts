@@ -1,4 +1,4 @@
-import { createStore } from './create-store'
+import { create } from 'zustand'
 
 export interface UpdaterStatus {
   downloading: boolean
@@ -16,7 +16,7 @@ const initialStatus: UpdaterStatus = {
   progress: 0
 }
 
-export const useUpdaterStore = createStore<UpdaterStore>((set) => ({
+export const useUpdaterStore = create<UpdaterStore>((set) => ({
   ...initialStatus,
   setStatus: (status): void => set(status),
   reset: (): void => set(initialStatus)
