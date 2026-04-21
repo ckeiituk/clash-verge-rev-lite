@@ -168,6 +168,7 @@ const EditInfoModal: React.FC<Props> = (props) => {
           'w-120'
         )}
         showCloseButton={false}
+        onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <DialogClose ref={closeRef} className="hidden" />
         <DialogHeader className="app-drag">
