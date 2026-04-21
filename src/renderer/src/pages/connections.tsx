@@ -827,174 +827,176 @@ const Connections: React.FC = () => {
       {isSettingModalOpen && (
         <ConnectionSettingModal onClose={() => setIsSettingModalOpen(false)} />
       )}
-      <div className="overflow-x-auto sticky top-0 z-40">
-        <div className="flex px-2 pb-2 gap-2">
-          {isProcessListView ? (
-            <>
-              <div className="flex h-8 items-center">
-                <span className="mr-2 text-sm text-muted-foreground whitespace-nowrap">
-                  {t('pages.connections.processes')}
-                </span>
-                <Badge variant="default" className="min-w-5 justify-center px-1.5 leading-none">
-                  {processGroups.length}
-                </Badge>
-              </div>
-              <InputGroup className="h-8 w-45 min-w-30">
-                <InputGroupInput
-                  className="h-8 text-sm"
-                  value={filter}
-                  placeholder={t('common.filter')}
-                  onChange={(event) => setFilter(event.target.value)}
-                />
-                <InputGroupAddon align="inline-end">
-                  <InputGroupButton
-                    size="icon-xs"
-                    variant="ghost"
-                    className={filter ? '' : 'opacity-0 pointer-events-none'}
-                    disabled={!filter}
-                    aria-label="Clear filter"
-                    onClick={() => setFilter('')}
-                  >
-                    <X className="text-base" />
-                  </InputGroupButton>
-                </InputGroupAddon>
-              </InputGroup>
-            </>
-          ) : (
-            <>
-              {!isClassicMode && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="gap-1 shrink-0"
-                  onClick={handleBackToProcesses}
-                >
-                  <ArrowLeft className="size-4" />
-                  {t('pages.connections.backToProcesses')}
-                </Button>
-              )}
-              <Tabs value={tab} onValueChange={handleTabChange} className="w-fit">
-                <TabsList>
-                  <TabsTrigger value="active" className="gap-2">
-                    <Badge variant="default" className="min-w-5 justify-center px-1 leading-none">
-                      {isClassicMode ? activeConnections.length : processActiveCount}
-                    </Badge>
-                    <span>{t('pages.connections.active')}</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="closed" className="gap-2">
-                    <Badge
-                      variant="destructive"
-                      className="min-w-5 justify-center px-1 leading-none"
+      <div className="flex flex-col h-full">
+        <div className="shrink-0 overflow-x-auto sticky top-0 z-40">
+          <div className="flex px-2 pb-2 gap-2">
+            {isProcessListView ? (
+              <>
+                <div className="flex h-8 items-center">
+                  <span className="mr-2 text-sm text-muted-foreground whitespace-nowrap">
+                    {t('pages.connections.processes')}
+                  </span>
+                  <Badge variant="default" className="min-w-5 justify-center px-1.5 leading-none">
+                    {processGroups.length}
+                  </Badge>
+                </div>
+                <InputGroup className="h-8 w-45 min-w-30">
+                  <InputGroupInput
+                    className="h-8 text-sm"
+                    value={filter}
+                    placeholder={t('common.filter')}
+                    onChange={(event) => setFilter(event.target.value)}
+                  />
+                  <InputGroupAddon align="inline-end">
+                    <InputGroupButton
+                      size="icon-xs"
+                      variant="ghost"
+                      className={filter ? '' : 'opacity-0 pointer-events-none'}
+                      disabled={!filter}
+                      aria-label="Clear filter"
+                      onClick={() => setFilter('')}
                     >
-                      {isClassicMode ? closedConnections.length : processClosedCount}
-                    </Badge>
-                    <span>{t('pages.connections.closed')}</span>
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
-              <InputGroup className="h-8 w-45 min-w-30">
-                <InputGroupInput
-                  className="h-8 text-sm"
-                  value={filter}
-                  placeholder={t('common.filter')}
-                  onChange={(event) => setFilter(event.target.value)}
-                />
-                <InputGroupAddon align="inline-end">
-                  <InputGroupButton
-                    size="icon-xs"
-                    variant="ghost"
-                    className={filter ? '' : 'opacity-0 pointer-events-none'}
-                    disabled={!filter}
-                    aria-label="Clear filter"
-                    onClick={() => setFilter('')}
-                  >
-                    <X className="text-base" />
-                  </InputGroupButton>
-                </InputGroupAddon>
-              </InputGroup>
-
-              {viewMode === 'table' && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button size="sm" variant="secondary" className="gap-1.5">
-                      <SlidersHorizontal className="text-2xl" />
-                      {t('pages.connections.tableColumns')}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-64" aria-label="Column visibility">
-                    {columnOptions.map((option) => (
-                      <DropdownMenuCheckboxItem
-                        key={option.key}
-                        checked={visibleColumns.has(option.key)}
-                        onCheckedChange={(checked) =>
-                          handleVisibleColumnToggle(option.key, checked)
-                        }
-                      >
-                        {option.label}
-                      </DropdownMenuCheckboxItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
-
-              {viewMode === 'list' && (
-                <>
-                  <Select value={connectionOrderBy} onValueChange={handleOrderByChange}>
-                    <SelectTrigger size="sm" className="min-w-50">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent position="popper">
-                      <SelectItem value="upload">{t('pages.connections.uploadAmount')}</SelectItem>
-                      <SelectItem value="download">
-                        {t('pages.connections.downloadAmount')}
-                      </SelectItem>
-                      <SelectItem value="uploadSpeed">
-                        {t('pages.connections.uploadSpeed')}
-                      </SelectItem>
-                      <SelectItem value="downloadSpeed">
-                        {t('pages.connections.downloadSpeed')}
-                      </SelectItem>
-                      <SelectItem value="time">{t('pages.connections.time')}</SelectItem>
-                      <SelectItem value="process">{t('pages.connections.processName')}</SelectItem>
-                    </SelectContent>
-                  </Select>
+                      <X className="text-base" />
+                    </InputGroupButton>
+                  </InputGroupAddon>
+                </InputGroup>
+              </>
+            ) : (
+              <>
+                {!isClassicMode && (
                   <Button
-                    className="border flex items-center justify-center"
-                    size="icon-sm"
-                    variant="secondary"
-                    onClick={handleDirectionToggle}
+                    size="sm"
+                    variant="ghost"
+                    className="gap-1 shrink-0"
+                    onClick={handleBackToProcesses}
                   >
-                    {connectionDirection === 'asc' ? (
-                      <ArrowDownNarrowWide className="text-lg" />
-                    ) : (
-                      <ArrowDownWideNarrow className="text-lg" />
-                    )}
+                    <ArrowLeft className="size-4" />
+                    {t('pages.connections.backToProcesses')}
                   </Button>
-                </>
-              )}
-            </>
+                )}
+                <Tabs value={tab} onValueChange={handleTabChange} className="w-fit">
+                  <TabsList>
+                    <TabsTrigger value="active" className="gap-2">
+                      <Badge variant="default" className="min-w-5 justify-center px-1 leading-none">
+                        {isClassicMode ? activeConnections.length : processActiveCount}
+                      </Badge>
+                      <span>{t('pages.connections.active')}</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="closed" className="gap-2">
+                      <Badge
+                        variant="destructive"
+                        className="min-w-5 justify-center px-1 leading-none"
+                      >
+                        {isClassicMode ? closedConnections.length : processClosedCount}
+                      </Badge>
+                      <span>{t('pages.connections.closed')}</span>
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+                <InputGroup className="h-8 w-45 min-w-30">
+                  <InputGroupInput
+                    className="h-8 text-sm"
+                    value={filter}
+                    placeholder={t('common.filter')}
+                    onChange={(event) => setFilter(event.target.value)}
+                  />
+                  <InputGroupAddon align="inline-end">
+                    <InputGroupButton
+                      size="icon-xs"
+                      variant="ghost"
+                      className={filter ? '' : 'opacity-0 pointer-events-none'}
+                      disabled={!filter}
+                      aria-label="Clear filter"
+                      onClick={() => setFilter('')}
+                    >
+                      <X className="text-base" />
+                    </InputGroupButton>
+                  </InputGroupAddon>
+                </InputGroup>
+
+                {viewMode === 'table' && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button size="sm" variant="secondary" className="gap-1.5">
+                        <SlidersHorizontal className="text-2xl" />
+                        {t('pages.connections.tableColumns')}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-64" aria-label="Column visibility">
+                      {columnOptions.map((option) => (
+                        <DropdownMenuCheckboxItem
+                          key={option.key}
+                          checked={visibleColumns.has(option.key)}
+                          onCheckedChange={(checked) =>
+                            handleVisibleColumnToggle(option.key, checked)
+                          }
+                        >
+                          {option.label}
+                        </DropdownMenuCheckboxItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+
+                {viewMode === 'list' && (
+                  <>
+                    <Select value={connectionOrderBy} onValueChange={handleOrderByChange}>
+                      <SelectTrigger size="sm" className="min-w-50">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent position="popper">
+                        <SelectItem value="upload">{t('pages.connections.uploadAmount')}</SelectItem>
+                        <SelectItem value="download">
+                          {t('pages.connections.downloadAmount')}
+                        </SelectItem>
+                        <SelectItem value="uploadSpeed">
+                          {t('pages.connections.uploadSpeed')}
+                        </SelectItem>
+                        <SelectItem value="downloadSpeed">
+                          {t('pages.connections.downloadSpeed')}
+                        </SelectItem>
+                        <SelectItem value="time">{t('pages.connections.time')}</SelectItem>
+                        <SelectItem value="process">{t('pages.connections.processName')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      className="border flex items-center justify-center"
+                      size="icon-sm"
+                      variant="secondary"
+                      onClick={handleDirectionToggle}
+                    >
+                      {connectionDirection === 'asc' ? (
+                        <ArrowDownNarrowWide className="text-lg" />
+                      ) : (
+                        <ArrowDownWideNarrow className="text-lg" />
+                      )}
+                    </Button>
+                  </>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+        <div className="flex-1 min-h-0 mt-px mb-2">
+          {isProcessListView ? (
+            <Virtuoso data={filteredProcessGroups} itemContent={renderProcessItem} />
+          ) : viewMode === 'list' ? (
+            <Virtuoso data={filteredConnections} itemContent={renderConnectionItem} />
+          ) : (
+            <ConnectionTable
+              connections={filteredConnections}
+              setSelected={setSelected}
+              setIsDetailModalOpen={setIsDetailModalOpen}
+              close={closeConnection}
+              visibleColumns={visibleColumns}
+              initialColumnWidths={connectionTableColumnWidths}
+              initialSortColumn={connectionTableSortColumn}
+              initialSortDirection={connectionTableSortDirection}
+              onColumnWidthChange={handleColumnWidthChange}
+              onSortChange={handleSortChange}
+            />
           )}
         </div>
-      </div>
-      <div className="h-[calc(100vh-106px)] mt-px mb-2">
-        {isProcessListView ? (
-          <Virtuoso data={filteredProcessGroups} itemContent={renderProcessItem} />
-        ) : viewMode === 'list' ? (
-          <Virtuoso data={filteredConnections} itemContent={renderConnectionItem} />
-        ) : (
-          <ConnectionTable
-            connections={filteredConnections}
-            setSelected={setSelected}
-            setIsDetailModalOpen={setIsDetailModalOpen}
-            close={closeConnection}
-            visibleColumns={visibleColumns}
-            initialColumnWidths={connectionTableColumnWidths}
-            initialSortColumn={connectionTableSortColumn}
-            initialSortDirection={connectionTableSortDirection}
-            onColumnWidthChange={handleColumnWidthChange}
-            onSortChange={handleSortChange}
-          />
-        )}
       </div>
     </BasePage>
   )

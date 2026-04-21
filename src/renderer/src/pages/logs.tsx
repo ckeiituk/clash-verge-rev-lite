@@ -88,55 +88,57 @@ const Logs: React.FC = () => {
 
   return (
     <BasePage title={t('pages.logs.title')}>
-      <div className="sticky top-0 z-40">
-        <div className="w-full flex px-2 pb-2">
-          <Input
-            className="h-8 text-sm"
-            value={filter}
-            placeholder={t('common.filter')}
-            onChange={(e) => setFilter(e.target.value)}
-          />
-          <Button
-            size="icon-sm"
-            className={cn('ml-2', trace && 'bg-primary text-primary-foreground')}
-            variant={trace ? 'default' : 'outline'}
-            title={t('logs.autoScroll')}
-            onClick={toggleTrace}
-          >
-            <MapPin className="text-lg" />
-          </Button>
-          <Button
-            size="icon-sm"
-            title={t('pages.logs.clearLogs')}
-            className="ml-2"
-            variant="ghost"
-            onClick={() => {
-              cachedLogs.clean()
-            }}
-          >
-            <Trash2 className="text-lg text-destructive" />
-          </Button>
+      <div className="flex flex-col h-full">
+        <div className="shrink-0 sticky top-0 z-40">
+          <div className="w-full flex px-2 pb-2">
+            <Input
+              className="h-8 text-sm"
+              value={filter}
+              placeholder={t('common.filter')}
+              onChange={(e) => setFilter(e.target.value)}
+            />
+            <Button
+              size="icon-sm"
+              className={cn('ml-2', trace && 'bg-primary text-primary-foreground')}
+              variant={trace ? 'default' : 'outline'}
+              title={t('logs.autoScroll')}
+              onClick={toggleTrace}
+            >
+              <MapPin className="text-lg" />
+            </Button>
+            <Button
+              size="icon-sm"
+              title={t('pages.logs.clearLogs')}
+              className="ml-2"
+              variant="ghost"
+              onClick={() => {
+                cachedLogs.clean()
+              }}
+            >
+              <Trash2 className="text-lg text-destructive" />
+            </Button>
+          </div>
+          <Separator className="mx-2" />
         </div>
-        <Separator className="mx-2" />
-      </div>
-      <div className="h-[calc(100vh-108px)] mt-px">
-        <Virtuoso
-          ref={virtuosoRef}
-          data={filteredLogs}
-          initialTopMostItemIndex={filteredLogs.length - 1}
-          followOutput={trace}
-          itemContent={(i, log) => {
-            return (
-              <LogItem
-                index={i}
-                key={log.payload + i}
-                time={log.time}
-                type={log.type}
-                payload={log.payload}
-              />
-            )
-          }}
-        />
+        <div className="flex-1 min-h-0 mt-px">
+          <Virtuoso
+            ref={virtuosoRef}
+            data={filteredLogs}
+            initialTopMostItemIndex={filteredLogs.length - 1}
+            followOutput={trace}
+            itemContent={(i, log) => {
+              return (
+                <LogItem
+                  index={i}
+                  key={log.payload + i}
+                  time={log.time}
+                  type={log.type}
+                  payload={log.payload}
+                />
+              )
+            }}
+          />
+        </div>
       </div>
     </BasePage>
   )

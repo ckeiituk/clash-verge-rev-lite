@@ -3,12 +3,16 @@ import { platform } from '@renderer/utils/init'
 import WindowControls from '@renderer/components/window-controls'
 import UpdateBanner from '@renderer/components/updater/update-banner'
 import { useUpdateInfo } from '@renderer/hooks/use-update-info'
-import React, { forwardRef, useImperativeHandle, useRef } from 'react'
+import React, { forwardRef, useImperativeHandle, useReducer, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ChevronLeft } from 'lucide-react'
+import { AnimatePresence, motion } from 'motion/react'
 
 const sidebarPaths = new Set(['/home', '/profiles', '/proxies', '/connections', '/rules', '/logs', '/settings'])
 const isMac = platform === 'darwin'
+
+// Persist across BasePage remounts during route changes and reset on app restart.
+let dismissedVersion: string | null = sessionStorage.getItem('updateBannerDismissedVersion')
 
 interface Props {
   title?: React.ReactNode
@@ -23,6 +27,27 @@ const BasePage = forwardRef<HTMLDivElement, Props>((props, ref) => {
   const navigate = useNavigate()
   const isSubPage = !sidebarPaths.has(location.pathname)
   const updateInfo = useUpdateInfo()
+  const [, forceUpdate] = useReducer((value: number) => value + 1, 0)
+
+  const bannerVisible = !!updateInfo?.version && updateInfo.version !== dismissedVersion
+
+  const handleBannerDismiss = (): void => {
+    if (!updateInfo?.version) return
+    sessionStorage.setItem('updateBannerDismissedVersion', updateInfo.version)
+    dismissedVersion = updateInfo.version
+    forceUpdate()
+  }
+
+  React.useEffect(() => {
+    const handleResetUpdateBanner = (): void => {
+      dismissedVersion = null
+      forceUpdate()
+    }
+    window.addEventListener('resetUpdateBanner', handleResetUpdateBanner)
+    return (): void => {
+      window.removeEventListener('resetUpdateBanner', handleResetUpdateBanner)
+    }
+  }, [])
 
   const contentRef = useRef<HTMLDivElement>(null)
   useImperativeHandle(ref, () => {
@@ -52,12 +77,27 @@ const BasePage = forwardRef<HTMLDivElement, Props>((props, ref) => {
           </div>
         </div>
       </div>
-      <div className="content grow overflow-y-auto custom-scrollbar">
-        {updateInfo && updateInfo.version && (
-          <div className="sticky top-0 z-30 pt-2">
-            <UpdateBanner version={updateInfo.version} changelog={updateInfo.changelog} />
-          </div>
+      <AnimatePresence initial={false}>
+        {bannerVisible && (
+          <motion.div
+            key="update-banner"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+            style={{ overflow: 'hidden', flexShrink: 0, zIndex: 30 }}
+          >
+            <div className="pt-2 pb-1 px-2">
+              <UpdateBanner
+                version={updateInfo.version}
+                changelog={updateInfo.changelog}
+                onDismiss={handleBannerDismiss}
+              />
+            </div>
+          </motion.div>
         )}
+      </AnimatePresence>
+      <div className="content grow overflow-y-auto custom-scrollbar">
         {props.children}
       </div>
     </div>

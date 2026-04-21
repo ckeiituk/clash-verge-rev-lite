@@ -7,11 +7,11 @@ import { cancelUpdate } from '@renderer/utils/ipc'
 interface Props {
   version: string
   changelog: string
+  onDismiss: () => void
 }
 
-const UpdateBanner: React.FC<Props> = ({ version, changelog }) => {
+const UpdateBanner: React.FC<Props> = ({ version, changelog, onDismiss }) => {
   const { t } = useTranslation()
-  const [dismissed, setDismissed] = useState(false)
   const [openModal, setOpenModal] = useState(false)
   const [updateStatus, setUpdateStatus] = useState<{
     downloading: boolean
@@ -32,8 +32,6 @@ const UpdateBanner: React.FC<Props> = ({ version, changelog }) => {
     }
   }, [])
 
-  if (dismissed) return null
-
   return (
     <>
       {openModal && (
@@ -50,7 +48,7 @@ const UpdateBanner: React.FC<Props> = ({ version, changelog }) => {
           onClose={() => setOpenModal(false)}
         />
       )}
-      <div className="flex items-center justify-center gap-3 bg-primary/95 backdrop-blur-sm px-4 py-1.5 text-primary-foreground text-sm shadow-md rounded-lg mx-2">
+      <div className="flex items-center justify-center gap-3 bg-primary/95 backdrop-blur-sm px-4 py-1.5 text-primary-foreground text-sm shadow-md rounded-lg">
         <CircleFadingArrowUp className="size-4 shrink-0 animate-pulse" />
         <span>{t('updater.versionReady', { version })}</span>
         <button
@@ -61,7 +59,7 @@ const UpdateBanner: React.FC<Props> = ({ version, changelog }) => {
         </button>
         <button
           className="ml-1 rounded-full p-0.5 hover:bg-primary-foreground/20 transition-colors"
-          onClick={() => setDismissed(true)}
+          onClick={onDismiss}
         >
           <X className="size-3.5" />
         </button>

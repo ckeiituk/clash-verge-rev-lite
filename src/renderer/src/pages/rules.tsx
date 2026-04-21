@@ -67,30 +67,32 @@ const Rules: React.FC = () => {
           onClose={() => setShowRulesEditor(false)}
         />
       )}
-      <div className="sticky top-0 z-40">
-        <div className="flex px-2 pb-2">
-          <Input
-            className="h-8 text-sm"
-            value={filter}
-            placeholder={t('common.filter')}
-            onChange={(e) => setFilter(e.target.value)}
+      <div className="flex flex-col h-full">
+        <div className="shrink-0 sticky top-0 z-40">
+          <div className="flex px-2 pb-2">
+            <Input
+              className="h-8 text-sm"
+              value={filter}
+              placeholder={t('common.filter')}
+              onChange={(e) => setFilter(e.target.value)}
+            />
+          </div>
+          <Separator className="mx-2" />
+        </div>
+        <div className="flex-1 min-h-0 mt-px">
+          <Virtuoso
+            data={filteredRules}
+            itemContent={(i, rule) => (
+              <RuleItem
+                index={i}
+                type={rule.type}
+                payload={rule.payload}
+                proxy={rule.proxy}
+                size={rule.size}
+              />
+            )}
           />
         </div>
-        <Separator className="mx-2"/>
-      </div>
-      <div className="h-[calc(100vh-108px)] mt-px">
-        <Virtuoso
-          data={filteredRules}
-          itemContent={(i, rule) => (
-            <RuleItem
-              index={i}
-              type={rule.type}
-              payload={rule.payload}
-              proxy={rule.proxy}
-              size={rule.size}
-            />
-          )}
-        />
       </div>
     </BasePage>
   )
