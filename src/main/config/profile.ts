@@ -53,7 +53,7 @@ export async function changeCurrentProfile(id: string): Promise<void> {
   try {
     const { useHotReloadProfile = true } = await getAppConfig()
     if (useHotReloadProfile) {
-      await reloadCurrentProfileOrRestart(id)
+      await reloadCurrentProfile(id)
     } else {
       await restartCore()
     }
@@ -389,6 +389,19 @@ async function reloadCurrentProfileOrRestart(id: string): Promise<void> {
       )
       throw restartError
     }
+  }
+}
+
+async function reloadCurrentProfile(id: string): Promise<void> {
+  await appendProfileReloadLog(`reload start for profile ${id}`)
+  try {
+    await mihomoHotReloadConfig()
+    await appendProfileReloadLog(`reload success for profile ${id}`)
+  } catch (error) {
+    await appendProfileReloadLog(
+      `reload failed for profile ${id}: ${formatProfileReloadError(error)}`
+    )
+    throw error
   }
 }
 
