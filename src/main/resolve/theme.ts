@@ -4,7 +4,7 @@ import { t } from '../utils/i18n'
 import path from 'path'
 import axios from 'axios'
 import AdmZip from 'adm-zip'
-import { getControledMihomoConfig } from '../config'
+import { getRuntimeConfig } from '../core/factory'
 import { existsSync } from 'fs'
 import { mainWindow } from '..'
 import { floatingWindow } from './floatingWindow'
@@ -35,7 +35,7 @@ export async function resolveThemes(): Promise<{ key: string; label: string }[]>
 
 export async function fetchThemes(): Promise<void> {
   const zipUrl = 'https://github.com/mihomo-party-org/theme-hub/releases/download/latest/themes.zip'
-  const { 'mixed-port': mixedPort = 7897 } = await getControledMihomoConfig()
+  const { 'mixed-port': mixedPort = 0 } = (await getRuntimeConfig()) ?? {}
   const zipData = await axios.get(zipUrl, {
     responseType: 'arraybuffer',
     headers: { 'Content-Type': 'application/octet-stream' },

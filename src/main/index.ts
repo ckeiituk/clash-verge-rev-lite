@@ -194,7 +194,7 @@ function getDeepLinkFromArgs(argv: string[]): string | undefined {
 
 app.on('second-instance', async (_event, commandline) => {
   showMainWindow()
-  const url = commandline.pop()
+  const url = getDeepLinkFromArgs(commandline)
   if (url) {
     if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.webContents.isLoading()) {
       await handleDeepLink(url)
@@ -567,6 +567,24 @@ export async function createWindow(appConfig?: AppConfig): Promise<void> {
     mainWindow.webContents.on('render-process-gone', (_event, details) => {
       if (details.reason === 'clean-exit') return
       scheduleMainWindowRecovery(`render-process-gone (${details.reason})`)
+    })
+
+    mainWindow.on('focus', () => {
+      if (!mainWindow || mainWindow.isDestroyed()) return
+      try {
+        mainWindow.webContents.invalidate()
+      } catch {
+        // ignore
+      }
+    })
+
+    mainWindow.on('show', () => {
+      if (!mainWindow || mainWindow.isDestroyed()) return
+      try {
+        mainWindow.webContents.invalidate()
+      } catch {
+        // ignore
+      }
     })
 
     mainWindow.webContents.once('did-finish-load', () => {

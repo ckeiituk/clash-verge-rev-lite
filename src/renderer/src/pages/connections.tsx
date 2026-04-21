@@ -987,7 +987,7 @@ const Connections: React.FC = () => {
                     </SelectContent>
                   </Select>
                   <Button
-                    className="border flex items-center justify-center"
+                    className="border flex items-center justify-center p-0 bg-clip-border"
                     size="icon-sm"
                     variant="secondary"
                     onClick={handleDirectionToggle}

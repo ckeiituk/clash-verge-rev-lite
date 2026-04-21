@@ -1,7 +1,7 @@
 import axios, { AxiosRequestConfig, CancelTokenSource } from 'axios'
 import { parseYaml } from '../utils/yaml'
 import { app, shell } from 'electron'
-import { getControledMihomoConfig } from '../config'
+import { getRuntimeConfig } from '../core/factory'
 import { dataDir, exeDir, exePath, isPortable, resourcesFilesDir } from '../utils/dirs'
 import { copyFile, rm, writeFile, readFile } from 'fs/promises'
 import path from 'path'
@@ -19,7 +19,7 @@ let downloadCancelToken: CancelTokenSource | null = null
 let lastCheckedUpdate: AppVersion | undefined
 
 export async function checkUpdate(): Promise<AppVersion | undefined> {
-  const { 'mixed-port': mixedPort = 7897 } = await getControledMihomoConfig()
+  const { 'mixed-port': mixedPort = 0 } = (await getRuntimeConfig()) ?? {}
   const { updateChannel = 'stable' } = await getAppConfig()
   const url =
     updateChannel === 'alpha'
@@ -48,7 +48,7 @@ export async function checkUpdate(): Promise<AppVersion | undefined> {
 }
 
 export async function downloadAndInstallUpdate(version: string): Promise<void> {
-  const { 'mixed-port': mixedPort = 7897 } = await getControledMihomoConfig()
+  const { 'mixed-port': mixedPort = 0 } = (await getRuntimeConfig()) ?? {}
   const rawTag = lastCheckedUpdate?.releaseTag ?? version
   const releaseTag = rawTag.startsWith('v') ? rawTag.slice(1) : rawTag
   const baseUrl = `https://github.com/ckeiituk/outclash/releases/download/${releaseTag}/`
