@@ -64,7 +64,6 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = (props) => {
     useHotReloadProfile = true,
     controlDns = true,
     controlSniff = true,
-    proxyMode = false,
     pauseSSID,
     mihomoCpuPriority = 'PRIORITY_NORMAL',
     autoLightweight = false,
@@ -202,36 +201,6 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = (props) => {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-        </SettingItem>
-      )}
-      {showHiddenSettings && (
-        <SettingItem
-          title={t('settings.advanced.legacyAlwaysEnableProxyPorts')}
-          actions={
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button size="icon-sm" variant="ghost">
-                  <MessageCircleQuestionMark className="text-lg" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                {t('settings.advanced.legacyAlwaysEnableProxyPortsHelp')}
-              </TooltipContent>
-            </Tooltip>
-          }
-          divider
-        >
-          <Switch
-            checked={proxyMode}
-            onCheckedChange={async (value) => {
-              try {
-                await patchAppConfig({ proxyMode: value })
-                await mihomoHotReloadConfig()
-              } catch (e) {
-                toast.error(`${e}`)
-              }
-            }}
-          />
         </SettingItem>
       )}
       {platform === 'win32' && (

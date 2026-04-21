@@ -368,6 +368,9 @@ export default {
     sysproxy: {
       title: '系统代理设置',
       systemProxyToggle: '系统代理',
+      alwaysOpenPorts: '始终保持本地端口启用',
+      alwaysOpenPortsHelp:
+        '恢复旧行为：即使 TUN 和系统代理都关闭，已配置的 mixed/http/socks 等本地端口仍然保持启用。',
       proxyHost: '代理主机',
       proxyHostPlaceholder: '默认 127.0.0.1 若无特殊需求请勿修改',
       proxyMode: '代理模式',

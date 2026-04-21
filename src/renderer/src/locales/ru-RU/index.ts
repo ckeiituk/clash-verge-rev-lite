@@ -296,6 +296,9 @@ export default {
     sysproxy: {
       title: 'Настройки системного прокси',
       systemProxyToggle: 'Системный прокси',
+      alwaysOpenPorts: 'Всегда держать локальные порты активными',
+      alwaysOpenPortsHelp:
+        'Возвращает старое поведение: настроенные mixed/http/socks и другие локальные порты остаются активными даже при выключенных TUN и системном прокси.',
       proxyHost: 'Хост прокси',
       proxyHostPlaceholder: 'По умолчанию: 127.0.0.1. Не меняйте без необходимости',
       proxyMode: 'Режим прокси',
