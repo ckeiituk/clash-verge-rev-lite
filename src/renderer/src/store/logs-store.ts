@@ -1,5 +1,5 @@
 import dayjs from 'dayjs'
-import { createStore } from './create-store'
+import { create } from 'zustand'
 
 const MAX_LOGS = 500
 
@@ -8,7 +8,7 @@ interface LogsStore {
   clear: () => void
 }
 
-export const useLogsStore = createStore<LogsStore>((set) => ({
+export const useLogsStore = create<LogsStore>((set) => ({
   logs: [],
   clear: (): void => set({ logs: [] })
 }))

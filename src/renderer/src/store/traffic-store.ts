@@ -1,4 +1,4 @@
-import { createStore } from './create-store'
+import { create } from 'zustand'
 
 interface TrafficStore {
   traffic: ControllerTraffic
@@ -11,7 +11,7 @@ const initialTraffic: ControllerTraffic = {
   downTotal: 0
 }
 
-export const useTrafficStore = createStore<TrafficStore>(() => ({
+export const useTrafficStore = create<TrafficStore>(() => ({
   traffic: initialTraffic
 }))
 

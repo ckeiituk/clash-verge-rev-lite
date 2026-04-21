@@ -1,11 +1,11 @@
-import { createStore } from './create-store'
+import { create } from 'zustand'
 
 interface CoreLifecycleStore {
   startedAt: number
   profileReloadedAt: number
 }
 
-export const useCoreLifecycleStore = createStore<CoreLifecycleStore>(() => ({
+export const useCoreLifecycleStore = create<CoreLifecycleStore>(() => ({
   startedAt: 0,
   profileReloadedAt: 0
 }))

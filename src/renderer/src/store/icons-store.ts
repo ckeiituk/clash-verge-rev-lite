@@ -1,7 +1,7 @@
 import { getAppName, getIconDataURL } from '@renderer/utils/ipc'
 import { cropAndPadTransparent } from '@renderer/utils/image'
 import { platform } from '@renderer/utils/init'
-import { createStore } from './create-store'
+import { create } from 'zustand'
 
 interface IconsStore {
   icons: Record<string, string>
@@ -22,7 +22,7 @@ const appNameQueue = new Set<string>()
 const processingAppNames = new Set<string>()
 let appNameTimer: ReturnType<typeof setTimeout> | null = null
 
-export const useIconsStore = createStore<IconsStore>((set, get) => ({
+export const useIconsStore = create<IconsStore>((set, get) => ({
   icons: {},
   appNames: {},
   requestIcon: (path): void => {
