@@ -67,16 +67,24 @@ export const patchMihomoConfig = async (patch: Partial<ControllerConfigs>): Prom
 const waitForMihomoReloadReady = async (): Promise<void> => {
   const maxRetries = 30
   const retryInterval = 100
+  let lastError: unknown
 
   for (let i = 0; i < maxRetries; i++) {
     try {
       await mihomoConfig()
       await mihomoGroups()
       return
-    } catch {
+    } catch (error) {
+      lastError = error
       await new Promise<void>((resolve) => setTimeout(resolve, retryInterval))
     }
   }
+
+  throw new Error(
+    `Mihomo config reload did not become ready after ${maxRetries * retryInterval}ms${
+      lastError instanceof Error ? `: ${lastError.message}` : ''
+    }`
+  )
 }
 
 const notifyProfileReloaded = (): void => {

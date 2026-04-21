@@ -264,11 +264,7 @@ const ProfileItem: React.FC<Props> = (props) => {
     >
       {openFileEditor && <EditFileModal id={info.id} onClose={() => setOpenFileEditor(false)} />}
       {openProxiesEditor && (
-        <EditProxiesModal
-          id={info.id}
-          isCurrent={isCurrent}
-          onClose={() => setOpenProxiesEditor(false)}
-        />
+        <EditProxiesModal id={info.id} onClose={() => setOpenProxiesEditor(false)} />
       )}
       {openRulesEditor && <EditRulesModal id={info.id} onClose={() => setOpenRulesEditor(false)} />}
       {openInfoEditor && (
