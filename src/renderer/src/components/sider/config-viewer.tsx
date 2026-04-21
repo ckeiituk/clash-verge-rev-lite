@@ -64,14 +64,18 @@ const ConfigViewer: React.FC<Props> = ({ onClose }) => {
               <Switch checked={isDiff} onCheckedChange={setIsDiff} />
               <span>{t('sider.compareCurrentConfig')}</span>
             </label>
-            <label className="flex items-center space-x-2 text-sm">
-              <Switch checked={sideBySide} onCheckedChange={setSideBySide} />
-              <span>{t('sider.sideBySide')}</span>
-            </label>
-            <label className="flex items-center space-x-2 text-sm">
-              <Switch checked={isRaw} onCheckedChange={setIsRaw} />
-              <span>{t('sider.showRawText')}</span>
-            </label>
+            {isDiff && (
+              <>
+                <label className="flex items-center space-x-2 text-sm">
+                  <Switch checked={sideBySide} onCheckedChange={setSideBySide} />
+                  <span>{t('sider.sideBySide')}</span>
+                </label>
+                <label className="flex items-center space-x-2 text-sm">
+                  <Switch checked={isRaw} onCheckedChange={setIsRaw} />
+                  <span>{t('sider.showRawText')}</span>
+                </label>
+              </>
+            )}
           </div>
           <DialogClose asChild>
             <Button size="sm" variant="ghost">

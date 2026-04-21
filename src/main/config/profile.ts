@@ -212,7 +212,7 @@ export async function createProfile(item: Partial<ProfileItem>): Promise<Profile
 
       const data = res.data
       const headers = res.headers
-      const contentType = (headers['content-type'] || '').toLowerCase()
+      const contentType = String(headers['content-type'] ?? '').toLowerCase()
       if (contentType.includes('text/html') || contentType.includes('text/xml')) {
         throw new Error(t('error.subscriptionFormatError'))
       }

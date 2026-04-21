@@ -341,7 +341,7 @@ const ProfileItem: React.FC<Props> = (props) => {
             <h3 title={info.name} className="text-sm font-semibold truncate flex-1 leading-tight">
               {info.name}
             </h3>
-            <div className="shrink-0 -mr-1 flex items-center" onClick={(e) => e.stopPropagation()}>
+            <div className="shrink-0 -mr-1 flex items-center" onPointerDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
               {info.type === 'remote' && (
                 <Button
                   size="icon-sm"
