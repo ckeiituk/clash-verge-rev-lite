@@ -268,7 +268,7 @@ const Home: React.FC = () => {
               {currentProfile.announce && (
                 <div
                   data-guide="home-profile-announce"
-                  className="text-sm font-medium text-center mt-2"
+                  className="text-sm font-medium text-center mt-2 whitespace-pre-line"
                 >
                   {currentProfile.announce}
                 </div>

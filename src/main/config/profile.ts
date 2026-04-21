@@ -1,4 +1,3 @@
-import { getControledMihomoConfig } from './controledMihomo'
 import {
   logPath,
   mihomoProfileWorkDir,
@@ -10,6 +9,7 @@ import {
 import { addProfileUpdater, delProfileUpdater } from '../core/profileUpdater'
 import { mkdir, readFile, rm, writeFile } from 'fs/promises'
 import { restartCore } from '../core/manager'
+import { getRuntimeConfig } from '../core/factory'
 import { getAppConfig, patchAppConfig } from './app'
 import { existsSync } from 'fs'
 import axios, { AxiosResponse } from 'axios'
@@ -171,7 +171,7 @@ export async function createProfile(item: Partial<ProfileItem>): Promise<Profile
   } as ProfileItem
   switch (newItem.type) {
     case 'remote': {
-      const { 'mixed-port': mixedPort = 7897 } = await getControledMihomoConfig()
+      const { 'mixed-port': mixedPort = 0 } = (await getRuntimeConfig()) ?? {}
       if (!item.url) throw new Error('Empty URL')
       let res: AxiosResponse
       try {
@@ -288,11 +288,10 @@ export async function createProfile(item: Partial<ProfileItem>): Promise<Profile
       )
       if (announceKey) {
         const announceValue = headers[announceKey]
-        if (announceValue.startsWith('base64:')) {
-          newItem.announce = Buffer.from(announceValue.slice(7), 'base64').toString('utf-8')
-        } else {
-          newItem.announce = announceValue
-        }
+        const decoded = announceValue.startsWith('base64:')
+          ? Buffer.from(announceValue.slice(7), 'base64').toString('utf-8')
+          : announceValue
+        newItem.announce = decoded.replace(/\\n/g, '\n')
       }
       const updateChannelKey = Object.keys(headers).find((k) =>
         k.toLowerCase() === 'outclash-update-channel'

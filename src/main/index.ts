@@ -194,7 +194,7 @@ function getDeepLinkFromArgs(argv: string[]): string | undefined {
 
 app.on('second-instance', async (_event, commandline) => {
   showMainWindow()
-  const url = commandline.pop()
+  const url = getDeepLinkFromArgs(commandline)
   if (url) {
     if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.webContents.isLoading()) {
       await handleDeepLink(url)
