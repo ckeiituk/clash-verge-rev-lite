@@ -18,8 +18,13 @@ const ProxySwitches: React.FC = () => {
   const { controledMihomoConfig, patchControledMihomoConfig } = useControledMihomoConfig()
   const { tun } = controledMihomoConfig || {}
   const { appConfig, patchAppConfig } = useAppConfig()
-  const { sysProxy, onlyActiveDevice = false, mainSwitchMode = 'tun' } = appConfig || {}
-  const { enable: sysProxyEnable, mode } = sysProxy || {}
+  const {
+    sysProxy,
+    proxyMode = false,
+    onlyActiveDevice = false,
+    mainSwitchMode = 'tun'
+  } = appConfig || {}
+  const { enable: writeSysProxy = true, mode } = sysProxy || {}
   const { 'mixed-port': mixedPort } = controledMihomoConfig || {}
   const sysProxyDisabled = mixedPort == 0
 
@@ -67,7 +72,7 @@ const ProxySwitches: React.FC = () => {
         />
       </SettingItem>
       <SettingItem
-        title={t('sider.systemProxy')}
+        title={t('sider.proxyMode')}
         actions={
           <Button
             size="icon-sm"
@@ -79,18 +84,22 @@ const ProxySwitches: React.FC = () => {
         }
       >
         <Switch
-          checked={sysProxyEnable}
-          disabled={!sysProxyEnable && mode == 'manual' && sysProxyDisabled}
+          checked={proxyMode}
+          disabled={!proxyMode && writeSysProxy && mode == 'manual' && sysProxyDisabled}
           onCheckedChange={async (enable: boolean) => {
-            if (enable && mode == 'manual' && sysProxyDisabled) return
+            if (enable && writeSysProxy && mode == 'manual' && sysProxyDisabled) return
             try {
               if (enable) {
-                await patchAppConfig({ sysProxy: { enable: true } })
+                await patchAppConfig({ proxyMode: true })
                 await restartCore()
-                await triggerSysProxy(true, onlyActiveDevice)
+                if (writeSysProxy) {
+                  await triggerSysProxy(true, onlyActiveDevice)
+                }
               } else {
-                await triggerSysProxy(false, onlyActiveDevice)
-                await patchAppConfig({ sysProxy: { enable: false } })
+                if (writeSysProxy) {
+                  await triggerSysProxy(false, onlyActiveDevice)
+                }
+                await patchAppConfig({ proxyMode: false })
                 await restartCore()
               }
               window.electron.ipcRenderer.send('updateFloatingWindow')

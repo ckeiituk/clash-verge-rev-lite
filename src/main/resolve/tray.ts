@@ -135,6 +135,7 @@ export const buildContextMenu = async (): Promise<Menu> => {
   const { mode, tun, 'mixed-port': mixedPort } = await getControledMihomoConfig()
   const {
     sysProxy,
+    proxyMode = false,
     onlyActiveDevice = false,
     autoCloseConnection,
     proxyInTray = true,
@@ -222,12 +223,12 @@ export const buildContextMenu = async (): Promise<Menu> => {
     { type: 'separator' },
     {
       type: 'normal',
-      label: (mainSwitchMode === 'tun' ? (tun?.enable ?? false) : sysProxy.enable)
+      label: (mainSwitchMode === 'tun' ? (tun?.enable ?? false) : proxyMode)
         ? t('tray.disable')
         : t('tray.enable'),
       accelerator: mainSwitchMode === 'tun' ? triggerTunShortcut : triggerSysProxyShortcut,
       click: async (): Promise<void> => {
-        const currentEnabled = mainSwitchMode === 'tun' ? (tun?.enable ?? false) : sysProxy.enable
+        const currentEnabled = mainSwitchMode === 'tun' ? (tun?.enable ?? false) : proxyMode
         const enable = !currentEnabled
         try {
           if (mainSwitchMode === 'tun') {
@@ -240,14 +241,20 @@ export const buildContextMenu = async (): Promise<Menu> => {
             floatingWindow?.webContents.send('controledMihomoConfigUpdated')
             await restartCore()
           } else {
-            if (enable && (sysProxy.mode ?? 'manual') == 'manual' && mixedPort == 0) return
+            if (enable && sysProxy.enable && (sysProxy.mode ?? 'manual') == 'manual' && mixedPort == 0) {
+              return
+            }
             if (enable) {
-              await patchAppConfig({ sysProxy: { enable: true } })
+              await patchAppConfig({ proxyMode: true })
               await restartCore()
-              await triggerSysProxy(true, onlyActiveDevice)
+              if (sysProxy.enable) {
+                await triggerSysProxy(true, onlyActiveDevice)
+              }
             } else {
-              await triggerSysProxy(false, onlyActiveDevice)
-              await patchAppConfig({ sysProxy: { enable: false } })
+              if (sysProxy.enable) {
+                await triggerSysProxy(false, onlyActiveDevice)
+              }
+              await patchAppConfig({ proxyMode: false })
               await restartCore()
             }
             mainWindow?.webContents.send('appConfigUpdated')
@@ -466,9 +473,9 @@ export async function closeTrayIcon(): Promise<void> {
 
 export async function updateTrayIcon(): Promise<void> {
   if (!tray) return
-  const { sysProxy } = await getAppConfig()
+  const { proxyMode = false } = await getAppConfig()
   const { tun } = await getControledMihomoConfig()
-  const proxyEnabled = sysProxy.enable || (tun?.enable ?? false)
+  const proxyEnabled = proxyMode || (tun?.enable ?? false)
 
   try {
     if (process.platform === 'darwin') {

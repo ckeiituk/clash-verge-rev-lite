@@ -74,6 +74,7 @@ interface AppConfig {
   autoCloseConnection: boolean
   expandProxyGroups?: boolean
   sysProxy: ISysProxyConfig
+  proxyMode?: boolean
   maxLogDays: number
   userAgent?: string
   delayTestConcurrency?: number

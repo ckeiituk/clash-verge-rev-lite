@@ -10,6 +10,7 @@ import SettingItem from '@renderer/components/base/base-setting-item'
 import EditableList from '@renderer/components/base/base-list-editor'
 import PacEditorModal from '@renderer/components/sysproxy/pac-editor-modal'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
+import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { platform } from '@renderer/utils/init'
 import { openUWPTool, restartCore, triggerSysProxy } from '@renderer/utils/ipc'
 import React, { useEffect, useState } from 'react'
@@ -72,8 +73,13 @@ const Sysproxy: React.FC = () => {
           ]
 
   const { appConfig, patchAppConfig } = useAppConfig()
-  const { sysProxy, onlyActiveDevice = false } =
-    appConfig || ({ sysProxy: { enable: false } } as AppConfig)
+  const { controledMihomoConfig } = useControledMihomoConfig()
+  const { 'mixed-port': mixedPort } = controledMihomoConfig || {}
+  const {
+    sysProxy,
+    proxyMode = false,
+    onlyActiveDevice = false
+  } = appConfig || ({ sysProxy: { enable: true }, proxyMode: false } as AppConfig)
   const [changed, setChanged] = useState(false)
   const [values, originSetValues] = useState({
     enable: sysProxy.enable,
@@ -96,11 +102,13 @@ const Sysproxy: React.FC = () => {
     originSetValues(v)
     setChanged(true)
   }
+
   const onSave = async (): Promise<void> => {
     // check valid TODO
     const prevEnable = sysProxy.enable ?? false
     await patchAppConfig({ sysProxy: values })
     setChanged(false)
+    if (!proxyMode) return
     if (values.enable) {
       try {
         await restartCore()
@@ -117,6 +125,25 @@ const Sysproxy: React.FC = () => {
         toast.error(`${e}`)
       }
       await restartCore()
+    }
+  }
+
+  const onToggleSysProxy = async (enable: boolean): Promise<void> => {
+    if (enable && values.mode == 'manual' && mixedPort == 0) return
+    setValues({ ...values, enable })
+    await patchAppConfig({ sysProxy: { ...values, enable } })
+    setChanged(false)
+    if (!proxyMode) return
+    try {
+      if (enable) {
+        await triggerSysProxy(true, onlyActiveDevice)
+      } else {
+        await triggerSysProxy(false, onlyActiveDevice)
+      }
+      window.electron.ipcRenderer.send('updateFloatingWindow')
+      window.electron.ipcRenderer.send('updateTrayMenu')
+    } catch (e) {
+      toast.error(`${e}`)
     }
   }
 
@@ -155,6 +182,15 @@ const Sysproxy: React.FC = () => {
         />
       )}
       <SettingCard className="sysproxy-settings">
+        <SettingItem title={t('pages.sysproxy.systemProxyToggle')} divider>
+          <Switch
+            checked={values.enable}
+            disabled={!values.enable && values.mode == 'manual' && mixedPort == 0}
+            onCheckedChange={(value) => {
+              void onToggleSysProxy(value)
+            }}
+          />
+        </SettingItem>
         <SettingItem title={t('pages.sysproxy.proxyHost')} divider>
           <Input
             className="w-[50%]"

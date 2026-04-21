@@ -17,7 +17,7 @@ import { Network } from 'lucide-react'
 const PortSetting: React.FC = () => {
   const { t } = useTranslation()
   const { appConfig } = useAppConfig()
-  const { sysProxy, onlyActiveDevice = false } = appConfig || {}
+  const { sysProxy, proxyMode = false, onlyActiveDevice = false } = appConfig || {}
   const { controledMihomoConfig, patchControledMihomoConfig } = useControledMihomoConfig()
   const {
     authentication = [],
@@ -77,7 +77,7 @@ const PortSetting: React.FC = () => {
                 disabled={hasPortConflict()}
                 onClick={async () => {
                   await onChangeNeedRestart({ 'mixed-port': mixedPortInput })
-                  if (sysProxy?.enable) {
+                  if (proxyMode && sysProxy?.enable) {
                     await triggerSysProxy(true, onlyActiveDevice)
                   }
                 }}
