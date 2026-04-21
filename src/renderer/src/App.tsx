@@ -52,6 +52,8 @@ const App: React.FC = () => {
   const [debugLatest, setDebugLatest] = useState<{ version: string; changelog: string } | null>(null)
   useEffect(() => {
     ;(window as any).__updateBanner = (v?: string) => {
+      sessionStorage.removeItem('updateBannerDismissedVersion')
+      window.dispatchEvent(new CustomEvent('resetUpdateBanner'))
       setDebugLatest((prev) => prev ? null : { version: v || '99.0.0', changelog: 'Test update banner' })
     }
   }, [])

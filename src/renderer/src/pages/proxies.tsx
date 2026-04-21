@@ -454,7 +454,7 @@ const Proxies: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="h-[calc(100vh-58px)]">
+        <div className="h-full">
           <GroupedVirtuoso
             ref={virtuosoRef}
             groupCounts={groupCounts}
