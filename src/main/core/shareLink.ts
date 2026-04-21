@@ -17,7 +17,6 @@ keep-alive-interval: 30
 unified-delay: false
 profile:
   store-selected: true
-  store-fake-ip: false
 sniffer:
   enable: true
   sniff:
@@ -115,7 +114,6 @@ keep-alive-interval: 30
 unified-delay: false
 profile:
   store-selected: true
-  store-fake-ip: false
 sniffer:
   enable: true
   force-dns-mapping: true
