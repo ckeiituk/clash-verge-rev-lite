@@ -569,6 +569,24 @@ export async function createWindow(appConfig?: AppConfig): Promise<void> {
       scheduleMainWindowRecovery(`render-process-gone (${details.reason})`)
     })
 
+    mainWindow.on('focus', () => {
+      if (!mainWindow || mainWindow.isDestroyed()) return
+      try {
+        mainWindow.webContents.invalidate()
+      } catch {
+        // ignore
+      }
+    })
+
+    mainWindow.on('show', () => {
+      if (!mainWindow || mainWindow.isDestroyed()) return
+      try {
+        mainWindow.webContents.invalidate()
+      } catch {
+        // ignore
+      }
+    })
+
     mainWindow.webContents.once('did-finish-load', () => {
       if (pendingDeepLink) {
         const url = pendingDeepLink

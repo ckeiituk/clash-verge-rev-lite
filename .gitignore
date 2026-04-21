@@ -17,6 +17,9 @@ resources/sidecar
 extra
 *.ttf
 .serena
+.zed
+*.tsbuildinfo
+latest.yml
 
 # IDE directories and files
 .vscode
