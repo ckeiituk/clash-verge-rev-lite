@@ -272,11 +272,10 @@ export async function createProfile(item: Partial<ProfileItem>): Promise<Profile
       )
       if (announceKey) {
         const announceValue = headers[announceKey]
-        if (announceValue.startsWith('base64:')) {
-          newItem.announce = Buffer.from(announceValue.slice(7), 'base64').toString('utf-8')
-        } else {
-          newItem.announce = announceValue
-        }
+        const decoded = announceValue.startsWith('base64:')
+          ? Buffer.from(announceValue.slice(7), 'base64').toString('utf-8')
+          : announceValue
+        newItem.announce = decoded.replace(/\\n/g, '\n')
       }
       if (newItem.verify) {
         let parsed: MihomoConfig
