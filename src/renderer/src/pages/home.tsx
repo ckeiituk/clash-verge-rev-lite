@@ -4,7 +4,7 @@ import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { useProfileConfig } from '@renderer/hooks/use-profile-config'
 import { useGroups } from '@renderer/hooks/use-groups'
-import { restartCore, triggerSysProxy, updateTrayIcon } from '@renderer/utils/ipc'
+import { triggerSysProxy, updateTrayIcon, mihomoHotReloadConfig } from '@renderer/utils/ipc'
 import NumberFlow from '@number-flow/react'
 import { useTranslation } from 'react-i18next'
 import { useEffect, useMemo, useState } from 'react'
@@ -18,6 +18,7 @@ import EditInfoModal from '@renderer/components/profiles/edit-info-modal'
 import { Spinner } from '@renderer/components/ui/spinner'
 import { CharacterMorph } from '@renderer/components/ui/character-morph'
 import { calcTraffic } from '@renderer/utils/calc'
+import { useTrafficStore } from '@renderer/store/traffic-store'
 
 function formatBytes(bytes: number): string {
   if (bytes <= 0) return '0 B'
@@ -37,7 +38,7 @@ const Home: React.FC = () => {
     sysProxy,
     onlyActiveDevice = false,
   } = appConfig || {}
-  const { enable: sysProxyEnable, mode } = sysProxy || {}
+  const { enable: sysProxyEnable = true, mode } = sysProxy || {}
   const { controledMihomoConfig, patchControledMihomoConfig } = useControledMihomoConfig()
   const { tun } = controledMihomoConfig || {}
   const { 'mixed-port': mixedPort } = controledMihomoConfig || {}
@@ -64,17 +65,7 @@ const Home: React.FC = () => {
     setShowEditModal(true)
   }
 
-  const [connectionsInfo, setConnectionsInfo] = useState<ControllerConnections>()
-
-  useEffect(() => {
-    const handleConnections = (_e: unknown, info: ControllerConnections): void => {
-      setConnectionsInfo(info)
-    }
-    window.electron.ipcRenderer.on('mihomoConnections', handleConnections)
-    return (): void => {
-      window.electron.ipcRenderer.removeListener('mihomoConnections', handleConnections)
-    }
-  }, [])
+  const trafficInfo = useTrafficStore((state) => state.traffic)
 
   const [loading, setLoading] = useState(false)
   const [loadingDirection, setLoadingDirection] = useState<'connecting' | 'disconnecting'>(
@@ -88,7 +79,7 @@ const Home: React.FC = () => {
     return 0
   })
 
-  const isSelected = (tun?.enable ?? false) || (sysProxyEnable ?? false)
+  const isSelected = (tun?.enable ?? false) || sysProxyEnable
 
   useEffect(() => {
     if (isSelected) {
@@ -107,8 +98,7 @@ const Home: React.FC = () => {
     }
   }, [isSelected])
 
-  const isDisabled =
-    loading || (mainSwitchMode === 'sysproxy' && mode == 'manual' && sysProxyDisabled)
+  const isDisabled = loading || (mainSwitchMode === 'sysproxy' && mode == 'manual' && sysProxyDisabled)
 
   const status = loading
     ? loadingDirection === 'connecting'
@@ -178,20 +168,25 @@ const Home: React.FC = () => {
     try {
       if (mainSwitchMode === 'tun') {
         if (enable) {
-          await patchControledMihomoConfig({ tun: { enable }, dns: { enable: true } })
+          await patchControledMihomoConfig({ tun: { enable: true }, dns: { enable: true } })
         } else {
-          await patchControledMihomoConfig({ tun: { enable } })
+          await patchControledMihomoConfig({ tun: { enable: false } })
         }
-        await restartCore()
-        window.electron.ipcRenderer.send('updateFloatingWindow')
-        window.electron.ipcRenderer.send('updateTrayMenu')
+        await mihomoHotReloadConfig()
       } else {
         if (mode == 'manual' && sysProxyDisabled) return
-        await triggerSysProxy(enable, onlyActiveDevice)
-        await patchAppConfig({ sysProxy: { enable } })
-        window.electron.ipcRenderer.send('updateFloatingWindow')
-        window.electron.ipcRenderer.send('updateTrayMenu')
+        if (enable) {
+          await patchAppConfig({ sysProxy: { enable: true } })
+          await mihomoHotReloadConfig()
+          await triggerSysProxy(true, onlyActiveDevice)
+        } else {
+          await triggerSysProxy(false, onlyActiveDevice)
+          await patchAppConfig({ sysProxy: { enable: false } })
+          await mihomoHotReloadConfig()
+        }
       }
+      window.electron.ipcRenderer.send('updateFloatingWindow')
+      window.electron.ipcRenderer.send('updateTrayMenu')
       await updateTrayIcon()
     } catch (e) {
       toast.error(`${e}`)
@@ -259,7 +254,7 @@ const Home: React.FC = () => {
                   <button
                     onClick={handleUpdateProfile}
                     disabled={updating}
-                    className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors disabled:opacity-50"
+                    className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors disabled:opacity-50 cursor-pointer"
                   >
                     <RefreshCcw className={`size-4 ${updating ? 'animate-spin' : ''}`} />
                   </button>
@@ -268,7 +263,7 @@ const Home: React.FC = () => {
               {currentProfile.announce && (
                 <div
                   data-guide="home-profile-announce"
-                  className="text-sm font-medium text-center mt-2"
+                  className="text-sm font-medium text-center mt-2 whitespace-pre-line"
                 >
                   {currentProfile.announce}
                 </div>
@@ -313,7 +308,7 @@ const Home: React.FC = () => {
               disabled={isDisabled}
               onClick={() => onValueChange(!isSelected)}
               data-guide="home-power-toggle"
-              className="relative group transition-transform active:scale-95"
+              className="relative group transition-transform active:scale-95 cursor-pointer"
             >
               <div
                 className={`w-32 h-32 rounded-full flex items-center justify-center transition-all duration-300 bg-radial-[at_30%_45%] backdrop-blur-xl border-2 ${
@@ -376,12 +371,12 @@ const Home: React.FC = () => {
             >
               <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                 <ArrowUp className="size-3.5 text-stroke-power-on" />
-                <span>{calcTraffic(connectionsInfo?.uploadTotal ?? 0)}</span>
+                <span>{calcTraffic(trafficInfo.upTotal)}</span>
               </div>
               <div className="h-3 w-px bg-stroke" />
               <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                 <ArrowDown className="size-3.5 text-stroke-power-on" />
-                <span>{calcTraffic(connectionsInfo?.downloadTotal ?? 0)}</span>
+                <span>{calcTraffic(trafficInfo.downTotal)}</span>
               </div>
             </div>
           </div>
@@ -394,7 +389,7 @@ const Home: React.FC = () => {
                 className="w-full cursor-pointer"
                 onClick={() => navigate('/proxies', { state: { fromHome: true } })}
               >
-                <div className="flex items-center justify-between h-9 rounded-2xl border border-stroke pl-3 pr-1 py-3 backdrop-blur-xl bg-card/50">
+                <div className="flex items-center justify-between h-9 rounded-2xl border border-stroke pl-3 pr-1 py-3 backdrop-blur-xl bg-card/50 transition-colors hover:bg-card/70">
                   <div className="flag-emoji text-sm truncate max-w-52">
                     {firstGroup.now || firstGroup.name}
                   </div>
@@ -409,7 +404,7 @@ const Home: React.FC = () => {
                 data-guide="home-support-link"
                 type="button"
                 onClick={() => open(supportLinkInfo.href)}
-                className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
+                className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors cursor-pointer"
               >
                 {supportLinkInfo.isTelegram ? (
                   <SiTelegram className="size-4" />

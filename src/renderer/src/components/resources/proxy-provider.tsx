@@ -3,6 +3,10 @@ import {
   mihomoUpdateProxyProviders,
   getRuntimeConfig
 } from '@renderer/utils/ipc'
+import {
+  subscribeCoreStarted,
+  subscribeProfileReloaded
+} from '@renderer/store/core-lifecycle-store'
 import { useTranslation } from 'react-i18next'
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import Viewer from './viewer'
@@ -52,13 +56,17 @@ const ProxyProvider: React.FC = () => {
   })
 
   useEffect(() => {
-    window.electron.ipcRenderer.on('core-started', () => {
+    const unsubscribeCoreStarted = subscribeCoreStarted(() => {
+      mutate()
+    })
+    const unsubscribeProfileReloaded = subscribeProfileReloaded(() => {
       mutate()
     })
     return (): void => {
-      window.electron.ipcRenderer.removeAllListeners('core-started')
+      unsubscribeCoreStarted()
+      unsubscribeProfileReloaded()
     }
-  }, [])
+  }, [mutate])
 
   const providers = useMemo(() => {
     if (!data) return []
@@ -102,7 +110,13 @@ const ProxyProvider: React.FC = () => {
           title={showDetails.title}
           privderType={showDetails.privderType}
           onClose={() =>
-            setShowDetails({ show: false, path: '', type: '', title: '', privderType: '' })
+            setShowDetails({
+              show: false,
+              path: '',
+              type: '',
+              title: '',
+              privderType: ''
+            })
           }
         />
       )}
@@ -122,19 +136,13 @@ const ProxyProvider: React.FC = () => {
         <Fragment key={provider.name}>
           <SettingItem
             title={provider.name}
-            actions={
-              <Badge className="ml-2">
-                {provider.proxies?.length || 0}
-              </Badge>
-            }
+            actions={<Badge className="ml-2">{provider.proxies?.length || 0}</Badge>}
             divider={!provider.subscriptionInfo && index !== providers.length - 1}
           >
             <div className="flex h-8 leading-8 text-foreground-500">
               <div>{dayjs(provider.updatedAt).fromNow()}</div>
               <Button
-                title={
-                  provider.vehicleType == 'File' ? t('resources.edit') : t('resources.view')
-                }
+                title={provider.vehicleType == 'File' ? t('resources.edit') : t('resources.view')}
                 className="ml-2"
                 size="icon-sm"
                 variant="ghost"

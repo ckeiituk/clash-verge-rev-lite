@@ -72,6 +72,25 @@ let networkDownHandled = false
 let child: ChildProcess
 let retry = 10
 
+let initialized = false
+let providerNames = new Set<string>()
+let unmatchedProviders = new Set<string>()
+
+const normalize = (s: string): string =>
+  s
+    .replace(/\\u([0-9a-fA-F]{4})/g, (_, h) => String.fromCharCode(parseInt(h, 16)))
+    .normalize('NFC')
+
+export async function resetProviderTracking(): Promise<void> {
+  const { 'rule-providers': ruleProviders, 'proxy-providers': proxyProviders } =
+    await getRuntimeConfig()
+  providerNames = new Set(
+    [...Object.keys(ruleProviders || {}), ...Object.keys(proxyProviders || {})].map(normalize)
+  )
+  unmatchedProviders = new Set(providerNames)
+  initialized = false
+}
+
 export async function startCore(detached = false): Promise<Promise<void>[]> {
   const {
     core = 'mihomo',
@@ -111,18 +130,7 @@ export async function startCore(detached = false): Promise<Promise<void>[]> {
       })
     }
   }
-  const { 'rule-providers': ruleProviders, 'proxy-providers': proxyProviders } =
-    await getRuntimeConfig()
-
-  const normalize = (s: string): string =>
-    s
-      .replace(/\\u([0-9a-fA-F]{4})/g, (_, h) => String.fromCharCode(parseInt(h, 16)))
-      .normalize('NFC')
-
-  const providerNames = new Set(
-    [...Object.keys(ruleProviders || {}), ...Object.keys(proxyProviders || {})].map(normalize)
-  )
-  const unmatchedProviders = new Set(providerNames)
+  await resetProviderTracking()
   const stdout = createWriteStream(logPath(), { flags: 'a' })
   const stderr = createWriteStream(logPath(), { flags: 'a' })
   const env = {
@@ -133,7 +141,6 @@ export async function startCore(detached = false): Promise<Promise<void>[]> {
     SAFE_PATHS: safePaths.join(path.delimiter),
     PATH: process.env.PATH
   }
-  let initialized = false
   child = spawn(
     corePath,
     [

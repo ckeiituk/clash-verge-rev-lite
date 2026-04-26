@@ -46,7 +46,11 @@ const recoveryAttempts: number[] = [] // timestamps of recent recovery attempts
 const MAX_RECOVERY_ATTEMPTS = 3
 const RECOVERY_WINDOW_MS = 60_000
 
-function scheduleMainWindowRecovery(reason: string): void {
+interface MainWindowRecoveryOptions {
+  forceCrashRenderer?: boolean
+}
+
+function scheduleMainWindowRecovery(reason: string, options: MainWindowRecoveryOptions = {}): void {
   if (!mainWindow || mainWindow.isDestroyed() || mainWindowRecoveryTimeout) return
 
   // Rate-limit: max 3 attempts per 60 seconds
@@ -76,6 +80,13 @@ function scheduleMainWindowRecovery(reason: string): void {
         if (windowShown) void showMainWindow()
       })
     } else {
+      if (options.forceCrashRenderer && !currentWindow.webContents.isCrashed()) {
+        try {
+          currentWindow.webContents.forcefullyCrashRenderer()
+        } catch {
+          // ignore
+        }
+      }
       currentWindow.webContents.reloadIgnoringCache()
       if (windowShown && !currentWindow.isVisible()) {
         currentWindow.show()
@@ -194,7 +205,7 @@ function getDeepLinkFromArgs(argv: string[]): string | undefined {
 
 app.on('second-instance', async (_event, commandline) => {
   showMainWindow()
-  const url = commandline.pop()
+  const url = getDeepLinkFromArgs(commandline)
   if (url) {
     if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.webContents.isLoading()) {
       await handleDeepLink(url)
@@ -344,6 +355,14 @@ app.whenReady().then(async () => {
     const deepLinkArg = getDeepLinkFromArgs(process.argv)
     if (deepLinkArg) {
       pendingDeepLink = deepLinkArg
+    }
+  }
+
+  if (process.platform === 'win32') {
+    try {
+      writeFileSync(path.join(taskDir(), 'param.txt'), 'empty')
+    } catch {
+      // ignore
     }
   }
 
@@ -558,7 +577,7 @@ export async function createWindow(appConfig?: AppConfig): Promise<void> {
       }
     })
     mainWindow.on('unresponsive', () => {
-      scheduleMainWindowRecovery('window-unresponsive')
+      scheduleMainWindowRecovery('window-unresponsive', { forceCrashRenderer: true })
     })
     mainWindow.webContents.on('did-fail-load', (_event, errorCode, errorDescription, _url, isMainFrame) => {
       if (!isMainFrame) return
@@ -568,6 +587,18 @@ export async function createWindow(appConfig?: AppConfig): Promise<void> {
       if (details.reason === 'clean-exit') return
       scheduleMainWindowRecovery(`render-process-gone (${details.reason})`)
     })
+
+    const invalidateMainWindowContents = (): void => {
+      if (!mainWindow || mainWindow.isDestroyed() || mainWindow.webContents.isDestroyed()) return
+      try {
+        mainWindow.webContents.invalidate()
+      } catch {
+        // ignore
+      }
+    }
+
+    mainWindow.on('focus', invalidateMainWindowContents)
+    mainWindow.on('show', invalidateMainWindowContents)
 
     mainWindow.webContents.once('did-finish-load', () => {
       if (pendingDeepLink) {
@@ -653,6 +684,9 @@ export async function showMainWindow(): Promise<void> {
     }
   }
   if (mainWindow) {
+    if (mainWindow.webContents.isDestroyed() || mainWindow.webContents.isCrashed()) {
+      scheduleMainWindowRecovery('show-crashed')
+    }
     windowShown = true
     mainWindow.show()
     mainWindow.focusOnWebView()

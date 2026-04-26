@@ -367,6 +367,10 @@ export default {
     },
     sysproxy: {
       title: '系统代理设置',
+      systemProxyToggle: '系统代理',
+      alwaysOpenPorts: '始终保持本地端口启用',
+      alwaysOpenPortsHelp:
+        '恢复旧行为：即使 TUN 和系统代理都关闭，已配置的 mixed/http/socks 等本地端口仍然保持启用。',
       proxyHost: '代理主机',
       proxyHostPlaceholder: '默认 127.0.0.1 若无特殊需求请勿修改',
       proxyMode: '代理模式',
@@ -533,6 +537,9 @@ export default {
       autoEnterLightModeDelay: '自动开启轻量模式延时',
       seconds: '秒',
       copyEnvType: '复制环境变量类型',
+      legacyAlwaysEnableProxyPorts: '始终保持本地端口启用',
+      legacyAlwaysEnableProxyPortsHelp:
+        '恢复旧行为：即使 TUN 和系统代理都关闭，已配置的 mixed/http/socks 等本地端口仍然保持启用。',
       corePriority: '内核进程优先级',
       realtime: '实时',
       high: '高',
@@ -542,12 +549,15 @@ export default {
       low: '低',
       mainSwitch: '主开关',
       mainSwitchTun: 'TUN 模式',
-      mainSwitchSysproxy: '系统代理',
+      mainSwitchSysproxy: '代理模式',
       takeOverDNS: '接管 DNS 设置',
       takeOverSniffer: '接管域名嗅探设置',
       stopCoreOnDisconnect: '断网时停止内核',
       stopCoreOnDisconnectHelp:
         '开启后，应用会在检测到网络断开时自动停止内核，并在网络恢复后自动重启内核',
+      useHotReloadProfile: '切换订阅时热重载配置',
+      useHotReloadProfileHelp:
+        '启用后切换或保存订阅时通过 API 热重载配置而无需重启内核，禁用时仍使用重启方式切换',
       disconnectDetectInterval: '断网检测间隔',
       bypassDetectInterfaces: '绕过检测的接口',
       directOnSpecificWifi: '在特定的 WiFi SSID 下直连'
@@ -556,7 +566,7 @@ export default {
       title: '快捷键设置',
       toggleWindow: '打开/关闭窗口',
       toggleFloatingWindow: '打开/关闭悬浮窗',
-      toggleSysProxy: '打开/关闭系统代理',
+      toggleSysProxy: '打开/关闭代理模式',
       toggleTun: '打开/关闭虚拟网卡',
       switchRuleMode: '切换规则模式',
       switchGlobalMode: '切换全局模式',

@@ -21,6 +21,11 @@ import AppSidebar from '@renderer/components/app-sidebar'
 import HwidLimitAlert from '@renderer/components/profiles/hwid-limit-alert'
 import WindowControls from '@renderer/components/window-controls'
 import { UpdateInfoContext } from '@renderer/hooks/use-update-info'
+import { attachConnectionsStore } from '@renderer/store/connections-store'
+import { attachCoreLifecycleStore } from '@renderer/store/core-lifecycle-store'
+import { attachLogsStore } from '@renderer/store/logs-store'
+import { attachTrafficStore } from '@renderer/store/traffic-store'
+import { attachUpdaterStore } from '@renderer/store/updater-store'
 import mapDark from '@renderer/assets/map_darktheme.svg'
 import mapLight from '@renderer/assets/map_lighttheme.svg'
 
@@ -52,10 +57,28 @@ const App: React.FC = () => {
   const [debugLatest, setDebugLatest] = useState<{ version: string; changelog: string } | null>(null)
   useEffect(() => {
     ;(window as any).__updateBanner = (v?: string) => {
+      sessionStorage.removeItem('updateBannerDismissedVersion')
+      window.dispatchEvent(new CustomEvent('resetUpdateBanner'))
       setDebugLatest((prev) => prev ? null : { version: v || '99.0.0', changelog: 'Test update banner' })
     }
   }, [])
   const effectiveLatest = debugLatest || latest
+
+  useEffect(() => {
+    const detachConnections = attachConnectionsStore()
+    const detachTraffic = attachTrafficStore()
+    const detachLogs = attachLogsStore()
+    const detachUpdater = attachUpdaterStore()
+    const detachCoreLifecycle = attachCoreLifecycleStore()
+
+    return (): void => {
+      detachConnections()
+      detachTraffic()
+      detachLogs()
+      detachUpdater()
+      detachCoreLifecycle()
+    }
+  }, [])
 
   useEffect(() => {
     const tourShown = window.localStorage.getItem('tourShown')

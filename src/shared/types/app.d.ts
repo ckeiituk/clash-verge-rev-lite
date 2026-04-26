@@ -74,6 +74,8 @@ interface AppConfig {
   autoCloseConnection: boolean
   expandProxyGroups?: boolean
   sysProxy: ISysProxyConfig
+  proxyMode?: boolean
+  proxyModeBehaviorMigrated?: boolean
   maxLogDays: number
   userAgent?: string
   delayTestConcurrency?: number
@@ -104,6 +106,7 @@ interface AppConfig {
   disableGPU: boolean
   mainSwitchMode?: 'tun' | 'sysproxy'
   devMode?: boolean
+  useHotReloadProfile?: boolean
 }
 
 interface ProfileConfig {

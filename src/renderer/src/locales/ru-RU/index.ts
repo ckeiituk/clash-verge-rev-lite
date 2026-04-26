@@ -295,6 +295,10 @@ export default {
     },
     sysproxy: {
       title: 'Настройки системного прокси',
+      systemProxyToggle: 'Системный прокси',
+      alwaysOpenPorts: 'Всегда держать локальные порты активными',
+      alwaysOpenPortsHelp:
+        'Возвращает старое поведение: настроенные mixed/http/socks и другие локальные порты остаются активными даже при выключенных TUN и системном прокси.',
       proxyHost: 'Хост прокси',
       proxyHostPlaceholder: 'По умолчанию: 127.0.0.1. Не меняйте без необходимости',
       proxyMode: 'Режим прокси',
@@ -468,6 +472,9 @@ export default {
       autoEnterLightModeDelay: 'Задержка перед переходом в облегчённый режим',
       seconds: 'с',
       copyEnvType: 'Формат копирования переменных окружения',
+      legacyAlwaysEnableProxyPorts: 'Всегда держать локальные порты активными',
+      legacyAlwaysEnableProxyPortsHelp:
+        'Возвращает старое поведение: настроенные mixed/http/socks и другие локальные порты остаются активными даже при выключенных TUN и системном прокси.',
       corePriority: 'Приоритет процесса ядра',
       realtime: 'Реальное время',
       high: 'Высокий',
@@ -477,12 +484,15 @@ export default {
       low: 'Низкий',
       mainSwitch: 'Основной переключатель',
       mainSwitchTun: 'Режим TUN',
-      mainSwitchSysproxy: 'Системный прокси',
+      mainSwitchSysproxy: 'Режим прокси',
       takeOverDNS: 'Управлять настройками DNS',
       takeOverSniffer: 'Управлять настройками определения доменов',
       stopCoreOnDisconnect: 'Останавливать ядро при потере сети',
       stopCoreOnDisconnectHelp:
         'Если включено, приложение автоматически остановит ядро при потере сети и запустит его снова после восстановления',
+      useHotReloadProfile: 'Горячая перезагрузка конфигурации при смене профиля',
+      useHotReloadProfileHelp:
+        'Если включено, при смене или сохранении профиля конфигурация обновляется через API без перезапуска ядра. Иначе ядро перезапускается.',
       disconnectDetectInterval: 'Интервал проверки соединения',
       bypassDetectInterfaces: 'Исключить интерфейсы из проверки',
       directOnSpecificWifi: 'Включать прямой режим для указанных Wi-Fi SSID'
@@ -491,7 +501,7 @@ export default {
       title: 'Настройки горячих клавиш',
       toggleWindow: 'Переключить окно',
       toggleFloatingWindow: 'Переключить плавающее окно',
-      toggleSysProxy: 'Переключить системный прокси',
+      toggleSysProxy: 'Переключить режим прокси',
       toggleTun: 'Переключить режим TUN',
       switchRuleMode: 'Переключить на режим правил',
       switchGlobalMode: 'Переключить на глобальный режим',

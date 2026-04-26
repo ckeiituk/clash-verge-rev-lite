@@ -22,6 +22,7 @@ extra
 .vscode
 .idea
 .fleet
+.zed
 .cursor
 *.iml
 *.ipr
@@ -35,6 +36,7 @@ extra
 *.swo
 *~
 *.bak
+*.tsbuildinfo
 
 # OS files
 Thumbs.db
@@ -46,6 +48,7 @@ Desktop.ini
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+latest.yml
 
 # Environment variables
 .env

@@ -7,6 +7,8 @@ import { calcTraffic } from '../utils/calc'
 import { getRuntimeConfig } from './factory'
 import { floatingWindow } from '../resolve/floatingWindow'
 import { mihomoIpcPath } from '../utils/dirs'
+import { debounce } from '../utils/debounce'
+import { safeSend } from '../utils/safeSend'
 
 let axiosIns: AxiosInstance = null!
 let mihomoTrafficWs: WebSocket | null = null
@@ -62,6 +64,35 @@ export const patchMihomoConfig = async (patch: Partial<ControllerConfigs>): Prom
   return await instance.patch('/configs', patch)
 }
 
+const waitForMihomoReloadReady = async (): Promise<void> => {
+  const maxRetries = 30
+  const retryInterval = 100
+  let lastError: unknown
+
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      await mihomoConfig()
+      await mihomoGroups()
+      return
+    } catch (error) {
+      lastError = error
+      await new Promise<void>((resolve) => setTimeout(resolve, retryInterval))
+    }
+  }
+
+  throw new Error(
+    `Mihomo config reload did not become ready after ${maxRetries * retryInterval}ms${
+      lastError instanceof Error ? `: ${lastError.message}` : ''
+    }`
+  )
+}
+
+const notifyProfileReloaded = (): void => {
+  setTimeout(() => {
+    safeSend(mainWindow, 'profile-reloaded')
+  }, 100)
+}
+
 export const mihomoCloseConnection = async (id: string): Promise<void> => {
   const instance = await getAxios()
   return await instance.delete(`/connections/${encodeURIComponent(id)}`)
@@ -109,7 +140,10 @@ export const mihomoGroups = async (): Promise<ControllerMixedGroup[]> => {
 
   const serverDescriptionMap = new Map<string, string>()
   if (runtime?.proxies) {
-    for (const p of runtime.proxies as { name?: string; serverDescription?: string }[]) {
+    for (const p of runtime.proxies as {
+      name?: string
+      serverDescription?: string
+    }[]) {
       if (p.name && p.serverDescription) {
         serverDescriptionMap.set(p.name, p.serverDescription)
       }
@@ -177,7 +211,9 @@ export const mihomoChangeProxy = async (
   proxy: string
 ): Promise<ControllerProxiesDetail> => {
   const instance = await getAxios()
-  return await instance.put(`/proxies/${encodeURIComponent(group)}`, { name: proxy })
+  return await instance.put(`/proxies/${encodeURIComponent(group)}`, {
+    name: proxy
+  })
 }
 
 export const mihomoUnfixedProxy = async (group: string): Promise<ControllerProxiesDetail> => {
@@ -231,6 +267,22 @@ export const mihomoUpgradeUI = async (): Promise<void> => {
   return await instance.post('/upgrade/ui')
 }
 
+export const mihomoHotReloadConfig = async (): Promise<void> => {
+  const { generateProfile } = await import('./factory')
+  const { getProfileConfig } = await import('../config')
+  const { resetProviderTracking } = await import('./manager')
+  await generateProfile()
+  const { current } = await getProfileConfig()
+  const { diffWorkDir = false } = await getAppConfig()
+  const { mihomoWorkConfigPath } = await import('../utils/dirs')
+  const configPath = diffWorkDir ? mihomoWorkConfigPath(current) : mihomoWorkConfigPath('work')
+  await resetProviderTracking()
+  const instance = await getAxios()
+  await instance.put('/configs?force=true', { path: configPath })
+  await waitForMihomoReloadReady()
+  notifyProfileReloaded()
+}
+
 export const startMihomoTraffic = async (): Promise<void> => {
   await mihomoTraffic()
 }
@@ -253,7 +305,7 @@ const mihomoTraffic = async (): Promise<void> => {
     const json = JSON.parse(data) as ControllerTraffic
     trafficRetry = 10
     try {
-      mainWindow?.webContents.send('mihomoTraffic', json)
+      safeSend(mainWindow, 'mihomoTraffic', json)
       if (process.platform !== 'linux') {
         tray?.setToolTip(
           '↑' +
@@ -262,7 +314,7 @@ const mihomoTraffic = async (): Promise<void> => {
             `${calcTraffic(json.down)}/s`.padStart(9)
         )
       }
-      floatingWindow?.webContents.send('mihomoTraffic', json)
+      safeSend(floatingWindow, 'mihomoTraffic', json)
     } catch {
       // ignore
     }
@@ -304,7 +356,7 @@ const mihomoMemory = async (): Promise<void> => {
     const data = e.data as string
     memoryRetry = 10
     try {
-      mainWindow?.webContents.send('mihomoMemory', JSON.parse(data) as ControllerMemory)
+      safeSend(mainWindow, 'mihomoMemory', JSON.parse(data) as ControllerMemory)
     } catch {
       // ignore
     }
@@ -348,7 +400,7 @@ const mihomoLogs = async (): Promise<void> => {
     const data = e.data as string
     logsRetry = 10
     try {
-      mainWindow?.webContents.send('mihomoLogs', JSON.parse(data) as ControllerLog)
+      safeSend(mainWindow, 'mihomoLogs', JSON.parse(data) as ControllerLog)
     } catch {
       // ignore
     }
@@ -373,7 +425,12 @@ export const startMihomoConnections = async (): Promise<void> => {
   await mihomoConnections()
 }
 
+const sendConnectionsDebounced = debounce<[ControllerConnections]>((payload) => {
+  safeSend(mainWindow, 'mihomoConnections', payload)
+}, 100)
+
 export const stopMihomoConnections = (): void => {
+  sendConnectionsDebounced.cancel()
   if (mihomoConnectionsWs) {
     mihomoConnectionsWs.removeAllListeners()
     if (mihomoConnectionsWs.readyState === WebSocket.OPEN) {
@@ -398,7 +455,7 @@ const mihomoConnections = async (): Promise<void> => {
     const data = e.data as string
     connectionsRetry = 10
     try {
-      mainWindow?.webContents.send('mihomoConnections', JSON.parse(data) as ControllerConnections)
+      sendConnectionsDebounced(JSON.parse(data) as ControllerConnections)
     } catch {
       // ignore
     }

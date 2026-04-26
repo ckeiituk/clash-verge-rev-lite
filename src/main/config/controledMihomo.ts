@@ -61,4 +61,11 @@ export async function patchControledMihomoConfig(patch: Partial<MihomoConfig>): 
   controledMihomoConfig = deepMerge(controledMihomoConfig, patchToMerge)
   await generateProfile()
   await writeFile(controledMihomoConfigPath(), stringifyYaml(controledMihomoConfig), 'utf-8')
+
+  try {
+    const { patchMihomoConfig } = await import('../core/mihomoApi')
+    await patchMihomoConfig(patch as Partial<ControllerConfigs>)
+  } catch {
+    // running core may not be ready; changes will apply on next restart/reload
+  }
 }

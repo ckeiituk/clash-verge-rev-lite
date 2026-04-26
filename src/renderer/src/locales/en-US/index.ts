@@ -294,6 +294,10 @@ export default {
     },
     sysproxy: {
       title: 'System Proxy Settings',
+      systemProxyToggle: 'System Proxy',
+      alwaysOpenPorts: 'Always keep local ports active',
+      alwaysOpenPortsHelp:
+        'Restores the old behavior: configured mixed/http/socks and other local ports stay active even when both TUN and System Proxy are disabled.',
       proxyHost: 'Proxy Host',
       proxyHostPlaceholder: 'Default 127.0.0.1, do not modify unless necessary',
       proxyMode: 'Proxy Mode',
@@ -469,6 +473,9 @@ export default {
       autoEnterLightModeDelay: 'Auto enter light mode delay',
       seconds: 's',
       copyEnvType: 'Copy environment variable type',
+      legacyAlwaysEnableProxyPorts: 'Always keep local ports active',
+      legacyAlwaysEnableProxyPortsHelp:
+        'Restores the old behavior: configured mixed/http/socks and other local ports stay active even when both TUN and System Proxy are disabled.',
       corePriority: 'Core process priority',
       realtime: 'Realtime',
       high: 'High',
@@ -478,12 +485,15 @@ export default {
       low: 'Low',
       mainSwitch: 'Main Switch',
       mainSwitchTun: 'TUN Mode',
-      mainSwitchSysproxy: 'System Proxy',
+      mainSwitchSysproxy: 'Proxy Mode',
       takeOverDNS: 'Take over DNS settings',
       takeOverSniffer: 'Take over domain sniffing settings',
       stopCoreOnDisconnect: 'Stop core on disconnect',
       stopCoreOnDisconnectHelp:
         'When enabled, app will automatically stop core when network is disconnected and restart when network is restored',
+      useHotReloadProfile: 'Hot reload config on profile switch',
+      useHotReloadProfileHelp:
+        'When enabled, switching profiles or saving them reloads the config via API without restarting the core. When disabled, the core restarts.',
       disconnectDetectInterval: 'Disconnect detect interval',
       bypassDetectInterfaces: 'Bypass detect interfaces',
       directOnSpecificWifi: 'Direct mode on specific WiFi SSID'
@@ -492,7 +502,7 @@ export default {
       title: 'Shortcut Settings',
       toggleWindow: 'Toggle Window',
       toggleFloatingWindow: 'Toggle Floating Window',
-      toggleSysProxy: 'Toggle System Proxy',
+      toggleSysProxy: 'Toggle Proxy Mode',
       toggleTun: 'Toggle Virtual Network Interface',
       switchRuleMode: 'Switch to Rule Mode',
       switchGlobalMode: 'Switch to Global Mode',

@@ -7,7 +7,7 @@ import { Switch } from '@renderer/components/ui/switch'
 import { Tabs, TabsList, TabsTrigger } from '@renderer/components/ui/tabs'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
-import { restartCore, triggerSysProxy, updateTrayIcon } from '@renderer/utils/ipc'
+import { triggerSysProxy, updateTrayIcon, mihomoHotReloadConfig } from '@renderer/utils/ipc'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Settings } from 'lucide-react'
@@ -18,8 +18,12 @@ const ProxySwitches: React.FC = () => {
   const { controledMihomoConfig, patchControledMihomoConfig } = useControledMihomoConfig()
   const { tun } = controledMihomoConfig || {}
   const { appConfig, patchAppConfig } = useAppConfig()
-  const { sysProxy, onlyActiveDevice = false, mainSwitchMode = 'tun' } = appConfig || {}
-  const { enable: sysProxyEnable, mode } = sysProxy || {}
+  const {
+    sysProxy,
+    onlyActiveDevice = false,
+    mainSwitchMode = 'tun'
+  } = appConfig || {}
+  const { enable: sysProxyEnable = true, mode } = sysProxy || {}
   const { 'mixed-port': mixedPort } = controledMihomoConfig || {}
   const sysProxyDisabled = mixedPort == 0
 
@@ -59,7 +63,6 @@ const ProxySwitches: React.FC = () => {
             } else {
               await patchControledMihomoConfig({ tun: { enable } })
             }
-            await restartCore()
             window.electron.ipcRenderer.send('updateFloatingWindow')
             window.electron.ipcRenderer.send('updateTrayMenu')
             await updateTrayIcon()
@@ -84,8 +87,15 @@ const ProxySwitches: React.FC = () => {
           onCheckedChange={async (enable: boolean) => {
             if (mode == 'manual' && sysProxyDisabled) return
             try {
-              await triggerSysProxy(enable, onlyActiveDevice)
-              await patchAppConfig({ sysProxy: { enable } })
+              if (enable) {
+                await patchAppConfig({ sysProxy: { enable: true } })
+                await mihomoHotReloadConfig()
+                await triggerSysProxy(true, onlyActiveDevice)
+              } else {
+                await triggerSysProxy(false, onlyActiveDevice)
+                await patchAppConfig({ sysProxy: { enable: false } })
+                await mihomoHotReloadConfig()
+              }
               window.electron.ipcRenderer.send('updateFloatingWindow')
               window.electron.ipcRenderer.send('updateTrayMenu')
               await updateTrayIcon()

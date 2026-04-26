@@ -54,12 +54,15 @@ function processRulesWithOffset(ruleStrings: string[], currentRules: string[], i
 
 export async function generateProfile(): Promise<void> {
   const { current } = await getProfileConfig()
+  const appConfig = await getAppConfig()
   const {
     diffWorkDir = false,
     controlDns = true,
     controlSniff = true,
     controlTun = false
-  } = await getAppConfig()
+  } = appConfig
+  const proxyModeEnabled = appConfig.proxyMode ?? false
+  const sysProxyEnabled = appConfig.sysProxy?.enable ?? false
   const currentProfile = await getProfile(current)
   rawProfileStr = await getProfileStr(current)
   currentProfileStr = stringifyYaml(currentProfile)
@@ -77,6 +80,7 @@ export async function generateProfile(): Promise<void> {
     currentProfile.tun.enable = controledMihomoConfig.tun?.enable ?? false
     delete configToMerge.tun
   }
+  preserveProfileStoreFakeIp(currentProfile, configToMerge)
 
   const ruleFilePath = rulePath(current || 'default')
   if (existsSync(ruleFilePath)) {
@@ -128,6 +132,15 @@ export async function generateProfile(): Promise<void> {
   }
 
   const profile = deepMerge(JSON.parse(JSON.stringify(currentProfile)), configToMerge)
+
+  const tunEnabled = profile.tun?.enable ?? false
+  if (!tunEnabled && !sysProxyEnabled && !proxyModeEnabled) {
+    profile.port = 0
+    profile['socks-port'] = 0
+    profile['redir-port'] = 0
+    profile['tproxy-port'] = 0
+    profile['mixed-port'] = 0
+  }
 
   await cleanProfile(profile, controlDns, controlSniff, controlTun)
 
@@ -190,6 +203,20 @@ function cleanBooleanConfigs(profile: MihomoConfig): void {
     const profileConfig = profile.profile as MihomoProfileConfig
     if (!hasStoreSelected) delete profileConfig['store-selected']
     if (!hasStoreFakeIp) delete profileConfig['store-fake-ip']
+  }
+}
+
+function preserveProfileStoreFakeIp(
+  currentProfile: MihomoConfig,
+  configToMerge: Partial<MihomoConfig>
+): void {
+  if (!currentProfile.profile || !configToMerge.profile) return
+  if (!Object.prototype.hasOwnProperty.call(currentProfile.profile, 'store-fake-ip')) return
+
+  // Keep the app default from replacing an explicit subscription value.
+  delete configToMerge.profile['store-fake-ip']
+  if (Object.keys(configToMerge.profile).length === 0) {
+    delete configToMerge.profile
   }
 }
 

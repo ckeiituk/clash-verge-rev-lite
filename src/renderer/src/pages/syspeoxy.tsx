@@ -11,7 +11,7 @@ import EditableList from '@renderer/components/base/base-list-editor'
 import PacEditorModal from '@renderer/components/sysproxy/pac-editor-modal'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { platform } from '@renderer/utils/init'
-import { openUWPTool, triggerSysProxy } from '@renderer/utils/ipc'
+import { openUWPTool, triggerSysProxy, mihomoHotReloadConfig, updateTrayIcon } from '@renderer/utils/ipc'
 import React, { useEffect, useState } from 'react'
 import ByPassEditorModal from '@renderer/components/sysproxy/bypass-editor-modal'
 import { useTranslation } from 'react-i18next'
@@ -72,8 +72,11 @@ const Sysproxy: React.FC = () => {
           ]
 
   const { appConfig, patchAppConfig } = useAppConfig()
-  const { sysProxy, onlyActiveDevice = false } =
-    appConfig || ({ sysProxy: { enable: false } } as AppConfig)
+  const {
+    sysProxy,
+    proxyMode = false,
+    onlyActiveDevice = false
+  } = appConfig || ({ sysProxy: { enable: true } } as AppConfig)
   const [changed, setChanged] = useState(false)
   const [values, originSetValues] = useState({
     enable: sysProxy.enable,
@@ -96,17 +99,39 @@ const Sysproxy: React.FC = () => {
     originSetValues(v)
     setChanged(true)
   }
+
   const onSave = async (): Promise<void> => {
     // check valid TODO
+    const prevEnable = sysProxy.enable ?? false
     await patchAppConfig({ sysProxy: values })
     setChanged(false)
-    if (values.enable) {
-      try {
-        await triggerSysProxy(values.enable, onlyActiveDevice)
-      } catch (e) {
-        toast.error(`${e}`)
+    try {
+      if (values.enable && !prevEnable) {
+        await mihomoHotReloadConfig()
+      }
+      if (values.enable) {
+        await triggerSysProxy(true, onlyActiveDevice)
+      } else if (prevEnable) {
+        await triggerSysProxy(false, onlyActiveDevice)
+        await mihomoHotReloadConfig()
+      }
+      window.electron.ipcRenderer.send('updateFloatingWindow')
+      window.electron.ipcRenderer.send('updateTrayMenu')
+      await updateTrayIcon()
+    } catch (e) {
+      toast.error(`${e}`)
+      if (values.enable) {
         await patchAppConfig({ sysProxy: { enable: false } })
       }
+    }
+  }
+
+  const onToggleAlwaysOpenPorts = async (enable: boolean): Promise<void> => {
+    try {
+      await patchAppConfig({ proxyMode: enable })
+      await mihomoHotReloadConfig()
+    } catch (e) {
+      toast.error(`${e}`)
     }
   }
 
@@ -145,6 +170,29 @@ const Sysproxy: React.FC = () => {
         />
       )}
       <SettingCard className="sysproxy-settings">
+        <SettingItem
+          title={t('pages.sysproxy.alwaysOpenPorts')}
+          actions={
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="icon-sm" variant="ghost">
+                  <MessageCircleQuestionMark className="text-lg" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <div>{t('pages.sysproxy.alwaysOpenPortsHelp')}</div>
+              </TooltipContent>
+            </Tooltip>
+          }
+          divider
+        >
+          <Switch
+            checked={proxyMode}
+            onCheckedChange={(value) => {
+              void onToggleAlwaysOpenPorts(value)
+            }}
+          />
+        </SettingItem>
         <SettingItem title={t('pages.sysproxy.proxyHost')} divider>
           <Input
             className="w-[50%]"
@@ -184,7 +232,10 @@ const Sysproxy: React.FC = () => {
               <Tabs
                 value={values.settingMode}
                 onValueChange={(value) => {
-                  setValues({ ...values, settingMode: value as 'exec' | 'service' })
+                  setValues({
+                    ...values,
+                    settingMode: value as 'exec' | 'service'
+                  })
                 }}
               >
                 <TabsList>

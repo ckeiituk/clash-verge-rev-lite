@@ -1,6 +1,10 @@
 import React, { createContext, useContext, ReactNode } from 'react'
 import useSWR from 'swr'
 import { mihomoRules } from '@renderer/utils/ipc'
+import {
+  subscribeCoreStarted,
+  subscribeProfileReloaded
+} from '@renderer/store/core-lifecycle-store'
 
 interface RulesContextType {
   rules: ControllerRules | undefined
@@ -16,17 +20,24 @@ export const RulesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   })
 
   React.useEffect(() => {
-    window.electron.ipcRenderer.on('rulesUpdated', () => {
+    const onRulesUpdated = (): void => {
       mutate()
-    })
-    window.electron.ipcRenderer.on('core-started', () => {
-      mutate()
-    })
-    return (): void => {
-      window.electron.ipcRenderer.removeAllListeners('rulesUpdated')
-      window.electron.ipcRenderer.removeAllListeners('core-started')
     }
-  }, [])
+
+    window.electron.ipcRenderer.on('rulesUpdated', onRulesUpdated)
+    const unsubscribeCoreStarted = subscribeCoreStarted(() => {
+      mutate()
+    })
+    const unsubscribeProfileReloaded = subscribeProfileReloaded(() => {
+      mutate()
+    })
+
+    return (): void => {
+      window.electron.ipcRenderer.removeListener('rulesUpdated', onRulesUpdated)
+      unsubscribeCoreStarted()
+      unsubscribeProfileReloaded()
+    }
+  }, [mutate])
 
   return <RulesContext.Provider value={{ rules, mutate }}>{children}</RulesContext.Provider>
 }

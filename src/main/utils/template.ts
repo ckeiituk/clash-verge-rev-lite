@@ -16,7 +16,9 @@ export const defaultConfig: AppConfig = {
   controlDns: false,
   controlSniff: false,
   hosts: [],
-  sysProxy: { enable: false, mode: 'manual' },
+  sysProxy: { enable: true, mode: 'manual' },
+  proxyMode: false,
+  proxyModeBehaviorMigrated: true,
   disableLoopbackDetector: false,
   disableEmbedCA: false,
   disableSystemCA: false,
@@ -26,7 +28,8 @@ export const defaultConfig: AppConfig = {
   proxyDisplayLayout: 'double',
   groupDisplayLayout: 'double',
   autoLightweightMode: 'core',
-  mainSwitchMode: 'tun'
+  mainSwitchMode: 'tun',
+  useHotReloadProfile: true
 }
 
 export const defaultControledMihomoConfig: Partial<MihomoConfig> = {
@@ -113,7 +116,7 @@ export const defaultControledMihomoConfig: Partial<MihomoConfig> = {
   },
   profile: {
     'store-selected': true,
-    'store-fake-ip': false
+    'store-fake-ip': true
   },
   'geo-auto-update': false,
   'geo-update-interval': 24,

@@ -8,8 +8,8 @@ import {
   patchControledMihomoConfig
 } from '../config'
 import { triggerSysProxy } from '../sys/sysproxy'
-import { patchMihomoConfig } from '../core/mihomoApi'
-import { quitWithoutCore, restartCore } from '../core/manager'
+import { mihomoHotReloadConfig } from '../core/mihomoApi'
+import { quitWithoutCore } from '../core/manager'
 import { floatingWindow, triggerFloatingWindow } from './floatingWindow'
 import { updateTrayIcon } from './tray'
 
@@ -37,15 +37,27 @@ export async function registerShortcut(
     }
     case 'triggerSysProxyShortcut': {
       return globalShortcut.register(newShortcut, async () => {
-        const {
-          sysProxy: { enable },
-          onlyActiveDevice = false
-        } = await getAppConfig()
+        const { sysProxy, onlyActiveDevice = false } = await getAppConfig()
+        const { enable, mode } = sysProxy
+        const { 'mixed-port': mixedPort } = await getControledMihomoConfig()
         try {
-          await triggerSysProxy(!enable, onlyActiveDevice)
-          await patchAppConfig({ sysProxy: { enable: !enable } })
+          const nextEnable = !enable
+          if (nextEnable && (mode ?? 'manual') == 'manual' && mixedPort == 0) {
+            return
+          }
+          if (nextEnable) {
+            await patchAppConfig({ sysProxy: { enable: true } })
+            await mihomoHotReloadConfig()
+            await triggerSysProxy(true, onlyActiveDevice)
+          } else {
+            await triggerSysProxy(false, onlyActiveDevice)
+            await patchAppConfig({ sysProxy: { enable: false } })
+            await mihomoHotReloadConfig()
+          }
           new Notification({
-            title: !enable ? t('notification.sysProxyEnabled') : t('notification.sysProxyDisabled')
+            title: nextEnable
+              ? t('notification.sysProxyEnabled')
+              : t('notification.sysProxyDisabled')
           }).show()
           mainWindow?.webContents.send('appConfigUpdated')
           floatingWindow?.webContents.send('appConfigUpdated')
@@ -63,11 +75,13 @@ export async function registerShortcut(
         const enable = tun?.enable ?? false
         try {
           if (!enable) {
-            await patchControledMihomoConfig({ tun: { enable: !enable }, dns: { enable: true } })
+            await patchControledMihomoConfig({
+              tun: { enable: !enable },
+              dns: { enable: true }
+            })
           } else {
             await patchControledMihomoConfig({ tun: { enable: !enable } })
           }
-          await restartCore()
           new Notification({
             title: !enable ? t('notification.tunEnabled') : t('notification.tunDisabled')
           }).show()
@@ -84,7 +98,6 @@ export async function registerShortcut(
     case 'ruleModeShortcut': {
       return globalShortcut.register(newShortcut, async () => {
         await patchControledMihomoConfig({ mode: 'rule' })
-        await patchMihomoConfig({ mode: 'rule' })
         new Notification({
           title: t('notification.switchedToRuleMode')
         }).show()
@@ -95,7 +108,6 @@ export async function registerShortcut(
     case 'globalModeShortcut': {
       return globalShortcut.register(newShortcut, async () => {
         await patchControledMihomoConfig({ mode: 'global' })
-        await patchMihomoConfig({ mode: 'global' })
         new Notification({
           title: t('notification.switchedToGlobalMode')
         }).show()
@@ -106,7 +118,6 @@ export async function registerShortcut(
     case 'directModeShortcut': {
       return globalShortcut.register(newShortcut, async () => {
         await patchControledMihomoConfig({ mode: 'direct' })
-        await patchMihomoConfig({ mode: 'direct' })
         new Notification({
           title: t('notification.switchedToDirectMode')
         }).show()

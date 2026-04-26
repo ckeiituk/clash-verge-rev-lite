@@ -31,7 +31,8 @@ import {
   Tray
 } from 'electron'
 import { triggerSysProxy } from '../sys/sysproxy'
-import { quitWithoutCore, restartCore } from '../core/manager'
+import { quitWithoutCore } from '../core/manager'
+import { mihomoHotReloadConfig } from '../core/mihomoApi'
 import { floatingWindow } from './floatingWindow'
 import { is } from '@electron-toolkit/utils'
 import { join } from 'path'
@@ -40,6 +41,21 @@ import { t } from '../utils/i18n'
 
 export let tray: Tray | null = null
 let customTrayWindow: BrowserWindow | null = null
+
+// Exponential backoff delays for the Windows tray icon registration check.
+// Explorer's notification area may not be ready on fast (or slow) startup —
+// getBounds() returning zero dimensions is the best available signal that the
+// icon hasn't been registered yet (heuristic, not an API contract).
+// Electron handles WM_TASKBARCREATED internally, so Explorer restarts are
+// covered by the native layer; only the initial startup race needs this.
+// NOTE: Do NOT pass a GUID to new Tray() on Windows — it causes
+// "Unable to create status tray icon" on Windows 10 (electron#41721).
+const WIN_TRAY_RETRY_DELAYS_MS = [500, 1500, 4000, 10000]
+
+// Incremented on every createTray() call so stale retry timeouts from a
+// previous instance can detect they're outdated and bail out.
+let trayGeneration = 0
+let winTrayRetryTimeout: NodeJS.Timeout | null = null
 
 function formatDelayText(delay: number): string {
   if (delay === 0) {
@@ -132,7 +148,7 @@ async function handleTrayClick(): Promise<void> {
 }
 
 export const buildContextMenu = async (): Promise<Menu> => {
-  const { mode, tun } = await getControledMihomoConfig()
+  const { mode, tun, 'mixed-port': mixedPort } = await getControledMihomoConfig()
   const {
     sysProxy,
     onlyActiveDevice = false,
@@ -238,10 +254,19 @@ export const buildContextMenu = async (): Promise<Menu> => {
             }
             mainWindow?.webContents.send('controledMihomoConfigUpdated')
             floatingWindow?.webContents.send('controledMihomoConfigUpdated')
-            await restartCore()
           } else {
-            await triggerSysProxy(enable, onlyActiveDevice)
-            await patchAppConfig({ sysProxy: { enable } })
+            if (enable && (sysProxy.mode ?? 'manual') == 'manual' && mixedPort == 0) {
+              return
+            }
+            if (enable) {
+              await patchAppConfig({ sysProxy: { enable: true } })
+              await mihomoHotReloadConfig()
+              await triggerSysProxy(true, onlyActiveDevice)
+            } else {
+              await triggerSysProxy(false, onlyActiveDevice)
+              await patchAppConfig({ sysProxy: { enable: false } })
+              await mihomoHotReloadConfig()
+            }
             mainWindow?.webContents.send('appConfigUpdated')
             floatingWindow?.webContents.send('appConfigUpdated')
           }
@@ -343,7 +368,7 @@ export const buildContextMenu = async (): Promise<Menu> => {
   return Menu.buildFromTemplate(contextMenu)
 }
 
-export async function createTray(): Promise<void> {
+async function initTray(winRetryAttempt = 0, generation = 0): Promise<void> {
   const { useDockIcon = true } = await getAppConfig()
   if (process.platform === 'linux') {
     tray = new Tray(pngIcon)
@@ -384,6 +409,29 @@ export async function createTray(): Promise<void> {
     tray?.addListener('right-click', async () => {
       await handleTrayClick()
     })
+
+    // Windows: Explorer's notification area may not be ready when Tray is
+    // created on fast startup. getBounds() returns zero dimensions until the
+    // icon is actually registered. Use exponential backoff so slow machines
+    // get enough time too. Electron handles WM_TASKBARCREATED internally, so
+    // only the initial race needs covering here.
+    if (winRetryAttempt < WIN_TRAY_RETRY_DELAYS_MS.length) {
+      winTrayRetryTimeout = setTimeout(async () => {
+        winTrayRetryTimeout = null
+        // Bail out if the tray was closed or replaced by a newer createTray() call.
+        if (!tray || trayGeneration !== generation) return
+        const bounds = tray.getBounds()
+        if (bounds.width === 0 && bounds.height === 0) {
+          tray.destroy()
+          tray = null
+          try {
+            await initTray(winRetryAttempt + 1, generation)
+          } catch {
+            // App may be shutting down or in an invalid state — ignore.
+          }
+        }
+      }, WIN_TRAY_RETRY_DELAYS_MS[winRetryAttempt])
+    }
   }
   if (process.platform === 'linux') {
     tray?.addListener('click', async () => {
@@ -393,6 +441,15 @@ export async function createTray(): Promise<void> {
       await updateTrayMenu()
     })
   }
+}
+
+export async function createTray(): Promise<void> {
+  trayGeneration++
+  if (winTrayRetryTimeout) {
+    clearTimeout(winTrayRetryTimeout)
+    winTrayRetryTimeout = null
+  }
+  await initTray(0, trayGeneration)
 }
 
 async function updateTrayMenu(): Promise<void> {
@@ -446,6 +503,10 @@ export async function showTrayIcon(): Promise<void> {
 }
 
 export async function closeTrayIcon(): Promise<void> {
+  if (winTrayRetryTimeout) {
+    clearTimeout(winTrayRetryTimeout)
+    winTrayRetryTimeout = null
+  }
   if (tray) {
     tray.destroy()
   }
@@ -458,7 +519,7 @@ export async function closeTrayIcon(): Promise<void> {
 
 export async function updateTrayIcon(): Promise<void> {
   if (!tray) return
-  const { sysProxy } = await getAppConfig()
+  const { sysProxy = { enable: false } } = await getAppConfig()
   const { tun } = await getControledMihomoConfig()
   const proxyEnabled = sysProxy.enable || (tun?.enable ?? false)
 

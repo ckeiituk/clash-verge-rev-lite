@@ -4,7 +4,7 @@ import SettingItem from '../base/base-setting-item'
 import EditableList from '../base/base-list-editor'
 
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
-import { restartCore, triggerSysProxy } from '@renderer/utils/ipc'
+import { triggerSysProxy, mihomoHotReloadConfig } from '@renderer/utils/ipc'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { platform } from '@renderer/utils/init'
 import { Button } from '@renderer/components/ui/button'
@@ -61,7 +61,7 @@ const PortSetting: React.FC = () => {
 
   const onChangeNeedRestart = async (patch: Partial<MihomoConfig>): Promise<void> => {
     await patchControledMihomoConfig(patch)
-    await restartCore()
+    await mihomoHotReloadConfig()
   }
 
   return (

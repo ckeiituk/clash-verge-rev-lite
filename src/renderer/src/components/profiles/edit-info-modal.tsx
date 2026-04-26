@@ -22,7 +22,12 @@ import {
   SelectTrigger,
   SelectValue
 } from '@renderer/components/ui/select'
-import { getFilePath, readTextFile, restartCore, createProfileFromShareLink } from '@renderer/utils/ipc'
+import {
+  createProfileFromShareLink,
+  getFilePath,
+  mihomoHotReloadConfig,
+  readTextFile
+} from '@renderer/utils/ipc'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { useTranslation } from 'react-i18next'
 import {
@@ -61,7 +66,10 @@ const EditInfoModal: React.FC<Props> = (props) => {
   const { t } = useTranslation()
   const { appConfig } = useAppConfig()
   const { item, isCurrent, updateProfileItem, onClose } = props
-  const [values, setValues] = useState({ ...item, autoUpdate: item.autoUpdate ?? true })
+  const [values, setValues] = useState({
+    ...item,
+    autoUpdate: item.autoUpdate ?? true
+  })
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [urlTouched, setUrlTouched] = useState(false)
   const [localFileName, setLocalFileName] = useState<string | null>(null)
@@ -75,11 +83,7 @@ const EditInfoModal: React.FC<Props> = (props) => {
 
   const urlValue = values.url || ''
   const isShareLinkUrl = isShareLink(urlValue)
-  const canImport = isNew
-    ? isLocal
-      ? !!values.file
-      : isValidUrl(urlValue)
-    : true
+  const canImport = isNew ? (isLocal ? !!values.file : isValidUrl(urlValue)) : true
 
   const onSave = async (): Promise<void> => {
     setSaving(true)
@@ -92,7 +96,7 @@ const EditInfoModal: React.FC<Props> = (props) => {
       const itemToSave = { ...values }
       await updateProfileItem(itemToSave)
       if (item.id && isCurrent) {
-        await restartCore()
+        await mihomoHotReloadConfig()
       }
       closeRef.current?.click()
     } catch (e) {
@@ -163,11 +167,9 @@ const EditInfoModal: React.FC<Props> = (props) => {
       }}
     >
       <DialogContent
-        className={cn(
-          'sm:max-w-none',
-          'w-120'
-        )}
+        className={cn('sm:max-w-none', 'w-120')}
         showCloseButton={false}
+        onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <DialogClose ref={closeRef} className="hidden" />
         <DialogHeader className="app-drag">
@@ -217,7 +219,8 @@ const EditInfoModal: React.FC<Props> = (props) => {
                     data-guide="profile-import-url-input"
                     className={cn(
                       'h-9 pr-9',
-                      urlInvalid && 'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/50'
+                      urlInvalid &&
+                        'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/50'
                     )}
                     placeholder={t('profile.urlPlaceholderWithShareLink')}
                     value={values.url || ''}
@@ -286,105 +289,114 @@ const EditInfoModal: React.FC<Props> = (props) => {
 
                 {showAdvanced && (
                   <div className="rounded-xl border border-stroke/50 bg-accent/20 p-3 flex flex-col gap-2">
-                <SettingItem title={t('profile.profileType')}>
-                  <div className="flex gap-1">
-                    <Button
-                      size="sm"
-                      variant={!isLocal ? 'default' : 'outline'}
-                      className="h-7 px-3 text-xs"
-                      onClick={() => switchToType('remote')}
-                    >
-                      {t('common.remote')}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={isLocal ? 'default' : 'outline'}
-                      className="h-7 px-3 text-xs"
-                      onClick={() => switchToType('local')}
-                    >
-                      {t('common.local')}
-                    </Button>
-                  </div>
-                </SettingItem>
-                <SettingItem title={t('profile.name')}>
-                  <Input
-                    className="h-8"
-                    value={values.name}
-                    onChange={(e) => setValues({ ...values, name: e.target.value })}
-                  />
-                </SettingItem>
-                {!isLocal && (
-                  <>
-                    <SettingItem title={t('profile.customUA')}>
+                    <SettingItem title={t('profile.profileType')}>
+                      <div className="flex gap-1">
+                        <Button
+                          size="sm"
+                          variant={!isLocal ? 'default' : 'outline'}
+                          className="h-7 px-3 text-xs"
+                          onClick={() => switchToType('remote')}
+                        >
+                          {t('common.remote')}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={isLocal ? 'default' : 'outline'}
+                          className="h-7 px-3 text-xs"
+                          onClick={() => switchToType('local')}
+                        >
+                          {t('common.local')}
+                        </Button>
+                      </div>
+                    </SettingItem>
+                    <SettingItem title={t('profile.name')}>
                       <Input
                         className="h-8"
-                        value={values.ua ?? ''}
-                        onChange={(e) =>
-                          setValues({ ...values, ua: e.target.value.trim() || undefined })
-                        }
+                        value={values.name}
+                        onChange={(e) => setValues({ ...values, name: e.target.value })}
                       />
                     </SettingItem>
-                    <SettingItem title={t('profile.verifyFormat')}>
-                      <Switch
-                        checked={values.verify ?? true}
-                        onCheckedChange={(v) => setValues({ ...values, verify: v })}
-                      />
-                    </SettingItem>
-                    <SettingItem title={t('profile.useProxyUpdate')}>
-                      <Switch
-                        checked={values.useProxy ?? false}
-                        onCheckedChange={(v) => setValues({ ...values, useProxy: v })}
-                      />
-                    </SettingItem>
-                    <SettingItem title={t('profile.autoUpdate')}>
-                      <Switch
-                        checked={values.autoUpdate ?? false}
-                        onCheckedChange={(v) => setValues({ ...values, autoUpdate: v })}
-                      />
-                    </SettingItem>
-                    {values.autoUpdate && (
-                      <SettingItem
-                        title={t('profile.updateIntervalMinutes')}
-                        actions={
-                          values.locked && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button size="icon-sm" variant="ghost">
-                                  <MessageCircleQuestionMark className="text-lg" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                {t('profile.updateIntervalLockedHelp')}
-                              </TooltipContent>
-                            </Tooltip>
-                          )
-                        }
-                      >
-                        <Input
-                          type="number"
-                          className="h-8 w-24"
-                          value={values.interval?.toString() ?? ''}
-                          onChange={(e) =>
-                            setValues({ ...values, interval: parseInt(e.target.value) })
-                          }
-                          disabled={values.locked}
-                        />
-                      </SettingItem>
+                    {!isLocal && (
+                      <>
+                        <SettingItem title={t('profile.customUA')}>
+                          <Input
+                            className="h-8"
+                            value={values.ua ?? ''}
+                            onChange={(e) =>
+                              setValues({
+                                ...values,
+                                ua: e.target.value.trim() || undefined
+                              })
+                            }
+                          />
+                        </SettingItem>
+                        <SettingItem title={t('profile.verifyFormat')}>
+                          <Switch
+                            checked={values.verify ?? true}
+                            onCheckedChange={(v) => setValues({ ...values, verify: v })}
+                          />
+                        </SettingItem>
+                        <SettingItem title={t('profile.useProxyUpdate')}>
+                          <Switch
+                            checked={values.useProxy ?? false}
+                            onCheckedChange={(v) => setValues({ ...values, useProxy: v })}
+                          />
+                        </SettingItem>
+                        <SettingItem title={t('profile.autoUpdate')}>
+                          <Switch
+                            checked={values.autoUpdate ?? false}
+                            onCheckedChange={(v) => setValues({ ...values, autoUpdate: v })}
+                          />
+                        </SettingItem>
+                        {values.autoUpdate && (
+                          <SettingItem
+                            title={t('profile.updateIntervalMinutes')}
+                            actions={
+                              values.locked && (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button size="icon-sm" variant="ghost">
+                                      <MessageCircleQuestionMark className="text-lg" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    {t('profile.updateIntervalLockedHelp')}
+                                  </TooltipContent>
+                                </Tooltip>
+                              )
+                            }
+                          >
+                            <Input
+                              type="number"
+                              className="h-8 w-24"
+                              value={values.interval?.toString() ?? ''}
+                              onChange={(e) =>
+                                setValues({
+                                  ...values,
+                                  interval: parseInt(e.target.value)
+                                })
+                              }
+                              disabled={values.locked}
+                            />
+                          </SettingItem>
+                        )}
+                        {appConfig?.devMode && (
+                          <SettingItem title="HWID Override">
+                            <Input
+                              className="h-8"
+                              placeholder="auto"
+                              value={values.customHwid ?? ''}
+                              onChange={(e) =>
+                                setValues({
+                                  ...values,
+                                  customHwid: e.target.value.trim() || undefined
+                                })
+                              }
+                            />
+                          </SettingItem>
+                        )}
+                      </>
                     )}
-                    {appConfig?.devMode && (
-                      <SettingItem title="HWID Override">
-                        <Input
-                          className="h-8"
-                          placeholder="auto"
-                          value={values.customHwid ?? ''}
-                          onChange={(e) =>
-                            setValues({ ...values, customHwid: e.target.value.trim() || undefined })
-                          }
-                        />
-                      </SettingItem>
-                    )}
-                  </>
-                )}
                   </div>
                 )}
               </>
@@ -420,7 +432,10 @@ const EditInfoModal: React.FC<Props> = (props) => {
                     className="h-8"
                     value={values.ua ?? ''}
                     onChange={(e) =>
-                      setValues({ ...values, ua: e.target.value.trim() || undefined })
+                      setValues({
+                        ...values,
+                        ua: e.target.value.trim() || undefined
+                      })
                     }
                   />
                 </SettingItem>
@@ -453,9 +468,7 @@ const EditInfoModal: React.FC<Props> = (props) => {
                               <MessageCircleQuestionMark className="text-lg" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent>
-                            {t('profile.updateIntervalLockedHelp')}
-                          </TooltipContent>
+                          <TooltipContent>{t('profile.updateIntervalLockedHelp')}</TooltipContent>
                         </Tooltip>
                       )
                     }
@@ -465,7 +478,10 @@ const EditInfoModal: React.FC<Props> = (props) => {
                       className="h-8 w-24"
                       value={values.interval?.toString() ?? ''}
                       onChange={(e) =>
-                        setValues({ ...values, interval: parseInt(e.target.value) })
+                        setValues({
+                          ...values,
+                          interval: parseInt(e.target.value)
+                        })
                       }
                       disabled={values.locked}
                     />
@@ -478,7 +494,10 @@ const EditInfoModal: React.FC<Props> = (props) => {
                       placeholder="auto"
                       value={values.customHwid ?? ''}
                       onChange={(e) =>
-                        setValues({ ...values, customHwid: e.target.value.trim() || undefined })
+                        setValues({
+                          ...values,
+                          customHwid: e.target.value.trim() || undefined
+                        })
                       }
                     />
                   </SettingItem>

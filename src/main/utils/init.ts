@@ -175,6 +175,19 @@ async function migration(): Promise<void> {
     }
   }
 
+  const legacyAppConfig = appConfig as Partial<AppConfig>
+  if (!legacyAppConfig.proxyModeBehaviorMigrated) {
+    if ('proxyMode' in legacyAppConfig) {
+      const currentSysProxy = { ...defaultConfig.sysProxy, ...(legacyAppConfig.sysProxy ?? {}) }
+      appConfigPatch.sysProxy = {
+        ...currentSysProxy,
+        enable: Boolean(legacyAppConfig.proxyMode) && currentSysProxy.enable
+      }
+    }
+    appConfigPatch.proxyMode = false
+    appConfigPatch.proxyModeBehaviorMigrated = true
+  }
+
   if (Object.keys(appConfigPatch).length > 0) {
     await patchAppConfig(appConfigPatch)
   }
@@ -214,7 +227,11 @@ export async function init(): Promise<void> {
     })
   ])
 
-  const { sysProxy, onlyActiveDevice = false, networkDetection = false } = appConfig
+  const {
+    sysProxy,
+    onlyActiveDevice = false,
+    networkDetection = false
+  } = appConfig
 
   const initTasks: Promise<void>[] = [
     startSSIDCheck()
