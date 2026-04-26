@@ -31,7 +31,7 @@ const MIHOMO_ALPHA_MAP = {
   'win32-arm64': 'mihomo-windows-arm64',
   'darwin-x64': 'mihomo-darwin-amd64-v1',
   'darwin-arm64': 'mihomo-darwin-arm64',
-  'linux-x64': 'mihomo-linux-amd64-v1',
+  'linux-x64': 'mihomo-linux-amd64',
   'linux-arm64': 'mihomo-linux-arm64'
 }
 
@@ -240,6 +240,9 @@ async function downloadFile(url, path) {
     method: 'GET',
     headers: { 'Content-Type': 'application/octet-stream' }
   })
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status} ${response.statusText} — ${url}`)
+  }
   const buffer = await response.arrayBuffer()
   fs.writeFileSync(path, new Uint8Array(buffer))
 
