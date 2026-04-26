@@ -9,11 +9,23 @@ import LanguageConfig from '@renderer/components/settings/language-config'
 import ProxySwitches from '@renderer/components/settings/proxy-switches'
 import { useTranslation } from 'react-i18next'
 import { Github } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 const Settings: React.FC = () => {
   const { t } = useTranslation()
-  const [showHiddenSettings, setShowHiddenSettings] = useState(false)
+  const [showHiddenSettings, setShowHiddenSettings] = useState(
+    () => sessionStorage.getItem('devMode') === '1'
+  )
+
+  const toggleHiddenSettings = (value: boolean): void => {
+    setShowHiddenSettings(value)
+    if (value) sessionStorage.setItem('devMode', '1')
+    else sessionStorage.removeItem('devMode')
+  }
+
+  useEffect(() => {
+    ;(window as any).__hidden = () => toggleHiddenSettings(!showHiddenSettings)
+  }, [showHiddenSettings])
 
   return (
     <BasePage
@@ -42,7 +54,7 @@ const Settings: React.FC = () => {
       <ShortcutConfig />
       <Actions
         showHiddenSettings={showHiddenSettings}
-        onUnlockHiddenSettings={() => setShowHiddenSettings(true)}
+        onUnlockHiddenSettings={() => toggleHiddenSettings(true)}
       />
     </BasePage>
   )
