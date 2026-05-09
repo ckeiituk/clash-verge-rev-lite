@@ -717,7 +717,10 @@ export default {
       delete: 'Удалить правило',
       restore: 'Восстановить правило',
       invalidPayload: 'Неверное значение',
-      expectedFormat: 'Ожидаемый формат'
+      expectedFormat: 'Ожидаемый формат',
+      yamlMode: 'YAML-редактор',
+      visualMode: 'Визуальный редактор',
+      invalidYaml: 'Некорректный YAML'
     },
     openFile: 'Открыть файл',
     delete: 'Удалить',
