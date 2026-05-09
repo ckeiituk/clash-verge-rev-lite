@@ -61,6 +61,9 @@ const Proxies: React.FC = () => {
   const [delaying, setDelaying] = useState<boolean[]>([])
   const [searchValue, setSearchValue] = useState<string[]>([])
   const [iconLoadTick, setIconLoadTick] = useState(0)
+  const delayingProxiesRef = useRef<Set<string>>(new Set())
+  const completedProxiesRef = useRef<Set<string>>(new Set())
+  const [delayingTick, setDelayingTick] = useState(0)
   const prevGroupsLengthRef = useRef(0)
   const [isSettingModalOpen, setIsSettingModalOpen] = useState(false)
   const fetchingIconsRef = useRef<Set<string>>(new Set())
@@ -117,6 +120,12 @@ const Proxies: React.FC = () => {
           })
       }
     })
+    if (completedProxiesRef.current.size > 0) {
+      const completed = completedProxiesRef.current
+      completedProxiesRef.current = new Set()
+      completed.forEach((name) => delayingProxiesRef.current.delete(name))
+      setDelayingTick((c) => c + 1)
+    }
   }, [groups])
 
 
@@ -185,6 +194,11 @@ const Proxies: React.FC = () => {
       mutateThrottleRef.current = null
     }, 500)
   }, [mutate])
+  useEffect(() => {
+    return () => {
+      if (mutateThrottleRef.current) clearTimeout(mutateThrottleRef.current)
+    }
+  }, [])
 
   const onGroupDelay = useCallback(
     async (index: number): Promise<void> => {
@@ -200,6 +214,8 @@ const Proxies: React.FC = () => {
         newDelaying[index] = true
         return newDelaying
       })
+      allProxies[index].forEach((p) => delayingProxiesRef.current.add(p.name))
+      setDelayingTick((c) => c + 1)
       const result: Promise<void>[] = []
       const runningList: Promise<void>[] = []
       for (const proxy of allProxies[index]) {
@@ -209,6 +225,7 @@ const Proxies: React.FC = () => {
           } catch {
             // ignore
           } finally {
+            completedProxiesRef.current.add(proxy.name)
             throttledMutate()
           }
         })
@@ -441,19 +458,19 @@ const Proxies: React.FC = () => {
           className={`grid ${proxyCols === 'auto' ? 'sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5' : ''} ${innerIndex === currentGroupCounts[groupIndex] - 1 ? 'pb-2' : ''} gap-2 ${innerIndex === 0 ? '' : 'pt-2'} mx-2`}
         >
           {Array.from({ length: cols }).map((_, i) => {
-            if (!currentAllProxies[groupIndex][innerIndex * cols + i]) return null
+            const proxy = currentAllProxies[groupIndex][innerIndex * cols + i]
+            if (!proxy) return null
             return (
               <ProxyItem
-                key={currentAllProxies[groupIndex][innerIndex * cols + i].name}
+                key={proxy.name}
                 mutateProxies={mutate}
                 onProxyDelay={onProxyDelay}
                 onSelect={onChangeProxy}
-                proxy={currentAllProxies[groupIndex][innerIndex * cols + i]}
+                proxy={proxy}
                 group={currentGroups[groupIndex]}
                 proxyDisplayLayout={proxyDisplayLayout}
-                selected={
-                  currentAllProxies[groupIndex][innerIndex * cols + i]?.name === currentGroups[groupIndex]?.now
-                }
+                selected={proxy.name === currentGroups[groupIndex]?.now}
+                isGroupDelaying={delayingProxiesRef.current.has(proxy.name)}
               />
             )
           })}
@@ -468,7 +485,8 @@ const Proxies: React.FC = () => {
       mutate,
       onProxyDelay,
       onChangeProxy,
-      proxyDisplayLayout
+      proxyDisplayLayout,
+      delayingTick
     ]
   )
 
