@@ -16,7 +16,9 @@ const GroupsContext = createContext<GroupsContextType | undefined>(undefined)
 export const GroupsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { data: groups, mutate } = useSWR<ControllerMixedGroup[]>('mihomoGroups', mihomoGroups, {
     errorRetryInterval: 200,
-    errorRetryCount: 10
+    errorRetryCount: 10,
+    keepPreviousData: true,
+    dedupingInterval: 300
   })
 
   React.useEffect(() => {

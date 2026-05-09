@@ -24,7 +24,7 @@ function delayColorClass(delay: number): string {
   return 'text-warning'
 }
 
-const ProxyItem: React.FC<Props> = (props) => {
+const ProxyItem: React.FC<Props> = React.memo((props) => {
   const { t } = useTranslation()
   const { mutateProxies, proxyDisplayLayout, group, proxy, selected, onSelect, onProxyDelay } =
     props
@@ -171,6 +171,8 @@ const ProxyItem: React.FC<Props> = (props) => {
       </CardContent>
     </Card>
   )
-}
+})
+
+ProxyItem.displayName = 'ProxyItem'
 
 export default ProxyItem
