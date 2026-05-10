@@ -19,6 +19,7 @@ import ProxySettingModal from '@renderer/components/proxies/proxy-setting-modal'
 import { useGroups } from '@renderer/hooks/use-groups'
 import CollapseInput from '@renderer/components/base/collapse-input'
 import { includesIgnoreCase } from '@renderer/utils/includes'
+import { cn } from '@renderer/lib/utils'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { useTranslation } from 'react-i18next'
 import {
@@ -27,16 +28,32 @@ import {
   ChevronsRight,
   ChevronsUpDown,
   Gauge,
+  Hand,
   LocateFixed,
-  SlidersHorizontal
+  Route,
+  Scale,
+  Shield,
+  SlidersHorizontal,
+  Zap
 } from 'lucide-react'
 
 const groupTypeColor: Record<string, string> = {
-  Selector: 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
-  URLTest: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
-  Fallback: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
-  LoadBalance: 'bg-violet-500/15 text-violet-600 dark:text-violet-400',
-  Relay: 'bg-rose-500/15 text-rose-600 dark:text-rose-400'
+  Selector: 'border-blue-500/40 bg-blue-500/8 text-blue-600 dark:text-blue-400 dark:border-blue-400/40',
+  URLTest:
+    'border-emerald-500/40 bg-emerald-500/8 text-emerald-600 dark:text-emerald-400 dark:border-emerald-400/40',
+  Fallback:
+    'border-amber-500/40 bg-amber-500/8 text-amber-600 dark:text-amber-400 dark:border-amber-400/40',
+  LoadBalance:
+    'border-violet-500/40 bg-violet-500/8 text-violet-600 dark:text-violet-400 dark:border-violet-400/40',
+  Relay: 'border-rose-500/40 bg-rose-500/8 text-rose-600 dark:text-rose-400 dark:border-rose-400/40'
+}
+
+const groupTypeIcon: Record<string, React.ReactNode> = {
+  Selector: <Hand className="size-4" />,
+  URLTest: <Zap className="size-4" />,
+  Fallback: <Shield className="size-4" />,
+  LoadBalance: <Scale className="size-4" />,
+  Relay: <Route className="size-4" />
 }
 
 const Proxies: React.FC = () => {
@@ -329,16 +346,18 @@ const Proxies: React.FC = () => {
       if (!group) return <div>Never See This</div>
 
       const typeColorClass =
-        groupTypeColor[group.type] || 'bg-muted text-muted-foreground'
+        groupTypeColor[group.type] || 'border-muted bg-muted text-muted-foreground'
+      const isExpanded = groupCounts[index] > 0
+      const showMeta = groupDisplayLayout !== 'hidden'
 
       return (
         <div
-          className="w-full pb-2 px-2"
+          className="w-full px-2 pb-2"
         >
           <Card
             data-guide={index === 0 ? 'proxies-first-group' : undefined}
             data-guide-open={index === 0 ? `${isOpen[index]}` : undefined}
-            className="w-full backdrop-blur-3xl cursor-pointer py-0 transition-all duration-200 hover:bg-accent/50 hover:shadow-sm"
+            className={cn('w-full bg-card/50 backdrop-blur-3xl cursor-pointer py-0 transition-all duration-200 hover:bg-card/65', isExpanded ? 'relative z-10 shadow-md' : 'hover:shadow-sm')}
             role="button"
             tabIndex={0}
             onClick={() => toggleOpen(index)}
@@ -351,7 +370,6 @@ const Proxies: React.FC = () => {
           >
             <CardContent className="w-full px-4 py-3">
               <div className="flex justify-between items-center">
-                {/* Left side: icon + name + meta */}
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                   {group.icon ? (
                     <Avatar className="bg-transparent rounded-md shrink-0 size-9">
@@ -363,26 +381,33 @@ const Proxies: React.FC = () => {
                         }
                       />
                     </Avatar>
-                  ) : null}
+                  ) : (
+                    <div className={cn('flex items-center justify-center shrink-0 size-9 rounded-md', typeColorClass)}>
+                      {groupTypeIcon[group.type] || <Zap className="size-4" />}
+                    </div>
+                  )}
                   <div className={`flex ${groupDisplayLayout === 'double' ? 'flex-col gap-0.5' : 'items-center gap-2'} min-w-0`}>
-                    <span className="flag-emoji text-sm font-medium truncate leading-tight">
-                      {group.name}
-                    </span>
-                    {groupDisplayLayout !== 'hidden' && (
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground leading-tight min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="flag-emoji text-sm font-semibold truncate leading-tight">
+                        {group.name}
+                      </span>
+                      {showMeta && (
                         <Badge
                           variant="ghost"
-                          className={`text-[10px] px-1.5 py-0 h-4 rounded-md font-medium shrink-0 ${typeColorClass}`}
+                          className={cn('text-[10px] px-1.5 py-0 h-4 rounded font-semibold uppercase tracking-wider shrink-0', typeColorClass)}
                         >
                           {group.type}
                         </Badge>
-                        <span className="flag-emoji truncate">{group.now}</span>
-                      </div>
+                      )}
+                    </div>
+                    {showMeta && (
+                      <span className="flag-emoji text-xs text-muted-foreground truncate leading-tight">
+                        {group.now}
+                      </span>
                     )}
                   </div>
                 </div>
 
-                {/* Right side: actions */}
                 <div className="flex items-center gap-0.5 shrink-0">
                   <div className="flex items-center" onClick={(e) => e.stopPropagation()}>
                     <CollapseInput
@@ -447,33 +472,38 @@ const Proxies: React.FC = () => {
       currentGroupCounts.slice(0, groupIndex).forEach((count) => {
         innerIndex -= count
       })
+      const isLastRow = innerIndex === currentGroupCounts[groupIndex] - 1
       return currentAllProxies[groupIndex] ? (
         <div
-          data-guide={groupIndex === 0 ? 'proxies-first-group-row' : undefined}
-          style={
-            proxyCols !== 'auto'
-              ? { gridTemplateColumns: `repeat(${proxyCols}, minmax(0, 1fr))` }
-              : {}
-          }
-          className={`grid ${proxyCols === 'auto' ? 'sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5' : ''} ${innerIndex === currentGroupCounts[groupIndex] - 1 ? 'pb-2' : ''} gap-2 ${innerIndex === 0 ? '' : 'pt-2'} mx-2`}
+          className={cn('mx-2 bg-card/30 border-x border-border/50', innerIndex === 0 && '-mt-5 pt-3', isLastRow && 'rounded-b-xl border-b shadow-sm mb-2')}
         >
-          {Array.from({ length: cols }).map((_, i) => {
-            const proxy = currentAllProxies[groupIndex][innerIndex * cols + i]
-            if (!proxy) return null
-            return (
-              <ProxyItem
-                key={proxy.name}
-                mutateProxies={mutate}
-                onProxyDelay={onProxyDelay}
-                onSelect={onChangeProxy}
-                proxy={proxy}
-                group={currentGroups[groupIndex]}
-                proxyDisplayLayout={proxyDisplayLayout}
-                selected={proxy.name === currentGroups[groupIndex]?.now}
-                isGroupDelaying={delayingProxiesRef.current.has(proxy.name)}
-              />
-            )
-          })}
+          <div
+            data-guide={groupIndex === 0 ? 'proxies-first-group-row' : undefined}
+            style={
+              proxyCols !== 'auto'
+                ? { gridTemplateColumns: `repeat(${proxyCols}, minmax(0, 1fr))` }
+                : {}
+            }
+            className={cn('grid gap-2 px-3 pt-2', proxyCols === 'auto' && 'sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5', isLastRow && 'pb-3')}
+          >
+            {Array.from({ length: cols }).map((_, i) => {
+              const proxy = currentAllProxies[groupIndex][innerIndex * cols + i]
+              if (!proxy) return null
+              return (
+                <ProxyItem
+                  key={proxy.name}
+                  mutateProxies={mutate}
+                  onProxyDelay={onProxyDelay}
+                  onSelect={onChangeProxy}
+                  proxy={proxy}
+                  group={currentGroups[groupIndex]}
+                  proxyDisplayLayout={proxyDisplayLayout}
+                  selected={proxy.name === currentGroups[groupIndex]?.now}
+                  isGroupDelaying={delayingProxiesRef.current.has(proxy.name)}
+                />
+              )
+            })}
+          </div>
         </div>
       ) : (
         <div>Never See This</div>

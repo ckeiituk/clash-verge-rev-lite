@@ -93,7 +93,7 @@ const ProxyItem: React.FC<Props> = React.memo((props) => {
             : 'hover:bg-accent/50'
       )}
     >
-      <CardContent className="pl-4 pr-3 py-2">
+      <CardContent className="pl-4 pr-4 py-2">
         <div
           className={`flex ${proxyDisplayLayout === 'double' ? 'gap-1' : 'justify-between items-center'}`}
         >
@@ -133,7 +133,7 @@ const ProxyItem: React.FC<Props> = React.memo((props) => {
                     onDelay()
                   }}
                   className={cn(
-                    'h-7 w-12 px-0 text-xs font-medium',
+                    'h-7 w-8 min-w-8 px-0 text-xs font-medium cursor-pointer',
                     delayColorClass(delay)
                   )}
                 >
@@ -180,7 +180,7 @@ const ProxyItem: React.FC<Props> = React.memo((props) => {
                     onDelay()
                   }}
                   className={cn(
-                    'h-7 w-12 px-0 text-xs font-medium',
+                    'h-7 w-8 min-w-8 px-0 text-xs font-medium cursor-pointer',
                     delayColorClass(delay)
                   )}
                 >
