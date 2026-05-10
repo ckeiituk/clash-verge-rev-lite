@@ -87,6 +87,7 @@ const Proxies: React.FC = () => {
   const groupsRef = useRef(groups)
   const allProxiesRef = useRef<(ControllerProxiesDetail | ControllerGroupDetail)[][]>([])
   const groupCountsRef = useRef<number[]>([])
+  const recentlyOpenedRef = useRef<Set<number>>(new Set())
   useEffect(() => {
     if (groups.length !== prevGroupsLengthRef.current) {
       prevGroupsLengthRef.current = groups.length
@@ -282,6 +283,10 @@ const Proxies: React.FC = () => {
     setIsOpen((prev) => {
       const newOpen = [...prev]
       newOpen[index] = !prev[index]
+      if (!prev[index]) {
+        recentlyOpenedRef.current.add(index)
+        setTimeout(() => recentlyOpenedRef.current.delete(index), 1000)
+      }
       return newOpen
     })
   }, [])
@@ -289,6 +294,12 @@ const Proxies: React.FC = () => {
   const toggleAll = useCallback(() => {
     setIsOpen((prev) => {
       const shouldExpand = !prev.every(Boolean)
+      if (shouldExpand) {
+        prev.forEach((v, i) => {
+          if (!v) recentlyOpenedRef.current.add(i)
+        })
+        setTimeout(() => recentlyOpenedRef.current.clear(), 1000)
+      }
       return Array(prev.length).fill(shouldExpand)
     })
   }, [])
@@ -473,9 +484,11 @@ const Proxies: React.FC = () => {
         innerIndex -= count
       })
       const isLastRow = innerIndex === currentGroupCounts[groupIndex] - 1
+      const shouldAnimate = recentlyOpenedRef.current.has(groupIndex)
       return currentAllProxies[groupIndex] ? (
         <div
-          className={cn('mx-2 bg-card/30 border-x border-border/50', innerIndex === 0 && '-mt-5 pt-3', isLastRow && 'rounded-b-xl border-b shadow-sm mb-2')}
+          className={cn('mx-2 bg-card/30 border-x border-border/50', innerIndex === 0 && '-mt-5 pt-3', isLastRow && 'rounded-b-xl border-b shadow-sm mb-2', shouldAnimate && 'animate-proxy-row-enter')}
+          style={shouldAnimate ? { animationDelay: `${Math.min(innerIndex * 0.04, 0.3)}s` } : undefined}
         >
           <div
             data-guide={groupIndex === 0 ? 'proxies-first-group-row' : undefined}
