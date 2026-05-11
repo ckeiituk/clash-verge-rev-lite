@@ -4,6 +4,7 @@ import { mainWindow, setNotQuitDialog, triggerMainWindow } from '..'
 import {
   getAppConfig,
   getControledMihomoConfig,
+  getCurrentProfileItem,
   patchAppConfig,
   patchControledMihomoConfig
 } from '../config'
@@ -107,6 +108,8 @@ export async function registerShortcut(
     }
     case 'globalModeShortcut': {
       return globalShortcut.register(newShortcut, async () => {
+        const profile = await getCurrentProfileItem()
+        if (profile.globalMode === false) return
         await patchControledMihomoConfig({ mode: 'global' })
         new Notification({
           title: t('notification.switchedToGlobalMode')
