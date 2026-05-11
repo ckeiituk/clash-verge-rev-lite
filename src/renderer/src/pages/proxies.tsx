@@ -368,7 +368,7 @@ const Proxies: React.FC = () => {
           <Card
             data-guide={index === 0 ? 'proxies-first-group' : undefined}
             data-guide-open={index === 0 ? `${isOpen[index]}` : undefined}
-            className={cn('w-full bg-card/50 backdrop-blur-3xl cursor-pointer py-0 transition-all duration-200 hover:bg-card/65', isExpanded ? 'relative z-10 shadow-md' : 'hover:shadow-sm')}
+            className={cn('w-full relative isolate bg-card/50 backdrop-blur-3xl cursor-pointer py-0 transition-all duration-200 hover:bg-card/65', isExpanded ? 'z-10 shadow-md' : 'hover:shadow-sm')}
             role="button"
             tabIndex={0}
             onClick={() => toggleOpen(index)}
@@ -486,36 +486,38 @@ const Proxies: React.FC = () => {
       const isLastRow = innerIndex === currentGroupCounts[groupIndex] - 1
       const shouldAnimate = recentlyOpenedRef.current.has(groupIndex)
       return currentAllProxies[groupIndex] ? (
-        <div
-          className={cn('mx-2 bg-card/30 border-x border-border/50', innerIndex === 0 && '-mt-5 pt-3', isLastRow && 'rounded-b-xl border-b shadow-sm mb-2', shouldAnimate && 'animate-proxy-row-enter')}
-          style={shouldAnimate ? { animationDelay: `${Math.min(innerIndex * 0.04, 0.3)}s` } : undefined}
-        >
+        <div className="flow-root">
           <div
-            data-guide={groupIndex === 0 ? 'proxies-first-group-row' : undefined}
-            style={
-              proxyCols !== 'auto'
-                ? { gridTemplateColumns: `repeat(${proxyCols}, minmax(0, 1fr))` }
-                : {}
-            }
-            className={cn('grid gap-2 px-3 pt-2', proxyCols === 'auto' && 'sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5', isLastRow && 'pb-3')}
+            className={cn('mx-2 bg-card/30 border-x border-border/50', innerIndex === 0 && '-mt-5 pt-3', isLastRow && 'rounded-b-xl border-b shadow-sm mb-2', shouldAnimate && 'animate-proxy-row-enter')}
+            style={shouldAnimate ? { animationDelay: `${Math.min(innerIndex * 0.04, 0.3)}s` } : undefined}
           >
-            {Array.from({ length: cols }).map((_, i) => {
-              const proxy = currentAllProxies[groupIndex][innerIndex * cols + i]
-              if (!proxy) return null
-              return (
-                <ProxyItem
-                  key={proxy.name}
-                  mutateProxies={mutate}
-                  onProxyDelay={onProxyDelay}
-                  onSelect={onChangeProxy}
-                  proxy={proxy}
-                  group={currentGroups[groupIndex]}
-                  proxyDisplayLayout={proxyDisplayLayout}
-                  selected={proxy.name === currentGroups[groupIndex]?.now}
-                  isGroupDelaying={delayingProxiesRef.current.has(proxy.name)}
-                />
-              )
-            })}
+            <div
+              data-guide={groupIndex === 0 ? 'proxies-first-group-row' : undefined}
+              style={
+                proxyCols !== 'auto'
+                  ? { gridTemplateColumns: `repeat(${proxyCols}, minmax(0, 1fr))` }
+                  : {}
+              }
+              className={cn('grid gap-2 px-3 pt-2', proxyCols === 'auto' && 'sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5', isLastRow && 'pb-3')}
+            >
+              {Array.from({ length: cols }).map((_, i) => {
+                const proxy = currentAllProxies[groupIndex][innerIndex * cols + i]
+                if (!proxy) return null
+                return (
+                  <ProxyItem
+                    key={proxy.name}
+                    mutateProxies={mutate}
+                    onProxyDelay={onProxyDelay}
+                    onSelect={onChangeProxy}
+                    proxy={proxy}
+                    group={currentGroups[groupIndex]}
+                    proxyDisplayLayout={proxyDisplayLayout}
+                    selected={proxy.name === currentGroups[groupIndex]?.now}
+                    isGroupDelaying={delayingProxiesRef.current.has(proxy.name)}
+                  />
+                )
+              })}
+            </div>
           </div>
         </div>
       ) : (

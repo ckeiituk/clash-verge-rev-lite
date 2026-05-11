@@ -85,7 +85,7 @@ const ProxyItem: React.FC<Props> = React.memo((props) => {
     <Card
       onClick={() => onSelect(group.name, proxy.name)}
       className={cn(
-        'w-full gap-0 py-0 cursor-pointer transition-all duration-150 relative overflow-hidden',
+        'w-full gap-0 py-0 rounded-lg cursor-pointer transition-all duration-150 relative overflow-hidden',
         fixed
           ? 'bg-amber-500/8 hover:bg-amber-500/12 border-amber-500/40 shadow-sm shadow-amber-500/10'
           : selected
