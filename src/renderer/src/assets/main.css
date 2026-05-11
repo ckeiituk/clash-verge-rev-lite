@@ -533,7 +533,7 @@
   }
 }
 
-[data-testid='virtuoso-top-item-list'] [data-slot='card']::after {
+[data-scrolled] [data-testid='virtuoso-top-item-list'] [data-slot='card']::after {
   content: '';
   position: absolute;
   inset: 0;

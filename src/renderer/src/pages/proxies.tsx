@@ -28,7 +28,7 @@ import {
   ChevronsRight,
   ChevronsUpDown,
   Gauge,
-  Hand,
+  MousePointerClick,
   LocateFixed,
   Route,
   Scale,
@@ -49,7 +49,7 @@ const groupTypeColor: Record<string, string> = {
 }
 
 const groupTypeIcon: Record<string, React.ReactNode> = {
-  Selector: <Hand className="size-4" />,
+  Selector: <MousePointerClick className="size-4" />,
   URLTest: <Zap className="size-4" />,
   Fallback: <Shield className="size-4" />,
   LoadBalance: <Scale className="size-4" />,
@@ -84,6 +84,9 @@ const Proxies: React.FC = () => {
   const prevGroupsLengthRef = useRef(0)
   const [isSettingModalOpen, setIsSettingModalOpen] = useState(false)
   const fetchingIconsRef = useRef<Set<string>>(new Set())
+  const virtuosoRef = useRef<GroupedVirtuosoHandle>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const hasScrolledRef = useRef(false)
   const groupsRef = useRef(groups)
   const allProxiesRef = useRef<(ControllerProxiesDetail | ControllerGroupDetail)[][]>([])
   const groupCountsRef = useRef<number[]>([])
@@ -577,12 +580,18 @@ const Proxies: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="h-full">
+        <div ref={scrollContainerRef} className="h-full">
           <GroupedVirtuoso
             ref={virtuosoRef}
             groupCounts={groupCounts}
             groupContent={groupContent}
             itemContent={itemContent}
+            isScrolling={(scrolling) => {
+              if (scrolling && !hasScrolledRef.current) {
+                hasScrolledRef.current = true
+                scrollContainerRef.current?.setAttribute('data-scrolled', '')
+              }
+            }}
           />
         </div>
       )}
