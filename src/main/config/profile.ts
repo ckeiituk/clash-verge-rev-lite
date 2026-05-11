@@ -10,7 +10,7 @@ import { mkdir, readFile, rm, writeFile } from 'fs/promises'
 import { restartCore } from '../core/manager'
 import { getRuntimeConfig } from '../core/factory'
 import { mihomoHotReloadConfig, patchMihomoConfig } from '../core/mihomoApi'
-import { getAppConfig } from './app'
+import { getAppConfig, patchAppConfig } from './app'
 import { getControledMihomoConfig, patchControledMihomoConfig } from './controledMihomo'
 import { ipcMain } from 'electron'
 import { mainWindow } from '..'
@@ -24,6 +24,7 @@ import { deepMerge } from '../utils/merge'
 import { getUserAgent } from '../utils/userAgent'
 import { getHWID, getDeviceOS, getOSVersion, getDeviceModel } from '../utils/deviceInfo'
 import { t } from '../utils/i18n'
+import { downloadCustomCss } from '../resolve/theme'
 
 let profileConfig: ProfileConfig // profile.yaml
 
@@ -67,6 +68,9 @@ export async function changeCurrentProfile(id: string): Promise<void> {
     await setProfileConfig(config)
   }
   await enforceGlobalModeRestriction(id)
+  const profile = await getProfileItem(id)
+  await patchAppConfig({ customTheme: profile?.customCss || 'default.css' })
+  mainWindow?.webContents.send('appConfigUpdated')
 }
 
 export async function updateProfileItem(item: ProfileItem): Promise<void> {
@@ -104,6 +108,8 @@ export async function addProfileItem(item: Partial<ProfileItem>): Promise<void> 
     await changeCurrentProfile(newItem.id)
   } else if (config.current === newItem.id) {
     await enforceGlobalModeRestriction(newItem.id)
+    await patchAppConfig({ customTheme: newItem.customCss || 'default.css' })
+    mainWindow?.webContents.send('appConfigUpdated')
   }
 }
 
@@ -320,6 +326,22 @@ export async function createProfile(item: Partial<ProfileItem>): Promise<Profile
           ? Buffer.from(announceValue.slice(7), 'base64').toString('utf-8')
           : announceValue
         newItem.announce = decoded.replace(/\\n/g, '\n')
+      }
+      const customCssKey = Object.keys(headers).find((k) =>
+        k.toLowerCase().endsWith('custom-css')
+      )
+      if (customCssKey) {
+        const cssUrl = headers[customCssKey]
+        try {
+          const proxyConfig =
+            newItem.useProxy && mixedPort
+              ? { protocol: 'http', host: '127.0.0.1', port: mixedPort }
+              : undefined
+          const existingProfile = await getProfileItem(id)
+          newItem.customCss = await downloadCustomCss(cssUrl, proxyConfig, existingProfile?.customCss)
+        } catch {
+          // ignore css download failure
+        }
       }
       if (newItem.verify) {
         let parsed: MihomoConfig
