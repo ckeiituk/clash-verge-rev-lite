@@ -43,9 +43,13 @@ export async function patchControledMihomoConfig(patch: Partial<MihomoConfig>): 
   if (!controlTun) {
     const previousTunEnable = controledMihomoConfig.tun?.enable ?? false
     const nextTunEnable = patchToMerge.tun?.enable ?? previousTunEnable
-    controledMihomoConfig.tun = { enable: nextTunEnable }
+    const routeExcludeAddress = controledMihomoConfig.tun?.['route-exclude-address']
+    controledMihomoConfig.tun = {
+      enable: nextTunEnable,
+      'route-exclude-address': routeExcludeAddress
+    } as MihomoTunConfig
     if (patchToMerge.tun) {
-      patchToMerge.tun = { enable: nextTunEnable }
+      patchToMerge.tun = { enable: nextTunEnable } as MihomoTunConfig
     }
   } else {
     if (!controledMihomoConfig.tun) {
