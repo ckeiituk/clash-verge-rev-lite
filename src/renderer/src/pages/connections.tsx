@@ -1,8 +1,7 @@
 import BasePage from '@renderer/components/base/base-page'
 import { mihomoCloseAllConnections, mihomoCloseConnection } from '@renderer/utils/ipc'
 import { useConnectionsStore } from '@renderer/store/connections-store'
-import { useIconsStore } from '@renderer/store/icons-store'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import { Badge } from '@renderer/components/ui/badge'
 import { Button } from '@renderer/components/ui/button'
 import {
@@ -35,6 +34,7 @@ import ConnectionDetailModal from '@renderer/components/connections/connection-d
 import ConnectionSettingModal from '@renderer/components/connections/connection-setting-modal'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { includesIgnoreCase } from '@renderer/utils/includes'
+import { useIconsStore, useProcessAppName } from '@renderer/store/icons-store'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { useTranslation } from 'react-i18next'
 import {
@@ -91,11 +91,6 @@ const Connections: React.FC = () => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const [isSettingModalOpen, setIsSettingModalOpen] = useState(false)
   const [selected, setSelected] = useState<ControllerConnectionDetail>()
-
-  const iconMap = useIconsStore((state) => state.icons)
-  const appNameCache = useIconsStore((state) => state.appNames)
-  const requestIcon = useIconsStore((state) => state.requestIcon)
-  const requestAppName = useIconsStore((state) => state.requestAppName)
 
   const [tab, setTab] = useState('active')
   const [viewMode, setViewMode] = useState<'list' | 'table'>(connectionViewMode)
@@ -179,37 +174,25 @@ const Connections: React.FC = () => {
     activeConnections.forEach((conn) => addToGroup(conn, true))
     closedConnections.forEach((conn) => addToGroup(conn, false))
 
-    const groups: ProcessGroup[] = Array.from(groupMap.values()).map((g) => ({
-      ...g,
-      displayName: displayAppName && g.processPath ? appNameCache[g.processPath] : undefined,
-      iconUrl: (displayIcon && findProcessMode !== 'off' && iconMap[g.processPath]) || ''
-    }))
+    const groups: ProcessGroup[] = Array.from(groupMap.values())
 
-    // Sort by active count descending, then by total traffic
     groups.sort((a, b) => {
       if (b.activeCount !== a.activeCount) return b.activeCount - a.activeCount
       return b.totalUpload + b.totalDownload - (a.totalUpload + a.totalDownload)
     })
 
     return groups
-  }, [
-    activeConnections,
-    closedConnections,
-    appNameCache,
-    iconMap,
-    displayIcon,
-    displayAppName,
-    findProcessMode
-  ])
+  }, [activeConnections, closedConnections])
 
-  // Filter process groups by search
   const filteredProcessGroups = useMemo(() => {
     if (filter === '') return processGroups
+    const appNames = useIconsStore.getState().appNames
     return processGroups.filter((pg) => {
-      const searchable = [pg.processName, pg.displayName, pg.processPath].filter(Boolean).join(' ')
+      const name = displayAppName && pg.processPath ? appNames[pg.processPath] : undefined
+      const searchable = [pg.processName, name, pg.processPath].filter(Boolean).join(' ')
       return includesIgnoreCase(searchable, filter)
     })
-  }, [processGroups, filter])
+  }, [processGroups, filter, displayAppName])
 
   const filteredConnections = useMemo(() => {
     const connections = tab === 'active' ? activeConnections : closedConnections
@@ -328,54 +311,6 @@ const Connections: React.FC = () => {
     [patchAppConfig]
   )
 
-  useEffect(() => {
-    if (!displayIcon || findProcessMode === 'off') return
-
-    const visiblePaths = new Set<string>()
-    const otherPaths = new Set<string>()
-
-    filteredConnections.slice(0, 20).forEach((conn) => {
-      visiblePaths.add(conn.metadata.processPath || '')
-    })
-
-    const collectPaths = (connections: ControllerConnectionDetail[]): void => {
-      for (const conn of connections) {
-        const path = conn.metadata.processPath || ''
-        if (!visiblePaths.has(path)) otherPaths.add(path)
-      }
-    }
-
-    collectPaths(activeConnections)
-    collectPaths(closedConnections)
-
-    visiblePaths.forEach((path) => {
-      requestIcon(path)
-      if (displayAppName) requestAppName(path)
-    })
-
-    if (otherPaths.size === 0) return
-
-    const deferred = setTimeout(() => {
-      otherPaths.forEach((path) => {
-        requestIcon(path)
-        if (displayAppName) requestAppName(path)
-      })
-    }, 100)
-
-    return (): void => {
-      clearTimeout(deferred)
-    }
-  }, [
-    activeConnections,
-    closedConnections,
-    displayIcon,
-    displayAppName,
-    filteredConnections,
-    findProcessMode,
-    requestIcon,
-    requestAppName
-  ])
-
   const handleTabChange = useCallback((value: string) => {
     setTab(value)
   }, [])
@@ -428,13 +363,18 @@ const Connections: React.FC = () => {
     setFilter('')
   }, [])
 
-  // Get the display name of the selected process for the header
+  const selectedProcessAppName = useProcessAppName(
+    selectedProcess || '',
+    displayAppName && selectedProcess !== null
+  )
+
   const selectedProcessName = useMemo(() => {
     if (selectedProcess === null) return ''
+    if (selectedProcessAppName) return selectedProcessAppName
     const group = processGroups.find((g) => g.processPath === selectedProcess)
     if (!group) return selectedProcess
-    return group.displayName || group.processName || t('pages.connections.unknownProcess')
-  }, [selectedProcess, processGroups, t])
+    return group.processName || t('pages.connections.unknownProcess')
+  }, [selectedProcess, selectedProcessAppName, processGroups, t])
 
   const matchesSelectedProcess = useCallback(
     (conn: ControllerConnectionDetail) => {
@@ -455,23 +395,16 @@ const Connections: React.FC = () => {
     return closedConnections.filter(matchesSelectedProcess).length
   }, [closedConnections, selectedProcess, matchesSelectedProcess])
 
+  const iconEnabled = displayIcon && findProcessMode !== 'off'
+
   const renderConnectionItem = useCallback(
     (i: number, connection: ControllerConnectionDetail) => {
-      const path = connection.metadata.processPath || ''
-      const iconUrl = (displayIcon && findProcessMode !== 'off' && iconMap[path]) || ''
-      const displayName =
-        displayAppName && connection.metadata.processPath
-          ? appNameCache[connection.metadata.processPath]
-          : undefined
-
       return (
         <ConnectionItem
           setSelected={setSelected}
           setIsDetailModalOpen={setIsDetailModalOpen}
-          selected={selected}
-          iconUrl={iconUrl}
-          displayIcon={displayIcon && findProcessMode !== 'off'}
-          displayName={displayName}
+          displayIcon={iconEnabled}
+          displayAppName={displayAppName}
           close={closeConnection}
           index={i}
           key={connection.id}
@@ -479,15 +412,7 @@ const Connections: React.FC = () => {
         />
       )
     },
-    [
-      displayIcon,
-      iconMap,
-      selected,
-      closeConnection,
-      appNameCache,
-      findProcessMode,
-      displayAppName
-    ]
+    [iconEnabled, displayAppName, closeConnection]
   )
 
   const renderProcessItem = useCallback(
@@ -496,12 +421,13 @@ const Connections: React.FC = () => {
         <ProcessItem
           key={process.processPath}
           process={process}
-          displayIcon={displayIcon && findProcessMode !== 'off'}
+          displayIcon={iconEnabled}
+          displayAppName={displayAppName}
           onClick={handleProcessClick}
         />
       )
     },
-    [displayIcon, findProcessMode, handleProcessClick]
+    [iconEnabled, displayAppName, handleProcessClick]
   )
 
   // Whether we are in the process list view (level 1) or connections view (level 2)
@@ -764,9 +690,17 @@ const Connections: React.FC = () => {
         </div>
         <div className="flex-1 min-h-0 mt-px mb-2">
           {isProcessListView ? (
-            <Virtuoso data={filteredProcessGroups} itemContent={renderProcessItem} />
+            <Virtuoso
+              data={filteredProcessGroups}
+              itemContent={renderProcessItem}
+              initialItemCount={Math.min(filteredProcessGroups.length, 15)}
+            />
           ) : viewMode === 'list' ? (
-            <Virtuoso data={filteredConnections} itemContent={renderConnectionItem} />
+            <Virtuoso
+              data={filteredConnections}
+              itemContent={renderConnectionItem}
+              initialItemCount={Math.min(filteredConnections.length, 15)}
+            />
           ) : (
             <ConnectionTable
               connections={filteredConnections}
