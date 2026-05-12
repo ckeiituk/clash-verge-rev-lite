@@ -133,6 +133,7 @@ interface ProfileItem {
   logo?: string
   supportUrl?: string
   customHwid?: string
+  globalMode?: boolean
 }
 
 interface SubscriptionUserInfo {

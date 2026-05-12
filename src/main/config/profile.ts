@@ -9,8 +9,11 @@ import {
 import { mkdir, readFile, rm, writeFile } from 'fs/promises'
 import { restartCore } from '../core/manager'
 import { getRuntimeConfig } from '../core/factory'
-import { mihomoHotReloadConfig } from '../core/mihomoApi'
+import { mihomoHotReloadConfig, patchMihomoConfig } from '../core/mihomoApi'
 import { getAppConfig } from './app'
+import { getControledMihomoConfig, patchControledMihomoConfig } from './controledMihomo'
+import { ipcMain } from 'electron'
+import { mainWindow } from '..'
 import { existsSync } from 'fs'
 import axios, { AxiosResponse } from 'axios'
 import https from 'https'
@@ -63,6 +66,7 @@ export async function changeCurrentProfile(id: string): Promise<void> {
   } finally {
     await setProfileConfig(config)
   }
+  await enforceGlobalModeRestriction(id)
 }
 
 export async function updateProfileItem(item: ProfileItem): Promise<void> {
@@ -98,6 +102,22 @@ export async function addProfileItem(item: Partial<ProfileItem>): Promise<void> 
 
   if (!isExisting || !config.current) {
     await changeCurrentProfile(newItem.id)
+  } else if (config.current === newItem.id) {
+    await enforceGlobalModeRestriction(newItem.id)
+  }
+}
+
+async function enforceGlobalModeRestriction(id: string): Promise<void> {
+  const profile = await getProfileItem(id)
+  if (profile?.globalMode === false) {
+    const { mode } = await getControledMihomoConfig()
+    if (mode === 'global') {
+      await patchControledMihomoConfig({ mode: 'rule' })
+      await patchMihomoConfig({ mode: 'rule' })
+      mainWindow?.webContents.send('controledMihomoConfigUpdated')
+      mainWindow?.webContents.send('groupsUpdated')
+      ipcMain.emit('updateTrayMenu')
+    }
   }
 }
 
@@ -286,6 +306,12 @@ export async function createProfile(item: Partial<ProfileItem>): Promise<Profile
       )
       if (supportUrlKey) {
         newItem.supportUrl = headers[supportUrlKey]
+      }
+      const globalModeKey = Object.keys(headers).find((k) =>
+        k.toLowerCase().endsWith('global-mode')
+      )
+      if (globalModeKey) {
+        newItem.globalMode = headers[globalModeKey].toLowerCase() !== 'false'
       }
       const announceKey = Object.keys(headers).find((k) => k.toLowerCase().endsWith('announce'))
       if (announceKey) {

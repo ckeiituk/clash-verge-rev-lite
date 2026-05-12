@@ -56,6 +56,8 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ latest }) => {
   const [showRuntimeConfig, setShowRuntimeConfig] = useState(false)
   const { profileConfig } = useProfileConfig()
   const hasProfiles = (profileConfig?.items?.length ?? 0) > 0
+  const currentProfile = profileConfig?.items?.find((i) => i.id === profileConfig.current)
+  const globalModeAllowed = currentProfile?.globalMode !== false
   const filteredNavItems = hasProfiles
     ? navItems
     : navItems.filter((item) => allowedWithoutProfiles.has(item.key))
@@ -99,7 +101,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ latest }) => {
       </SidebarContent>
       <SidebarFooter>
         <div className="flex flex-col items-center gap-2">
-          {hasProfiles && <OutboundModeSwitcher />}
+          {hasProfiles && globalModeAllowed && <OutboundModeSwitcher />}
           {latest && latest.version && <UpdaterButton iconOnly={collapsed} latest={latest} />}
           <SidebarMenu>
             <SidebarMenuItem>
