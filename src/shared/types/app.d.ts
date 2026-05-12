@@ -134,6 +134,7 @@ interface ProfileItem {
   supportUrl?: string
   customHwid?: string
   globalMode?: boolean
+  customCss?: string
 }
 
 interface SubscriptionUserInfo {

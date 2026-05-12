@@ -3,6 +3,7 @@ import { themesDir } from '../utils/dirs'
 import { t } from '../utils/i18n'
 import path from 'path'
 import axios from 'axios'
+import https from 'https'
 import AdmZip from 'adm-zip'
 import { getRuntimeConfig } from '../core/factory'
 import { existsSync } from 'fs'
@@ -80,4 +81,33 @@ export async function applyTheme(theme: string): Promise<void> {
   } catch {
     // ignore
   }
+}
+
+export async function downloadCustomCss(
+  url: string,
+  proxy?: { protocol: string; host: string; port: number },
+  existingFile?: string
+): Promise<string> {
+  const httpsAgent = new https.Agent()
+  const res = await axios.get(url, {
+    httpsAgent,
+    ...(proxy && { proxy }),
+    responseType: 'text',
+    timeout: 15000
+  })
+  const css = String(res.data)
+  const label = new URL(url).pathname.split('/').pop()?.replace(/\.css$/i, '') || 'Custom Theme'
+  const content = `/* ${label} */\n${css}`
+  if (existingFile) {
+    const existingPath = path.join(themesDir(), existingFile)
+    if (existsSync(existingPath)) {
+      const existing = await readFile(existingPath, 'utf-8')
+      if (existing === content) return existingFile
+    }
+    await writeFile(path.join(themesDir(), existingFile), content, 'utf-8')
+    return existingFile
+  }
+  const filename = `custom-${Date.now().toString(16)}.css`
+  await writeFile(path.join(themesDir(), filename), content, 'utf-8')
+  return filename
 }
