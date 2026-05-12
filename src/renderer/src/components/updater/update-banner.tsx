@@ -32,7 +32,9 @@ const UpdateBanner: React.FC<Props> = ({ version, changelog, onDismiss }) => {
             try {
               await cancelUpdate()
               resetUpdateStatus()
-            } catch {}
+            } catch {
+              // ignore
+            }
           }}
           onClose={() => setOpenModal(false)}
         />

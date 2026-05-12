@@ -717,7 +717,10 @@ export default {
       delete: 'Delete rule',
       restore: 'Restore rule',
       invalidPayload: 'Invalid payload',
-      expectedFormat: 'Expected format'
+      expectedFormat: 'Expected format',
+      yamlMode: 'YAML Editor',
+      visualMode: 'Visual Editor',
+      invalidYaml: 'Invalid YAML'
     },
     openFile: 'Open File',
     delete: 'Delete',

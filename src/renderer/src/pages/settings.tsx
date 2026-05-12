@@ -24,6 +24,7 @@ const Settings: React.FC = () => {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ;(window as any).__hidden = () => toggleHiddenSettings(!showHiddenSettings)
   }, [showHiddenSettings])
 

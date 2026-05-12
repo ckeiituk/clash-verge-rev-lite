@@ -777,7 +777,10 @@ export default {
       delete: '删除规则',
       restore: '恢复规则',
       invalidPayload: '无效的规则内容',
-      expectedFormat: '期望格式'
+      expectedFormat: '期望格式',
+      yamlMode: 'YAML 编辑器',
+      visualMode: '可视化编辑器',
+      invalidYaml: '无效的 YAML'
     },
     openFile: '打开文件',
     delete: '删除',

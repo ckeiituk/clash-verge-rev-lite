@@ -224,6 +224,8 @@ export const buildContextMenu = async (): Promise<Menu> => {
     }
   }
   const { current, items = [] } = await getProfileConfig()
+  const currentProfile = items.find((i) => i.id === current)
+  const globalModeAllowed = currentProfile?.globalMode !== false
 
   const contextMenu = [
     {
@@ -279,40 +281,44 @@ export const buildContextMenu = async (): Promise<Menu> => {
       }
     },
     { type: 'separator' },
-    {
-      type: 'submenu',
-      label: `${t('tray.outboundMode')} (${mode === 'rule' ? t('tray.rule') : t('tray.global')})`,
-      submenu: [
-        {
-          id: 'rule',
-          label: t('tray.ruleMode'),
-          accelerator: ruleModeShortcut,
-          type: 'radio',
-          checked: mode === 'rule',
-          click: async (): Promise<void> => {
-            await patchControledMihomoConfig({ mode: 'rule' })
-            await patchMihomoConfig({ mode: 'rule' })
-            mainWindow?.webContents.send('controledMihomoConfigUpdated')
-            mainWindow?.webContents.send('groupsUpdated')
-            ipcMain.emit('updateTrayMenu')
+    ...(globalModeAllowed
+      ? [
+          {
+            type: 'submenu' as const,
+            label: `${t('tray.outboundMode')} (${mode === 'rule' ? t('tray.rule') : t('tray.global')})`,
+            submenu: [
+              {
+                id: 'rule',
+                label: t('tray.ruleMode'),
+                accelerator: ruleModeShortcut,
+                type: 'radio' as const,
+                checked: mode === 'rule',
+                click: async (): Promise<void> => {
+                  await patchControledMihomoConfig({ mode: 'rule' })
+                  await patchMihomoConfig({ mode: 'rule' })
+                  mainWindow?.webContents.send('controledMihomoConfigUpdated')
+                  mainWindow?.webContents.send('groupsUpdated')
+                  ipcMain.emit('updateTrayMenu')
+                }
+              },
+              {
+                id: 'global',
+                label: t('tray.globalMode'),
+                accelerator: globalModeShortcut,
+                type: 'radio' as const,
+                checked: mode === 'global',
+                click: async (): Promise<void> => {
+                  await patchControledMihomoConfig({ mode: 'global' })
+                  await patchMihomoConfig({ mode: 'global' })
+                  mainWindow?.webContents.send('controledMihomoConfigUpdated')
+                  mainWindow?.webContents.send('groupsUpdated')
+                  ipcMain.emit('updateTrayMenu')
+                }
+              }
+            ]
           }
-        },
-        {
-          id: 'global',
-          label: t('tray.globalMode'),
-          accelerator: globalModeShortcut,
-          type: 'radio',
-          checked: mode === 'global',
-          click: async (): Promise<void> => {
-            await patchControledMihomoConfig({ mode: 'global' })
-            await patchMihomoConfig({ mode: 'global' })
-            mainWindow?.webContents.send('controledMihomoConfigUpdated')
-            mainWindow?.webContents.send('groupsUpdated')
-            ipcMain.emit('updateTrayMenu')
-          }
-        }
-      ]
-    },
+        ]
+      : []),
     ...groupsMenu,
     { type: 'separator' },
     {
