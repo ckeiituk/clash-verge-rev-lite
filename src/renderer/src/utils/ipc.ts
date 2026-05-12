@@ -424,6 +424,12 @@ export async function openDevTools(): Promise<void> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('openDevTools'))
 }
 
+export async function captureMainWindowPage(fileName?: string): Promise<string> {
+  return ipcErrorWrapper(
+    await window.electron.ipcRenderer.invoke('captureMainWindowPage', fileName)
+  )
+}
+
 export async function resetAppConfig(): Promise<void> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('resetAppConfig'))
 }

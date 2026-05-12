@@ -72,6 +72,7 @@ const Tun: React.FC = () => {
   return (
     <>
       <BasePage
+        pageKey="tun"
         title={t('pages.tun.title')}
         header={
           changed && (

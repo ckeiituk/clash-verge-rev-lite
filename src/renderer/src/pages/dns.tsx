@@ -110,6 +110,7 @@ const DNS: React.FC = () => {
 
   return (
     <BasePage
+      pageKey="dns"
       title={t('pages.dns.title')}
       header={
         changed && (

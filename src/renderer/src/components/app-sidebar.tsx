@@ -98,12 +98,17 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ latest }) => {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <div className="flex flex-col items-center gap-2">
+        <div data-guide="sidebar-footer-stack" className="flex flex-col items-center gap-2">
           {hasProfiles && <OutboundModeSwitcher />}
           {latest && latest.version && <UpdaterButton iconOnly={collapsed} latest={latest} />}
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip={t('common.toggleSidebar')} onClick={toggleSidebar} className="cursor-pointer">
+              <SidebarMenuButton
+                data-guide="sidebar-toggle-button"
+                tooltip={t('common.toggleSidebar')}
+                onClick={toggleSidebar}
+                className="cursor-pointer"
+              >
                 {collapsed ? (
                   <ExpandedIcon className="size-4 shrink-0" />
                 ) : (

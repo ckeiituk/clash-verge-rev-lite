@@ -221,7 +221,7 @@ const Mihomo: React.FC = () => {
   ]
 
   return (
-    <BasePage title={t('pages.mihomo.title')}>
+    <BasePage pageKey="mihomo" title={t('pages.mihomo.title')}>
       {showGrantConfirm && (
         <ConfirmModal
           onChange={setShowGrantConfirm}

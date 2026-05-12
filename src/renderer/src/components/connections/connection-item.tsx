@@ -87,6 +87,9 @@ const ConnectionItemComponent: React.FC<Props> = ({
   return (
     <div className="px-2 pb-2" style={{ height: 72 }}>
       <div
+        data-guide="connections-row"
+        data-row-kind="connection"
+        data-active={info.isActive ? 'true' : 'false'}
         className={`
           w-full h-full flex items-center cursor-pointer rounded-xl border
           transition-all duration-200 ease-out

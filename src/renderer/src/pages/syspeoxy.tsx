@@ -137,6 +137,7 @@ const Sysproxy: React.FC = () => {
 
   return (
     <BasePage
+      pageKey="sysproxy"
       title={t('pages.sysproxy.title')}
       header={
         changed && (

@@ -57,7 +57,7 @@ const Logs: React.FC = () => {
   }, [])
 
   return (
-    <BasePage title={t('pages.logs.title')}>
+    <BasePage pageKey="logs" title={t('pages.logs.title')}>
       <div className="flex flex-col h-full">
         <div className="shrink-0 sticky top-0 z-40">
           <div className="w-full flex px-2 pb-2">

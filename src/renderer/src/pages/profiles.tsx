@@ -152,6 +152,7 @@ const Profiles: React.FC = () => {
 
   return (
     <BasePage
+      pageKey="profiles"
       ref={pageRef}
       title={t('pages.profiles.title')}
       header={

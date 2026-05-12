@@ -35,6 +35,7 @@ const Rules: React.FC = () => {
 
   return (
     <BasePage
+      pageKey="rules"
       title={t('pages.rules.title')}
       header={
         <>

@@ -19,6 +19,7 @@ interface Props {
   header?: React.ReactNode
   children?: React.ReactNode
   contentClassName?: string
+  pageKey?: string
   showBackButton?: boolean
 }
 
@@ -55,7 +56,11 @@ const BasePage = forwardRef<HTMLDivElement, Props>((props, ref) => {
   })
 
   return (
-    <div ref={contentRef} className="w-full h-full flex flex-col overflow-hidden">
+    <div
+      ref={contentRef}
+      data-page={props.pageKey}
+      className="w-full h-full flex flex-col overflow-hidden"
+    >
       <div className="shrink-0 z-40 h-14.25 w-full">
         <div className="app-drag px-2 pt-3 pb-2 flex justify-between h-14.25">
           <div className="title h-full text-lg leading-8 flex items-center gap-1">
@@ -97,7 +102,9 @@ const BasePage = forwardRef<HTMLDivElement, Props>((props, ref) => {
           </motion.div>
         )}
       </AnimatePresence>
-      <div className="content grow overflow-y-auto custom-scrollbar">
+      <div
+        className={`content grow overflow-y-auto custom-scrollbar ${props.contentClassName || ''}`}
+      >
         {props.children}
       </div>
     </div>

@@ -1,0 +1,1068 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OutClash Home Shell Design Handoff</title>
+    <style>
+      :root {
+        --bg: #c5d4f1;
+        --bg-deep: #e5eefc;
+        --panel: rgb(255 255 255 / 0.58);
+        --panel-strong: rgb(255 255 255 / 0.74);
+        --panel-border: rgb(255 255 255 / 0.88);
+        --text: #122038;
+        --muted: #61708f;
+        --line: rgb(18 32 56 / 0.12);
+        --shadow: 0 28px 64px rgb(30 56 110 / 0.18);
+        --green-a: #66e6ab;
+        --green-b: #12bb74;
+        --green-line: #8ff2c4;
+        --orange-a: #ffb48c;
+        --orange-b: #d86439;
+        --orange-line: #ffd1b7;
+        --sidebar-text: #23314d;
+        --sidebar-active: rgb(255 255 255 / 0.72);
+        --dot: rgb(18 32 56 / 0.24);
+        --status-good: #0f8a57;
+        --status-bad: #b6522c;
+      }
+
+      html[data-theme='dark'] {
+        --bg: #08111b;
+        --bg-deep: #0d1a2a;
+        --panel: rgb(34 50 76 / 0.56);
+        --panel-strong: rgb(41 60 92 / 0.72);
+        --panel-border: rgb(150 185 255 / 0.14);
+        --text: #edf4ff;
+        --muted: #9eb0d0;
+        --line: rgb(237 244 255 / 0.1);
+        --shadow: 0 28px 64px rgb(0 0 0 / 0.36);
+        --green-a: #58eca8;
+        --green-b: #0f9e61;
+        --green-line: #92ffd0;
+        --orange-a: #ea8858;
+        --orange-b: #8f4124;
+        --orange-line: #f0a27d;
+        --sidebar-text: #e8efff;
+        --sidebar-active: rgb(255 255 255 / 0.08);
+        --dot: rgb(237 244 255 / 0.2);
+        --status-good: #66eca9;
+        --status-bad: #ff9f73;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        font-family:
+          "Segoe UI",
+          "SF Pro Display",
+          "Helvetica Neue",
+          sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgb(255 255 255 / 0.65), transparent 28%),
+          radial-gradient(circle at top right, rgb(76 180 255 / 0.18), transparent 20%),
+          linear-gradient(180deg, var(--bg), var(--bg-deep));
+      }
+
+      body {
+        min-height: 100vh;
+        overflow: hidden;
+      }
+
+      body::before,
+      body::after {
+        content: "";
+        position: fixed;
+        inset: auto;
+        border-radius: 999px;
+        filter: blur(70px);
+        pointer-events: none;
+      }
+
+      body::before {
+        top: -4rem;
+        left: -6rem;
+        width: 18rem;
+        height: 18rem;
+        background: rgb(91 205 255 / 0.22);
+      }
+
+      body::after {
+        right: -3rem;
+        bottom: -4rem;
+        width: 20rem;
+        height: 20rem;
+        background: rgb(39 202 133 / 0.24);
+      }
+
+      .mesh {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background-image:
+          linear-gradient(rgb(255 255 255 / 0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgb(255 255 255 / 0.04) 1px, transparent 1px);
+        background-size: 2rem 2rem;
+        mask-image: radial-gradient(circle at center, black 42%, transparent 90%);
+        opacity: 0.4;
+      }
+
+      .app {
+        position: relative;
+        display: grid;
+        grid-template-columns: 18.5rem minmax(0, 1fr);
+        gap: 1rem;
+        min-height: 100vh;
+        padding: 1rem;
+      }
+
+      .app.is-collapsed {
+        grid-template-columns: 5.5rem minmax(0, 1fr);
+      }
+
+      .glass {
+        backdrop-filter: blur(24px);
+        background: var(--panel);
+        border: 1px solid var(--panel-border);
+        box-shadow: var(--shadow);
+      }
+
+      .sidebar {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+        border-radius: 1.75rem;
+        overflow: hidden;
+      }
+
+      .sidebar::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(180deg, rgb(255 255 255 / 0.08), transparent 32%),
+          radial-gradient(circle at top right, rgb(79 176 255 / 0.18), transparent 24%);
+        pointer-events: none;
+      }
+
+      .brand,
+      .sidebar-footer,
+      .sidebar-nav {
+        position: relative;
+        z-index: 1;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        padding: 0.35rem;
+      }
+
+      .brand-mark {
+        display: grid;
+        place-items: center;
+        width: 2.75rem;
+        height: 2.75rem;
+        border-radius: 0.95rem;
+        background:
+          linear-gradient(135deg, rgb(255 255 255 / 0.3), rgb(255 255 255 / 0.08)),
+          linear-gradient(135deg, var(--green-a), var(--green-b));
+        color: #041119;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+      }
+
+      .brand-copy {
+        min-width: 0;
+      }
+
+      .brand-title {
+        font-size: 1rem;
+        font-weight: 700;
+        letter-spacing: 0.01em;
+      }
+
+      .brand-subtitle {
+        margin-top: 0.2rem;
+        font-size: 0.74rem;
+        color: var(--muted);
+      }
+
+      .app.is-collapsed .brand-copy,
+      .app.is-collapsed .nav-copy,
+      .app.is-collapsed .sidebar-footer-copy {
+        display: none;
+      }
+
+      .app.is-collapsed .brand {
+        justify-content: center;
+      }
+
+      .sidebar-nav {
+        display: grid;
+        gap: 0.45rem;
+      }
+
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        width: 100%;
+        padding: 0.8rem 0.9rem;
+        border: 0;
+        border-radius: 1rem;
+        background: transparent;
+        color: var(--sidebar-text);
+        text-align: left;
+        cursor: pointer;
+        transition:
+          transform 160ms ease,
+          background-color 160ms ease,
+          color 160ms ease;
+      }
+
+      .nav-item:hover {
+        transform: translateX(2px);
+        background: rgb(255 255 255 / 0.1);
+      }
+
+      .nav-item.is-active {
+        background: var(--sidebar-active);
+        box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08);
+      }
+
+      .nav-glyph {
+        display: grid;
+        place-items: center;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 0.8rem;
+        background: rgb(255 255 255 / 0.1);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        flex: 0 0 auto;
+      }
+
+      .nav-copy {
+        min-width: 0;
+      }
+
+      .nav-title {
+        font-size: 0.95rem;
+        font-weight: 600;
+      }
+
+      .nav-caption {
+        margin-top: 0.1rem;
+        font-size: 0.74rem;
+        color: var(--muted);
+      }
+
+      .sidebar-footer {
+        margin-top: auto;
+        display: grid;
+        gap: 0.8rem;
+      }
+
+      .mode-switch {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.35rem;
+        padding: 0.3rem;
+        border-radius: 1rem;
+        background: rgb(255 255 255 / 0.08);
+      }
+
+      .mode-option {
+        border: 0;
+        padding: 0.7rem 0.75rem;
+        border-radius: 0.8rem;
+        background: transparent;
+        color: var(--text);
+        font-size: 0.76rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        cursor: pointer;
+      }
+
+      .mode-option.is-active {
+        background: var(--panel-strong);
+      }
+
+      .update-card,
+      .sidebar-button {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.8rem;
+        padding: 0.9rem 1rem;
+        border-radius: 1rem;
+        background: rgb(255 255 255 / 0.08);
+        border: 0;
+        color: var(--text);
+      }
+
+      .sidebar-button {
+        cursor: pointer;
+        text-align: left;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-height: 2.15rem;
+        padding: 0.5rem 0.85rem;
+        border-radius: 999px;
+        background: rgb(255 255 255 / 0.08);
+        border: 1px solid var(--line);
+        color: var(--text);
+        font-size: 0.8rem;
+        font-weight: 600;
+      }
+
+      .dot {
+        width: 0.55rem;
+        height: 0.55rem;
+        border-radius: 999px;
+        background: var(--dot);
+      }
+
+      .main {
+        min-width: 0;
+        padding: 1rem;
+        border-radius: 2rem;
+        overflow: auto;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+
+      .kicker {
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .page-title {
+        margin: 0.45rem 0 0;
+        font-size: clamp(1.75rem, 2vw, 2.4rem);
+        line-height: 1.02;
+      }
+
+      .page-subtitle {
+        max-width: 42rem;
+        margin: 0.65rem 0 0;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .topbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      .control-button {
+        border: 0;
+        cursor: pointer;
+      }
+
+      .content {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(18rem, 0.82fr);
+        gap: 1rem;
+      }
+
+      .stack {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .panel {
+        position: relative;
+        padding: 1.1rem;
+        border-radius: 1.5rem;
+        overflow: hidden;
+      }
+
+      .panel::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgb(255 255 255 / 0.1), transparent 26%);
+        pointer-events: none;
+      }
+
+      .panel > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .profile-card {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .profile-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+      }
+
+      .profile-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.9rem;
+        min-width: 0;
+      }
+
+      .profile-logo {
+        display: grid;
+        place-items: center;
+        width: 3rem;
+        height: 3rem;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #1dd48f, #0b7d53);
+        color: #03150f;
+        font-weight: 800;
+      }
+
+      .profile-name {
+        margin: 0;
+        font-size: 1.05rem;
+      }
+
+      .profile-type {
+        margin-top: 0.24rem;
+        color: var(--muted);
+        font-size: 0.82rem;
+      }
+
+      .ghost-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 2.5rem;
+        height: 2.5rem;
+        padding: 0 0.9rem;
+        border-radius: 0.9rem;
+        border: 1px solid var(--line);
+        background: rgb(255 255 255 / 0.08);
+        color: var(--text);
+        cursor: pointer;
+      }
+
+      .announce {
+        padding: 1rem;
+        border-radius: 1.1rem;
+        background: rgb(255 255 255 / 0.08);
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.75rem;
+      }
+
+      .stat-card {
+        padding: 1rem;
+        border-radius: 1.2rem;
+        background: rgb(255 255 255 / 0.08);
+      }
+
+      .stat-label {
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+      }
+
+      .stat-value {
+        margin-top: 0.6rem;
+        font-size: clamp(1.15rem, 2vw, 1.7rem);
+        font-weight: 700;
+        line-height: 1.1;
+      }
+
+      .power-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 31rem;
+        text-align: center;
+      }
+
+      .status-line {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        padding: 0.5rem 0.85rem;
+        border-radius: 999px;
+        background: rgb(255 255 255 / 0.08);
+        color: var(--muted);
+        font-size: 0.86rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+      }
+
+      .status-line strong {
+        color: var(--status-good);
+      }
+
+      .status-line.is-off strong {
+        color: var(--status-bad);
+      }
+
+      .power-button {
+        position: relative;
+        display: grid;
+        place-items: center;
+        width: 11.5rem;
+        height: 11.5rem;
+        margin-top: 1.3rem;
+        border: 0;
+        border-radius: 999px;
+        cursor: pointer;
+        transition:
+          transform 180ms ease,
+          box-shadow 180ms ease,
+          filter 180ms ease;
+      }
+
+      .power-button:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.04);
+      }
+
+      .power-button:active {
+        transform: scale(0.98);
+      }
+
+      .power-button[data-state='on'] {
+        background:
+          radial-gradient(circle at 30% 35%, rgb(255 255 255 / 0.28), transparent 34%),
+          linear-gradient(135deg, rgb(102 230 171 / 0.62), rgb(18 187 116 / 0.42));
+        box-shadow:
+          inset 0 1px 0 rgb(255 255 255 / 0.24),
+          0 30px 55px rgb(18 187 116 / 0.22);
+        outline: 2px solid rgb(143 242 196 / 0.5);
+      }
+
+      .power-button[data-state='off'] {
+        background:
+          radial-gradient(circle at 30% 35%, rgb(255 255 255 / 0.24), transparent 34%),
+          linear-gradient(135deg, rgb(255 180 140 / 0.56), rgb(216 100 57 / 0.4));
+        box-shadow:
+          inset 0 1px 0 rgb(255 255 255 / 0.18),
+          0 24px 48px rgb(216 100 57 / 0.18);
+        outline: 2px solid rgb(255 209 183 / 0.34);
+      }
+
+      .power-icon {
+        width: 3.9rem;
+        height: 3.9rem;
+        color: rgb(250 250 250);
+      }
+
+      .timer {
+        margin-top: 1.15rem;
+        font-size: clamp(1.8rem, 4vw, 2.5rem);
+        font-weight: 750;
+        letter-spacing: 0.08em;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .timer[data-hidden='true'] {
+        opacity: 0.4;
+      }
+
+      .traffic {
+        display: flex;
+        gap: 0.65rem;
+        margin-top: 1rem;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .traffic-chip {
+        padding: 0.75rem 0.95rem;
+        border-radius: 999px;
+        background: rgb(255 255 255 / 0.08);
+        color: var(--muted);
+        font-size: 0.88rem;
+        font-weight: 600;
+      }
+
+      .proxy-card {
+        display: grid;
+        gap: 0.9rem;
+        align-content: start;
+      }
+
+      .section-label {
+        font-size: 0.76rem;
+        font-weight: 700;
+        color: var(--muted);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .proxy-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.95rem 1rem;
+        border-radius: 1.15rem;
+        background: rgb(255 255 255 / 0.08);
+      }
+
+      .proxy-name {
+        font-weight: 700;
+      }
+
+      .proxy-hint,
+      .support-link,
+      .source-note {
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .support-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        width: fit-content;
+        min-width: 0;
+        padding: 0.75rem 0.95rem;
+        border-radius: 999px;
+        background: rgb(255 255 255 / 0.08);
+        text-decoration: none;
+      }
+
+      .tiny {
+        font-size: 0.82rem;
+      }
+
+      @media (max-width: 1100px) {
+        body {
+          overflow: auto;
+        }
+
+        .app,
+        .app.is-collapsed {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          min-height: auto;
+        }
+
+        .content {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 720px) {
+        .app {
+          padding: 0.75rem;
+        }
+
+        .main,
+        .sidebar {
+          border-radius: 1.5rem;
+        }
+
+        .topbar {
+          flex-direction: column;
+        }
+
+        .topbar-actions {
+          justify-content: flex-start;
+        }
+
+        .stat-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .power-card {
+          min-height: 27rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="mesh"></div>
+    <div class="app" id="app">
+      <aside class="sidebar glass">
+        <div class="brand">
+          <div class="brand-mark">OC</div>
+          <div class="brand-copy">
+            <div class="brand-title">OutClash</div>
+            <div class="brand-subtitle">Desktop shell, browser-only handoff</div>
+          </div>
+        </div>
+
+        <nav class="sidebar-nav" aria-label="Primary">
+          <button class="nav-item is-active" type="button">
+            <span class="nav-glyph">HM</span>
+            <span class="nav-copy">
+              <span class="nav-title">Home</span>
+              <span class="nav-caption">Status and main switch</span>
+            </span>
+          </button>
+          <button class="nav-item" type="button">
+            <span class="nav-glyph">PF</span>
+            <span class="nav-copy">
+              <span class="nav-title">Profiles</span>
+              <span class="nav-caption">Subscriptions and runtime config</span>
+            </span>
+          </button>
+          <button class="nav-item" type="button">
+            <span class="nav-glyph">PX</span>
+            <span class="nav-copy">
+              <span class="nav-title">Proxies</span>
+              <span class="nav-caption">Groups and active endpoint</span>
+            </span>
+          </button>
+          <button class="nav-item" type="button">
+            <span class="nav-glyph">CN</span>
+            <span class="nav-copy">
+              <span class="nav-title">Connections</span>
+              <span class="nav-caption">Live session monitoring</span>
+            </span>
+          </button>
+          <button class="nav-item" type="button">
+            <span class="nav-glyph">RL</span>
+            <span class="nav-copy">
+              <span class="nav-title">Rules</span>
+              <span class="nav-caption">Routing behavior</span>
+            </span>
+          </button>
+          <button class="nav-item" type="button">
+            <span class="nav-glyph">LG</span>
+            <span class="nav-copy">
+              <span class="nav-title">Logs</span>
+              <span class="nav-caption">Inspect events and failures</span>
+            </span>
+          </button>
+          <button class="nav-item" type="button">
+            <span class="nav-glyph">ST</span>
+            <span class="nav-copy">
+              <span class="nav-title">Settings</span>
+              <span class="nav-caption">Theme and behavior</span>
+            </span>
+          </button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="mode-switch">
+            <button class="mode-option is-active" type="button" data-mode="tun">TUN</button>
+            <button class="mode-option" type="button" data-mode="sysproxy">PROXY</button>
+          </div>
+
+          <div class="update-card">
+            <span class="sidebar-footer-copy">
+              <strong>Update ready</strong><br />
+              <span class="tiny">v1.2.1 with refreshed theming</span>
+            </span>
+            <span class="pill">
+              <span class="dot"></span>
+              Now
+            </span>
+          </div>
+
+          <button class="sidebar-button" type="button" id="collapseSidebar">
+            <span class="sidebar-footer-copy">
+              <strong>Collapse sidebar</strong><br />
+              <span class="tiny">Browser preview only</span>
+            </span>
+            <span class="pill">Toggle</span>
+          </button>
+        </div>
+      </aside>
+
+      <main class="main glass">
+        <header class="topbar">
+          <div>
+            <div class="kicker">Design Handoff</div>
+            <h1 class="page-title">Home shell extracted from the Electron app</h1>
+            <p class="page-subtitle">
+              This browser-only preview keeps the visual language of the current Home screen:
+              frosted sidebar, subscription summary, central connection control, and active
+              proxy entry. Real IPC and app logic are intentionally removed.
+            </p>
+          </div>
+
+          <div class="topbar-actions">
+            <button class="pill control-button" type="button" id="themeToggle">
+              <span class="dot"></span>
+              Toggle theme
+            </button>
+            <button class="pill control-button" type="button" id="resetState">
+              <span class="dot"></span>
+              Reset demo
+            </button>
+          </div>
+        </header>
+
+        <section class="content">
+          <div class="stack">
+            <section class="panel glass profile-card">
+              <div class="profile-head">
+                <div class="profile-meta">
+                  <div class="profile-logo" id="profileLogo">NT</div>
+                  <div>
+                    <h2 class="profile-name" id="profileName">North Tunnel</h2>
+                    <div class="profile-type" id="profileType">Remote subscription profile</div>
+                  </div>
+                </div>
+                <button class="ghost-button" type="button" id="refreshProfile">Sync</button>
+              </div>
+
+              <div class="announce" id="profileAnnounce">
+                Premium line is healthy. Singapore and Tokyo routes were refreshed today.
+              </div>
+            </section>
+
+            <section class="panel glass">
+              <div class="section-label">Subscription</div>
+              <div class="stat-grid">
+                <div class="stat-card">
+                  <div class="stat-label">Traffic Remaining</div>
+                  <div class="stat-value" id="remainingTraffic">184 GB</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-label">Days Remaining</div>
+                  <div class="stat-value" id="remainingDays">24</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-label">Expires</div>
+                  <div class="stat-value" id="expiryDate">May 20</div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div class="stack">
+            <section class="panel glass power-card">
+              <div class="status-line" id="statusLine">
+                <span class="dot"></span>
+                Status
+                <strong id="statusText">Connected</strong>
+              </div>
+
+              <button class="power-button" id="powerButton" type="button" data-state="on">
+                <svg class="power-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                  <path
+                    d="M32 10v20"
+                    stroke="currentColor"
+                    stroke-width="5"
+                    stroke-linecap="round"
+                  />
+                  <path
+                    d="M20 18.5A19 19 0 1 0 44 18.5"
+                    stroke="currentColor"
+                    stroke-width="5"
+                    stroke-linecap="round"
+                  />
+                </svg>
+              </button>
+
+              <div class="timer" id="timer" data-hidden="false">11:27:16</div>
+
+              <div class="traffic">
+                <div class="traffic-chip" id="uploadChip">UP 82.3 GB</div>
+                <div class="traffic-chip" id="downloadChip">DOWN 101.7 GB</div>
+              </div>
+            </section>
+
+            <section class="panel glass proxy-card">
+              <div class="section-label">Active Group</div>
+
+              <div class="proxy-row">
+                <div>
+                  <div class="proxy-name" id="proxyName">JP Premium Auto</div>
+                  <div class="proxy-hint" id="proxyHint">Tap-through target for the Proxies page</div>
+                </div>
+                <span class="pill" id="latencyPill">43 ms</span>
+              </div>
+
+              <a class="support-link" href="#" id="supportLink">Open provider support</a>
+
+              <div class="source-note tiny">
+                Source references: <code>App.tsx</code>, <code>pages/home.tsx</code>,
+                <code>components/app-sidebar.tsx</code>, <code>assets/main.css</code>.
+              </div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      const initialState = {
+        theme: "dark",
+        collapsed: false,
+        connected: true,
+        mode: "tun",
+        seconds: 11 * 3600 + 27 * 60 + 16,
+        profile: {
+          logo: "NT",
+          name: "North Tunnel",
+          type: "Remote subscription profile",
+          announce: "Premium line is healthy. Singapore and Tokyo routes were refreshed today."
+        },
+        subscription: {
+          remainingTraffic: "184 GB",
+          remainingDays: "24",
+          expires: "May 20"
+        },
+        traffic: {
+          up: "82.3 GB",
+          down: "101.7 GB"
+        },
+        proxy: {
+          name: "JP Premium Auto",
+          hint: "Tap-through target for the Proxies page",
+          latency: "43 ms"
+        }
+      }
+
+      function cloneState() {
+        return JSON.parse(JSON.stringify(initialState))
+      }
+
+      const state = cloneState()
+
+      const app = document.getElementById("app")
+      const statusLine = document.getElementById("statusLine")
+      const statusText = document.getElementById("statusText")
+      const timer = document.getElementById("timer")
+      const powerButton = document.getElementById("powerButton")
+      const themeToggle = document.getElementById("themeToggle")
+      const resetState = document.getElementById("resetState")
+      const collapseSidebar = document.getElementById("collapseSidebar")
+      const modeButtons = Array.from(document.querySelectorAll("[data-mode]"))
+
+      function formatTime(totalSeconds) {
+        const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0")
+        const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0")
+        const seconds = String(totalSeconds % 60).padStart(2, "0")
+        return hours + ":" + minutes + ":" + seconds
+      }
+
+      function hydrateContent() {
+        document.getElementById("profileLogo").textContent = state.profile.logo
+        document.getElementById("profileName").textContent = state.profile.name
+        document.getElementById("profileType").textContent = state.profile.type
+        document.getElementById("profileAnnounce").textContent = state.profile.announce
+        document.getElementById("remainingTraffic").textContent = state.subscription.remainingTraffic
+        document.getElementById("remainingDays").textContent = state.subscription.remainingDays
+        document.getElementById("expiryDate").textContent = state.subscription.expires
+        document.getElementById("uploadChip").textContent = "UP " + state.traffic.up
+        document.getElementById("downloadChip").textContent = "DOWN " + state.traffic.down
+        document.getElementById("proxyName").textContent = state.proxy.name
+        document.getElementById("proxyHint").textContent = state.proxy.hint
+        document.getElementById("latencyPill").textContent = state.proxy.latency
+      }
+
+      function render() {
+        document.documentElement.dataset.theme = state.theme
+        app.classList.toggle("is-collapsed", state.collapsed)
+        powerButton.dataset.state = state.connected ? "on" : "off"
+        statusLine.classList.toggle("is-off", !state.connected)
+        statusText.textContent = state.connected ? "Connected" : "Disconnected"
+        timer.textContent = state.connected ? formatTime(state.seconds) : "00:00:00"
+        timer.dataset.hidden = state.connected ? "false" : "true"
+
+        modeButtons.forEach((button) => {
+          button.classList.toggle("is-active", button.dataset.mode === state.mode)
+        })
+
+        themeToggle.innerHTML =
+          '<span class="dot"></span>' +
+          (state.theme === "dark" ? "Switch to light" : "Switch to dark")
+      }
+
+      window.setInterval(() => {
+        if (!state.connected) return
+        state.seconds += 1
+        timer.textContent = formatTime(state.seconds)
+      }, 1000)
+
+      powerButton.addEventListener("click", () => {
+        state.connected = !state.connected
+        if (state.connected && state.seconds === 0) {
+          state.seconds = 12
+        }
+        render()
+      })
+
+      themeToggle.addEventListener("click", () => {
+        state.theme = state.theme === "dark" ? "light" : "dark"
+        render()
+      })
+
+      resetState.addEventListener("click", () => {
+        Object.assign(state, cloneState())
+        hydrateContent()
+        render()
+      })
+
+      collapseSidebar.addEventListener("click", () => {
+        state.collapsed = !state.collapsed
+        render()
+      })
+
+      modeButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          state.mode = button.dataset.mode
+          render()
+        })
+      })
+
+      document.getElementById("refreshProfile").addEventListener("click", () => {
+        state.profile.announce =
+          state.profile.announce === initialState.profile.announce
+            ? "Refresh simulated. Europe failover line is now marked stable for evening traffic."
+            : initialState.profile.announce
+        hydrateContent()
+      })
+
+      document.getElementById("supportLink").addEventListener("click", (event) => {
+        event.preventDefault()
+      })
+
+      hydrateContent()
+      render()
+    </script>
+  </body>
+</html>

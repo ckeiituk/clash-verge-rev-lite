@@ -10,11 +10,12 @@ interface Props {
 
 const SettingCard: React.FC<Props> = (props) => {
   return !props.title ? (
-    <Card className={`${props.className} mx-2 mb-2`}>
+    <Card data-guide="settings-card" className={`${props.className} mx-2 mb-2`}>
       <CardContent>{props.children}</CardContent>
     </Card>
   ) : (
     <Accordion
+      data-guide="settings-accordion"
       className={`${props.className} mx-2 mb-2 px-6 rounded-xl border text-card-foreground shadow-sm`}
       type="single"
       collapsible

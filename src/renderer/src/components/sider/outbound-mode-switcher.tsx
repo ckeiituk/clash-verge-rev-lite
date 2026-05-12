@@ -64,6 +64,7 @@ const OutboundModeSwitcher: React.FC = () => {
 
   return (
     <div
+      data-guide="sidebar-mode-switcher"
       className={cn(
         'flex items-center rounded-lg border border-stroke bg-card/50 backdrop-blur-xl p-0.75 transition-opacity duration-150',
         iconOnly ? 'flex-col gap-1' : 'w-full gap-1',
@@ -74,6 +75,8 @@ const OutboundModeSwitcher: React.FC = () => {
         <Tooltip key={value}>
           <TooltipTrigger asChild>
             <button
+              data-guide="sidebar-mode-button"
+              data-current={mode === value ? 'true' : 'false'}
               onClick={() => onChangeMode(value)}
               className={cn(
                 'flex items-center justify-center rounded-md font-medium transition-colors',

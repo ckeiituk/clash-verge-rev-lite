@@ -263,6 +263,7 @@ const Proxies: React.FC = () => {
           <Card
             data-guide={index === 0 ? 'proxies-first-group' : undefined}
             data-guide-open={index === 0 ? `${isOpen[index]}` : undefined}
+            data-group-card="true"
             className="w-full backdrop-blur-3xl cursor-pointer py-0 transition-all duration-200 hover:bg-accent/50 hover:shadow-sm"
             role="button"
             tabIndex={0}
@@ -416,6 +417,7 @@ const Proxies: React.FC = () => {
 
   return (
     <BasePage
+      pageKey="proxies"
       title={t('pages.proxies.title')}
       showBackButton={fromHome}
       header={

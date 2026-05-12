@@ -196,7 +196,7 @@ const Home: React.FC = () => {
   }
 
   return (
-    <BasePage>
+    <BasePage pageKey="home">
       {!hasProfiles ? (
         <div className="h-full w-full flex items-center justify-center">
           <div className="flex flex-col items-center gap-4 max-w-75 rounded-2xl border border-stroke bg-card/50 backdrop-blur-xl p-8">
@@ -231,10 +231,14 @@ const Home: React.FC = () => {
           )}
         </div>
       ) : (
-        <div className="flex flex-col h-full px-2 pb-2 gap-3">
+        <div data-guide="home-layout" className="flex flex-col h-full px-2 pb-2 gap-3">
           {/* Profile card */}
           {currentProfile && (
-            <div className="rounded-2xl border border-stroke bg-card/50 backdrop-blur-xl p-4">
+            <div
+              data-guide="home-profile-panel"
+              data-has-announce={currentProfile.announce ? 'true' : 'false'}
+              className="rounded-2xl border border-stroke bg-card/50 backdrop-blur-xl p-4"
+            >
               <div
                 data-guide="home-profile-header"
                 className="flex items-center justify-center gap-3"
@@ -272,7 +276,7 @@ const Home: React.FC = () => {
           )}
           {/* Subscription info */}
           {subscription && (
-            <div className="grid grid-cols-[1fr_auto_1fr_auto_1fr] items-center rounded-2xl border border-stroke bg-card/50 backdrop-blur-xl p-1">
+            <div data-guide="home-stats-bar" className="grid grid-cols-[1fr_auto_1fr_auto_1fr] items-center rounded-2xl border border-stroke bg-card/50 backdrop-blur-xl p-1">
               <div className="flex flex-col items-center py-2 px-1">
                 <span className="text-sm text-foreground">{t('pages.home.trafficRemaining')}</span>
                 <span className="font-bold text-base mt-0.5">
@@ -295,8 +299,11 @@ const Home: React.FC = () => {
           )}
 
           {/* Connection button */}
-          <div className="flex flex-col grow-3 items-center justify-center min-h-0">
-            <div className="mb-3 flex h-6 items-center justify-center">
+          <div
+            data-guide="home-power-section"
+            className="flex flex-col grow-3 items-center justify-center min-h-0"
+          >
+            <div data-guide="home-status-line" className="mb-3 flex h-6 items-center justify-center">
               <CharacterMorph
                 texts={[status]}
                 reserveTexts={statusWidthTexts}
@@ -340,7 +347,7 @@ const Home: React.FC = () => {
                 </div>
               </div>
             </button>
-            <div className="mt-3 h-8 flex items-center justify-center">
+            <div data-guide="home-timer-wrap" className="mt-3 h-8 flex items-center justify-center">
               <div
                 aria-hidden={!showConnectedTimer}
                 className={`inline-flex items-center gap-0.5 text-base font-bold text-foreground tabular-nums transition-all duration-300 ease-out ${
@@ -364,6 +371,7 @@ const Home: React.FC = () => {
               </div>
             </div>
             <div
+              data-guide="home-traffic-wrap"
               aria-hidden={!showConnectedTimer}
               className={`mt-2 flex items-center gap-4 tabular-nums transition-all duration-300 ease-out ${
                 showConnectedTimer ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-1'
@@ -383,7 +391,10 @@ const Home: React.FC = () => {
 
           {/* Group & Proxy selectors */}
           {firstGroup && (
-            <div className="flag-emoji flex flex-col items-center mx-auto w-full max-w-3xs max-h-16">
+            <div
+              data-guide="home-dock-wrap"
+              className="flag-emoji flex flex-col items-center mx-auto w-full max-w-3xs max-h-16"
+            >
               <div
                 data-guide="home-group-selector"
                 className="w-full cursor-pointer"
@@ -399,7 +410,10 @@ const Home: React.FC = () => {
             </div>
           )}
           {supportLinkInfo && (
-            <div className="flex justify-center text-sm text-muted-foreground">
+            <div
+              data-guide="home-support-wrap"
+              className="flex justify-center text-sm text-muted-foreground"
+            >
               <button
                 data-guide="home-support-link"
                 type="button"

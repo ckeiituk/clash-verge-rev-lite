@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next'
 const Resources: React.FC = () => {
   const { t } = useTranslation()
   return (
-    <BasePage title={t('pages.resources.title')}>
+    <BasePage pageKey="resources" title={t('pages.resources.title')}>
       <GeoData />
       <ProxyProvider />
       <RuleProvider />

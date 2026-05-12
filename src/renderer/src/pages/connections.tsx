@@ -511,6 +511,7 @@ const Connections: React.FC = () => {
 
   return (
     <BasePage
+      pageKey="connections"
       title={
         isProcessListView
           ? t('pages.connections.title')
@@ -613,7 +614,7 @@ const Connections: React.FC = () => {
         <ConnectionSettingModal onClose={() => setIsSettingModalOpen(false)} />
       )}
       <div className="flex flex-col h-full">
-        <div className="shrink-0 overflow-x-auto sticky top-0 z-40">
+        <div data-guide="connections-toolbar" className="shrink-0 overflow-x-auto sticky top-0 z-40">
           <div className="flex px-2 pb-2 gap-2">
             {isProcessListView ? (
               <>
@@ -625,7 +626,7 @@ const Connections: React.FC = () => {
                     {processGroups.length}
                   </Badge>
                 </div>
-                <InputGroup className="h-8 w-45 min-w-30">
+                <InputGroup data-guide="connections-filter-input-group" className="h-8 w-45 min-w-30">
                   <InputGroupInput
                     className="h-8 text-sm"
                     value={filter}
@@ -678,7 +679,7 @@ const Connections: React.FC = () => {
                     </TabsTrigger>
                   </TabsList>
                 </Tabs>
-                <InputGroup className="h-8 w-45 min-w-30">
+                <InputGroup data-guide="connections-filter-input-group" className="h-8 w-45 min-w-30">
                   <InputGroupInput
                     className="h-8 text-sm"
                     value={filter}

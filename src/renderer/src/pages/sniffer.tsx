@@ -81,6 +81,7 @@ const Sniffer: React.FC = () => {
 
   return (
     <BasePage
+      pageKey="sniffer"
       title={t('pages.sniffer.title')}
       header={
         changed && (

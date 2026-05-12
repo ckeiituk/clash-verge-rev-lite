@@ -1,4 +1,5 @@
 import { app, ipcMain } from 'electron'
+import { writeFile } from 'node:fs/promises'
 import {
   mihomoChangeProxy,
   mihomoCloseAllConnections,
@@ -105,6 +106,7 @@ import {
 } from '../resolve/theme'
 import { logDir } from './dirs'
 import path from 'path'
+import { tmpdir } from 'os'
 import v8 from 'v8'
 import { getIconDataURL, getImageDataURL } from './icon'
 import { closeFloatingWindow, showContextMenu, showFloatingWindow } from '../resolve/floatingWindow'
@@ -136,6 +138,16 @@ function ipcErrorWrapper<T>( // eslint-disable-next-line @typescript-eslint/no-e
     }
   }
 }
+
+function resolveCapturePagePath(fileName?: string): string {
+  const safeName = fileName
+    ? path.basename(fileName)
+    : `outclash-capture-${Date.now()}.png`
+  const normalizedName = safeName.endsWith('.png') ? safeName : `${safeName}.png`
+
+  return path.join(tmpdir(), normalizedName)
+}
+
 export function registerIpcMainHandlers(): void {
   ipcMain.handle('mihomoVersion', ipcErrorWrapper(mihomoVersion))
   ipcMain.handle('mihomoConfig', ipcErrorWrapper(mihomoConfig))
@@ -272,6 +284,20 @@ export function registerIpcMainHandlers(): void {
   ipcMain.handle('openDevTools', () => {
     mainWindow?.webContents.openDevTools()
   })
+  ipcMain.handle('captureMainWindowPage', (_e, fileName?: string) =>
+    ipcErrorWrapper(async (): Promise<string> => {
+      if (!mainWindow || mainWindow.isDestroyed()) {
+        throw new Error('Main window is not available')
+      }
+
+      const image = await mainWindow.webContents.capturePage()
+      const outputPath = resolveCapturePagePath(fileName)
+
+      await writeFile(outputPath, image.toPNG())
+
+      return outputPath
+    })()
+  )
   ipcMain.handle('createHeapSnapshot', () => {
     v8.writeHeapSnapshot(path.join(logDir(), `${Date.now()}.heapsnapshot`))
   })

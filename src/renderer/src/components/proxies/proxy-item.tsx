@@ -58,6 +58,9 @@ const ProxyItem: React.FC<Props> = (props) => {
 
   return (
     <Card
+      data-guide="proxy-node-card"
+      data-selected={selected ? 'true' : 'false'}
+      data-fixed={fixed ? 'true' : 'false'}
       onClick={() => onSelect(group.name, proxy.name)}
       className={cn(
         'w-full gap-0 py-0 cursor-pointer transition-all duration-150 relative overflow-hidden',
@@ -100,6 +103,8 @@ const ProxyItem: React.FC<Props> = (props) => {
                   </Button>
                 )}
                 <Button
+                  data-guide="proxy-delay-button"
+                  data-delay-state={delayColorClass(delay).replace('text-', '')}
                   variant="ghost"
                   title={proxy.type}
                   disabled={loading}
@@ -147,6 +152,8 @@ const ProxyItem: React.FC<Props> = (props) => {
                   </Button>
                 )}
                 <Button
+                  data-guide="proxy-delay-button"
+                  data-delay-state={delayColorClass(delay).replace('text-', '')}
                   variant="ghost"
                   title={proxy.type}
                   disabled={loading}

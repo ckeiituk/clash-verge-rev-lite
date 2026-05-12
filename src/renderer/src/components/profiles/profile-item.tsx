@@ -301,6 +301,8 @@ const ProfileItem: React.FC<Props> = (props) => {
       </AlertDialog>
 
       <div
+        data-guide="profile-card"
+        data-current={isCurrent ? 'true' : 'false'}
         role="button"
         tabIndex={0}
         aria-selected={isCurrent}
@@ -323,9 +325,10 @@ const ProfileItem: React.FC<Props> = (props) => {
       >
         <div ref={setNodeRef} {...attributes} {...listeners} className="w-full h-full">
           {/* Header: logo + name + menu */}
-          <div className="flex items-center gap-2">
+          <div data-guide="profile-card-header" className="flex items-center gap-2">
             {info.logo && (
               <img
+                data-guide="profile-card-logo"
                 src={info.logo}
                 alt=""
                 className="size-7 rounded-full object-cover shrink-0"
@@ -334,10 +337,15 @@ const ProfileItem: React.FC<Props> = (props) => {
                 }}
               />
             )}
-            <h3 title={info.name} className="text-sm font-semibold truncate flex-1 leading-tight">
+            <h3
+              data-guide="profile-card-title"
+              title={info.name}
+              className="text-sm font-semibold truncate flex-1 leading-tight"
+            >
               {info.name}
             </h3>
             <div
+              data-guide="profile-card-actions"
               className="shrink-0 -mr-1 flex items-center"
               onClick={(e) => e.stopPropagation()}
               onPointerDown={(e) => e.stopPropagation()}
@@ -383,7 +391,7 @@ const ProfileItem: React.FC<Props> = (props) => {
           </div>
 
           {/* Stats: traffic remaining | days remaining */}
-          <div className="grid grid-cols-2 mt-2">
+          <div data-guide="profile-card-stats" className="grid grid-cols-2 mt-2">
             <div className="pr-3 border-r border-foreground/10 justify-items-center">
               <div className="text-[11px] text-muted-foreground">
                 {t('profile.trafficRemaining')}
@@ -404,7 +412,10 @@ const ProfileItem: React.FC<Props> = (props) => {
 
 
           {/* Footer */}
-          <div className="border-t border-foreground/10 mt-3 pt-2 flex items-center justify-between text-[11px] text-muted-foreground">
+          <div
+            data-guide="profile-card-footer"
+            className="border-t border-foreground/10 mt-3 pt-2 flex items-center justify-between text-[11px] text-muted-foreground"
+          >
             {info.type === 'remote' ? (
               <>
                 <span>

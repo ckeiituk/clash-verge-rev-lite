@@ -29,7 +29,9 @@ const Settings: React.FC = () => {
 
   return (
     <BasePage
+      pageKey="settings"
       title={t('pages.settings.title')}
+      contentClassName="settings-page"
       header={
         <>
           <Button

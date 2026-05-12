@@ -22,7 +22,7 @@ const LanguageConfig: React.FC = () => {
             changeLanguage(value as 'zh-CN' | 'en-US' | 'ru-RU')
           }}
         >
-          <SelectTrigger size="sm" className="w-[200px]">
+          <SelectTrigger data-guide="settings-language-select" size="sm" className="w-[200px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
