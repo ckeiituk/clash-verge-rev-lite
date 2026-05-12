@@ -251,7 +251,13 @@ export async function createProfile(item: Partial<ProfileItem>): Promise<Profile
       const hwidLimitKey = Object.keys(headers).find((k) =>
         k.toLowerCase().endsWith('x-hwid-limit')
       )
-      if (hwidLimitKey && headers[hwidLimitKey] === 'true') {
+      const hwidMaxDevicesKey = Object.keys(headers).find((k) =>
+        k.toLowerCase().endsWith('x-hwid-max-devices-reached')
+      )
+      if (
+        (hwidLimitKey && headers[hwidLimitKey] === 'true') ||
+        (hwidMaxDevicesKey && headers[hwidMaxDevicesKey] === 'true')
+      ) {
         const hwidSupportKey = Object.keys(headers).find((k) =>
           k.toLowerCase().endsWith('support-url')
         )
