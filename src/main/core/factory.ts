@@ -78,6 +78,10 @@ export async function generateProfile(): Promise<void> {
   }
   if (!controlTun && currentProfile.tun) {
     currentProfile.tun.enable = controledMihomoConfig.tun?.enable ?? false
+    if (!currentProfile.tun['route-exclude-address']?.length) {
+      currentProfile.tun['route-exclude-address'] =
+        controledMihomoConfig.tun?.['route-exclude-address']
+    }
     delete configToMerge.tun
   }
   preserveProfileStoreFakeIp(currentProfile, configToMerge)
