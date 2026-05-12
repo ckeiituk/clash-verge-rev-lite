@@ -56,6 +56,7 @@ const App: React.FC = () => {
 
   const [debugLatest, setDebugLatest] = useState<{ version: string; changelog: string } | null>(null)
   useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ;(window as any).__updateBanner = (v?: string) => {
       sessionStorage.removeItem('updateBannerDismissedVersion')
       window.dispatchEvent(new CustomEvent('resetUpdateBanner'))

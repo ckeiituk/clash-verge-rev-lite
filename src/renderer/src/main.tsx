@@ -24,6 +24,7 @@ getAppConfig()
   })
   .catch(() => {})
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 ;(window as any).__dev = async (enable?: boolean) => {
   const val = enable !== undefined ? enable : true
   await patchAppConfig({ devMode: val })
@@ -33,6 +34,7 @@ getAppConfig()
   return val
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 ;(window as any).__help = () => {
   const commands = [
     ['__help()', 'Show this help'],

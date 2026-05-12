@@ -1,6 +1,8 @@
 // Proxy URI parser — ported from Tauri (main branch src/utils/uri-parser.ts)
 // Supports: ss, ssr, vmess, vless, trojan, hysteria, hysteria2, tuic, wireguard, http, socks5
 
+import { isIPv4, isIPv6 } from 'is-ip'
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ProxyConfig = Record<string, any> & { name: string; type: string }
 
@@ -53,16 +55,6 @@ function isPresent(value: any): boolean {
 
 function trimStr(str: string | undefined): string | undefined {
   return str ? str.trim() : str
-}
-
-function isIPv4(address: string): boolean {
-  return /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(address)
-}
-
-function isIPv6(address: string): boolean {
-  return /^((?=.*(::))(?!.*\3.+)(::)?)([0-9A-Fa-f]{1,4}(\3|:\b)|\3){7}[0-9A-Fa-f]{1,4}$/.test(
-    address
-  )
 }
 
 function decodeBase64OrOriginal(str: string): string {
@@ -401,11 +393,10 @@ function URI_VLESS(line: string): ProxyConfig {
     }
   }
   if (!parsed) throw new Error('Invalid VLESS URI')
-  let [, uuid, server, portStr, , addons = '', name] = parsed
-  if (isShadowrocket) uuid = uuid.replace(/^.*?:/g, '')
+  const [, uuidRaw, server, portStr, , addons = '', nameRaw] = parsed
   const port = parseInt(portStr, 10)
-  uuid = decodeURIComponent(uuid)
-  name = name ? decodeURIComponent(name) : ''
+  const uuid = decodeURIComponent(isShadowrocket ? uuidRaw.replace(/^.*?:/g, '') : uuidRaw)
+  const name = nameRaw ? decodeURIComponent(nameRaw) : ''
 
   const proxy: ProxyConfig = { type: 'vless', name: '', server, port, uuid }
   const params: Record<string, string> = {}
@@ -494,19 +485,19 @@ function URI_VLESS(line: string): ProxyConfig {
 function URI_Trojan(line: string): ProxyConfig {
   line = line.split('trojan://')[1]
   const m = /^(.*?)@(.*?)(:(\d+))?\/?(\?(.*?))?(?:#(.*?))?$/.exec(line) || []
-  let [, password, server, , port, , addons = '', name] = m
-  let portNum = parseInt(`${port}`, 10)
-  if (isNaN(portNum)) portNum = 443
-  password = decodeURIComponent(password)
-  name = trimStr(decodeURIComponent(name || '')) ?? `Trojan ${server}:${portNum}`
+  const [, passwordRaw, server, , port, , addons = '', nameRaw] = m
+  const parsedPort = parseInt(`${port}`, 10)
+  const portNum = isNaN(parsedPort) ? 443 : parsedPort
+  const password = decodeURIComponent(passwordRaw)
+  const name = trimStr(decodeURIComponent(nameRaw || '')) ?? `Trojan ${server}:${portNum}`
 
   const proxy: ProxyConfig = { type: 'trojan', name, server, port: portNum, password }
   let host = ''
   let path = ''
 
   for (const addon of addons.split('&')) {
-    let [key, value] = addon.split('=')
-    value = decodeURIComponent(value || '')
+    const [key, valueRaw] = addon.split('=')
+    const value = decodeURIComponent(valueRaw || '')
     switch (key) {
       case 'type':
         proxy.network = ['ws', 'h2'].includes(value) ? value : 'tcp'
@@ -538,11 +529,11 @@ function URI_Trojan(line: string): ProxyConfig {
 function URI_Hysteria2(line: string): ProxyConfig {
   line = line.split(/(hysteria2|hy2):\/\//)[2]
   const m = /^(.*?)@(.*?)(:(\d+))?\/?(\?(.*?))?(?:#(.*?))?$/.exec(line) || []
-  let [, password, server, , port, , addons = '', name] = m
-  let portNum = parseInt(`${port}`, 10)
-  if (isNaN(portNum)) portNum = 443
-  password = decodeURIComponent(password)
-  name = trimStr(decodeURIComponent(name || '')) ?? `Hysteria2 ${server}:${port}`
+  const [, passwordRaw, server, , port, , addons = '', nameRaw] = m
+  const parsedPort = parseInt(`${port}`, 10)
+  const portNum = isNaN(parsedPort) ? 443 : parsedPort
+  const password = decodeURIComponent(passwordRaw)
+  const name = trimStr(decodeURIComponent(nameRaw || '')) ?? `Hysteria2 ${server}:${port}`
 
   const proxy: ProxyConfig = { type: 'hysteria2', name, server, port: portNum, password }
   const params: Record<string, string> = {}
@@ -563,16 +554,16 @@ function URI_Hysteria2(line: string): ProxyConfig {
 function URI_Hysteria(line: string): ProxyConfig {
   line = line.split(/(hysteria|hy):\/\//)[2]
   const m = /^(.*?)(:(\d+))?\/?(\?(.*?))?(?:#(.*?))?$/.exec(line)!
-  let [, server, , port, , addons = '', name] = m
-  let portNum = parseInt(`${port}`, 10)
-  if (isNaN(portNum)) portNum = 443
-  name = trimStr(decodeURIComponent(name || '')) ?? `Hysteria ${server}:${port}`
+  const [, server, , port, , addons = '', nameRaw] = m
+  const parsedPort = parseInt(`${port}`, 10)
+  const portNum = isNaN(parsedPort) ? 443 : parsedPort
+  const name = trimStr(decodeURIComponent(nameRaw || '')) ?? `Hysteria ${server}:${port}`
 
   const proxy: ProxyConfig = { type: 'hysteria', name, server, port: portNum }
   for (const addon of addons.split('&')) {
-    let [key, value] = addon.split('=')
-    key = key.replace(/_/, '-')
-    value = decodeURIComponent(value || '')
+    const [keyRaw, valueRaw] = addon.split('=')
+    const key = keyRaw.replace(/_/, '-')
+    const value = decodeURIComponent(valueRaw || '')
     switch (key) {
       case 'alpn': proxy.alpn = value ? value.split(',') : undefined; break
       case 'insecure': proxy['skip-cert-verify'] = /(TRUE)|1/i.test(value); break
@@ -601,17 +592,17 @@ function URI_Hysteria(line: string): ProxyConfig {
 function URI_TUIC(line: string): ProxyConfig {
   line = line.split(/tuic:\/\//)[1]
   const m = /^(.*?):(.*?)@(.*?)(:(\d+))?\/?(\?(.*?))?(?:#(.*?))?$/.exec(line) || []
-  let [, uuid, password, server, , port, , addons = '', name] = m
-  let portNum = parseInt(`${port}`, 10)
-  if (isNaN(portNum)) portNum = 443
-  password = decodeURIComponent(password)
-  name = trimStr(decodeURIComponent(name || '')) ?? `TUIC ${server}:${port}`
+  const [, uuid, passwordRaw, server, , port, , addons = '', nameRaw] = m
+  const parsedPort = parseInt(`${port}`, 10)
+  const portNum = isNaN(parsedPort) ? 443 : parsedPort
+  const password = decodeURIComponent(passwordRaw)
+  const name = trimStr(decodeURIComponent(nameRaw || '')) ?? `TUIC ${server}:${port}`
 
   const proxy: ProxyConfig = { type: 'tuic', name, server, port: portNum, password, uuid }
   for (const addon of addons.split('&')) {
-    let [key, value] = addon.split('=')
-    key = key.replace(/_/, '-')
-    value = decodeURIComponent(value || '')
+    const [keyRaw, valueRaw] = addon.split('=')
+    const key = keyRaw.replace(/_/, '-')
+    const value = decodeURIComponent(valueRaw || '')
     switch (key) {
       case 'token': proxy.token = value; break
       case 'ip': proxy.ip = value; break
@@ -636,20 +627,20 @@ function URI_TUIC(line: string): ProxyConfig {
 function URI_Wireguard(line: string): ProxyConfig {
   line = line.split(/(wireguard|wg):\/\//)[2]
   const m = /^((.*?)@)?(.*?)(:(\d+))?\/?(\?(.*?))?(?:#(.*?))?$/.exec(line)!
-  let [, , privateKey, server, , port, , addons = '', name] = m
-  let portNum = parseInt(`${port}`, 10)
-  if (isNaN(portNum)) portNum = 443
-  privateKey = decodeURIComponent(privateKey || '')
-  name = trimStr(decodeURIComponent(name || '')) ?? `WireGuard ${server}:${port}`
+  const [, , privateKeyRaw, server, , port, , addons = '', nameRaw] = m
+  const parsedPort = parseInt(`${port}`, 10)
+  const portNum = isNaN(parsedPort) ? 443 : parsedPort
+  const privateKey = decodeURIComponent(privateKeyRaw || '')
+  const name = trimStr(decodeURIComponent(nameRaw || '')) ?? `WireGuard ${server}:${port}`
 
   const proxy: ProxyConfig = {
     type: 'wireguard', name, server, port: portNum,
     'private-key': privateKey, udp: true
   }
   for (const addon of addons.split('&')) {
-    let [key, value] = addon.split('=')
-    key = key.replace(/_/, '-')
-    value = decodeURIComponent(value || '')
+    const [keyRaw, valueRaw] = addon.split('=')
+    const key = keyRaw.replace(/_/, '-')
+    const value = decodeURIComponent(valueRaw || '')
     switch (key) {
       case 'address': case 'ip':
         value.split(',').forEach((i) => {
@@ -679,11 +670,11 @@ function URI_Wireguard(line: string): ProxyConfig {
 function URI_HTTP(line: string): ProxyConfig {
   line = line.split(/(http|https):\/\//)[2]
   const m = /^((.*?)@)?(.*?)(:(\d+))?\/?(\?(.*?))?(?:#(.*?))?$/.exec(line)!
-  let [, , auth, server, , port, , addons = '', name] = m
-  let portNum = parseInt(`${port}`, 10)
-  if (isNaN(portNum)) portNum = 443
-  if (auth) auth = decodeURIComponent(auth)
-  name = trimStr(decodeURIComponent(name || '')) ?? `HTTP ${server}:${portNum}`
+  const [, , authRaw, server, , port, , addons = '', nameRaw] = m
+  const parsedPort = parseInt(`${port}`, 10)
+  const portNum = isNaN(parsedPort) ? 443 : parsedPort
+  const auth = authRaw ? decodeURIComponent(authRaw) : authRaw
+  const name = trimStr(decodeURIComponent(nameRaw || '')) ?? `HTTP ${server}:${portNum}`
 
   const proxy: ProxyConfig = { type: 'http', name, server, port: portNum }
   if (auth) {
@@ -692,9 +683,9 @@ function URI_HTTP(line: string): ProxyConfig {
     proxy.password = password
   }
   for (const addon of addons.split('&')) {
-    let [key, value] = addon.split('=')
-    key = key.replace(/_/, '-')
-    value = decodeURIComponent(value || '')
+    const [keyRaw, valueRaw] = addon.split('=')
+    const key = keyRaw.replace(/_/, '-')
+    const value = decodeURIComponent(valueRaw || '')
     switch (key) {
       case 'tls': proxy.tls = /(TRUE)|1/i.test(value); break
       case 'fingerprint': proxy.fingerprint = value; break
@@ -710,11 +701,11 @@ function URI_HTTP(line: string): ProxyConfig {
 function URI_SOCKS(line: string): ProxyConfig {
   line = line.split(/socks5:\/\//)[1]
   const m = /^((.*?)@)?(.*?)(:(\d+))?\/?(\?(.*?))?(?:#(.*?))?$/.exec(line)!
-  let [, , auth, server, , port, , addons = '', name] = m
-  let portNum = parseInt(`${port}`, 10)
-  if (isNaN(portNum)) portNum = 443
-  if (auth) auth = decodeURIComponent(auth)
-  name = trimStr(decodeURIComponent(name || '')) ?? `SOCKS5 ${server}:${portNum}`
+  const [, , authRaw, server, , port, , addons = '', nameRaw] = m
+  const parsedPort = parseInt(`${port}`, 10)
+  const portNum = isNaN(parsedPort) ? 443 : parsedPort
+  const auth = authRaw ? decodeURIComponent(authRaw) : authRaw
+  const name = trimStr(decodeURIComponent(nameRaw || '')) ?? `SOCKS5 ${server}:${portNum}`
 
   const proxy: ProxyConfig = { type: 'socks5', name, server, port: portNum }
   if (auth) {
@@ -723,9 +714,9 @@ function URI_SOCKS(line: string): ProxyConfig {
     proxy.password = password
   }
   for (const addon of addons.split('&')) {
-    let [key, value] = addon.split('=')
-    key = key.replace(/_/, '-')
-    value = decodeURIComponent(value || '')
+    const [keyRaw, valueRaw] = addon.split('=')
+    const key = keyRaw.replace(/_/, '-')
+    const value = decodeURIComponent(valueRaw || '')
     switch (key) {
       case 'tls': proxy.tls = /(TRUE)|1/i.test(value); break
       case 'fingerprint': proxy.fingerprint = value; break
