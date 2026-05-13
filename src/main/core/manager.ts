@@ -316,6 +316,19 @@ export async function stopCore(force = false): Promise<void> {
     }
     await rm(path.join(dataDir(), 'core.pid')).catch(() => {})
   }
+
+  // Reap orphan sidecars left over from the Tauri bridge migration —
+  // their IPC pipe collides with the Electron core's, so the next
+  // startCore() would fail to bind without this cleanup.
+  if (process.platform === 'win32') {
+    await new Promise<void>((resolve) => {
+      execFile(
+        'taskkill',
+        ['/F', '/T', '/IM', 'out-mihomo.exe', '/IM', 'out-mihomo-alpha.exe'],
+        () => resolve()
+      )
+    })
+  }
 }
 
 async function stopChildProcess(process: ChildProcess): Promise<void> {
