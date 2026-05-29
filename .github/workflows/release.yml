@@ -326,6 +326,10 @@ jobs:
                 ) ;;
             esac
           fi
+          if [ "${#urls[@]}" -eq 0 ]; then
+            echo "No release assets expected for this target — skipping verification"
+            exit 0
+          fi
           for u in "${urls[@]}"; do
             echo "Checking $u"
             curl -fsSI --retry 5 --retry-delay 2 "$u" >/dev/null

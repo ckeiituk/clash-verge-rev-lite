@@ -22,8 +22,8 @@ async function resolveUpdater() {
     page: 1,
   });
 
-  // get the latest publish tag (vX.Y.Z)
-  const tag = tags.find((t) => /^v\d+\.\d+\.\d+$/.test(t.name));
+  // get the latest publish tag on the Tauri v0.x line (Electron rewrite is v1.x+)
+  const tag = tags.find((t) => /^v0\.\d+\.\d+$/.test(t.name));
 
   console.log(tag);
   console.log();

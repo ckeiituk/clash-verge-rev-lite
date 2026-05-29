@@ -46,8 +46,10 @@ async function resolveUpdater() {
   const tags = allTags;
   console.log(`Retrieved ${tags.length} tags in total`);
 
-  // More flexible tag detection with regex patterns
-  const stableTagRegex = /^v\d+\.\d+\.\d+$/; // Matches vX.Y.Z format
+  // Tauri builds ship on the v0.x line; the Electron rewrite lives in the same
+  // repository under v1.x+. listTags has no sort option and returns the highest
+  // version first, so restrict to v0.x to avoid resolving an Electron tag.
+  const stableTagRegex = /^v0\.\d+\.\d+$/; // Tauri line only (v0.x.y)
   // const preReleaseRegex = /^v\d+\.\d+\.\d+-(alpha|beta|rc|pre)/i; // Matches vX.Y.Z-alpha/beta/rc format
   const preReleaseRegex = /^(alpha|beta|rc|pre)$/i; // Matches exact alpha/beta/rc/pre tags
 

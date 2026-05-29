@@ -1,3 +1,9 @@
+## v0.3.0
+- Improved update delivery and reliability
+- Stability and maintenance improvements
+
+---
+
 ## v0.2.6
 - fixed issue with error 0xc00000142 when shutting down the computer
 - dark mode issue fixed
