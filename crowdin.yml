@@ -1,4 +1,0 @@
-files:
-  - source: /src/renderer/src/locales/en.json
-    translation: /src/renderer/src/locales
-    multilingual: 1
