@@ -2,12 +2,22 @@
 
 APP_NAME="OutClash"
 
-# --- Remove old app only if it is the old fork (contains koala-mihomo) ---
+# --- Remove the OLD non-Electron build before the new app overlays the same path.
+#     Detect it by its sidecar: Tauri ships out-mihomo (older koala ships
+#     koala-mihomo); the new Electron build ships mihomo, so an Electron→Electron
+#     update is left untouched (and keeps its service). ---
 OLD_APP="/Applications/${APP_NAME}.app"
-if [ -f "$OLD_APP/Contents/MacOS/koala-mihomo" ]; then
+if [ -f "$OLD_APP/Contents/MacOS/out-mihomo" ] || [ -f "$OLD_APP/Contents/MacOS/koala-mihomo" ]; then
     pkill -f "$OLD_APP" 2>/dev/null || true
     sleep 2
     pkill -9 -f "$OLD_APP" 2>/dev/null || true
+
+    # stop & remove the old Tauri privileged service daemon (label io.github.outclash.service)
+    launchctl bootout system/io.github.outclash.service 2>/dev/null || true
+    launchctl remove io.github.outclash.service 2>/dev/null || true
+    rm -f /Library/LaunchDaemons/io.github.outclash.service.plist 2>/dev/null || true
+    rm -f /Library/PrivilegedHelperTools/io.github.outclash.service 2>/dev/null || true
+
     rm -rf "$OLD_APP"
 fi
 
