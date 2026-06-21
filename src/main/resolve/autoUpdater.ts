@@ -2,6 +2,7 @@ import axios, { AxiosRequestConfig, CancelTokenSource } from 'axios'
 import { parseYaml } from '../utils/yaml'
 import { app, shell } from 'electron'
 import { getRuntimeConfig } from '../core/factory'
+import { getAppConfig } from '../config/app'
 import { dataDir, exeDir, exePath, isPortable, resourcesFilesDir } from '../utils/dirs'
 import { copyFile, rm, writeFile, readFile } from 'fs/promises'
 import path from 'path'
@@ -14,10 +15,35 @@ import { disableSysProxy } from '../sys/sysproxy'
 import { t } from '../utils/i18n'
 
 let downloadCancelToken: CancelTokenSource | null = null
+let lastCheckedUpdate: AppVersion | undefined
+
+// Compare semver-ish versions (x.y.z with optional -prerelease). Returns true only
+// if `candidate` is strictly newer than `current`, so switching alpha→stable never
+// prompts a downgrade. Falls back to plain inequality if either side doesn't parse.
+function isNewerVersion(candidate: string, current: string): boolean {
+  const parse = (v: string): { nums: number[]; pre: string } | null => {
+    const m = v.replace(/^v/, '').match(/^(\d+)\.(\d+)\.(\d+)(?:-(.+))?$/)
+    return m ? { nums: [Number(m[1]), Number(m[2]), Number(m[3])], pre: m[4] ?? '' } : null
+  }
+  const a = parse(candidate)
+  const b = parse(current)
+  if (!a || !b) return candidate !== current
+  for (let i = 0; i < 3; i++) {
+    if (a.nums[i] !== b.nums[i]) return a.nums[i] > b.nums[i]
+  }
+  if (a.pre === b.pre) return false
+  if (a.pre === '') return true // a final release outranks a same-version prerelease
+  if (b.pre === '') return false
+  return a.pre > b.pre
+}
 
 export async function checkUpdate(): Promise<AppVersion | undefined> {
   const { 'mixed-port': mixedPort = 0 } = (await getRuntimeConfig()) ?? {}
-  const url = 'https://github.com/ckeiituk/outclash/releases/latest/download/latest.yml'
+  const { updateChannel = 'stable' } = await getAppConfig()
+  const url =
+    updateChannel === 'alpha'
+      ? 'https://github.com/ckeiituk/outclash/releases/download/alpha/alpha.yml'
+      : 'https://github.com/ckeiituk/outclash/releases/latest/download/latest.yml'
   const res = await axios.get(url, {
     headers: { 'Content-Type': 'application/octet-stream' },
     ...(mixedPort != 0 && {
@@ -31,16 +57,23 @@ export async function checkUpdate(): Promise<AppVersion | undefined> {
   })
   const latest = parseYaml<AppVersion>(res.data)
   const currentVersion = app.getVersion()
-  if (latest.version !== currentVersion) {
+  if (isNewerVersion(latest.version, currentVersion)) {
+    lastCheckedUpdate = latest
     return latest
   } else {
+    lastCheckedUpdate = undefined
     return undefined
   }
 }
 
 export async function downloadAndInstallUpdate(version: string): Promise<void> {
   const { 'mixed-port': mixedPort = 0 } = (await getRuntimeConfig()) ?? {}
-  const releaseTag = version.startsWith('v') ? version.slice(1) : version
+  const { updateChannel = 'stable' } = await getAppConfig()
+  // Alpha artifacts live at the fixed `alpha` tag, not the semver tag. Prefer the
+  // releaseTag from the feed; if that module state was lost, fall back by channel
+  // (alpha → 'alpha') so the download never targets a non-existent tag.
+  const rawTag = lastCheckedUpdate?.releaseTag ?? (updateChannel === 'alpha' ? 'alpha' : version)
+  const releaseTag = rawTag.startsWith('v') ? rawTag.slice(1) : rawTag
   const baseUrl = `https://github.com/ckeiituk/outclash/releases/download/${releaseTag}/`
   const fileMap = {
     'win32-x64': `OutClash_x64-setup.exe`,

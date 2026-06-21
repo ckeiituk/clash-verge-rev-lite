@@ -1,5 +1,6 @@
 interface AppVersion {
   version: string
+  releaseTag?: string
   changelog: string
 }
 
@@ -70,6 +71,8 @@ interface AppConfig {
   appTheme: AppTheme
   customTheme?: string
   autoCheckUpdate: boolean
+  updateChannel?: 'stable' | 'alpha'
+  updateChannelLocked?: boolean
   silentStart: boolean
   autoCloseConnection: boolean
   expandProxyGroups?: boolean

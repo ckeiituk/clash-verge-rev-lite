@@ -12,6 +12,7 @@ export const defaultConfig: AppConfig = {
   connectionInterval: 500,
   proxyDisplayOrder: 'default',
   autoCheckUpdate: true,
+  updateChannel: 'stable',
   autoCloseConnection: true,
   controlDns: false,
   controlSniff: false,

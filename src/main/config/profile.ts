@@ -351,6 +351,21 @@ export async function createProfile(item: Partial<ProfileItem>): Promise<Profile
           // ignore css download failure
         }
       }
+      const updateChannelKey = Object.keys(headers).find((k) =>
+        k.toLowerCase().endsWith('outclash-update-channel')
+      )
+      if (updateChannelKey) {
+        const channel = headers[updateChannelKey].toLowerCase()
+        // Server-driven channel cohort: only honour an explicit alpha/stable value
+        // (absent header leaves the channel unchanged), and never override a channel
+        // the user picked manually in settings (updateChannelLocked).
+        if (channel === 'alpha' || channel === 'stable') {
+          const { updateChannelLocked } = await getAppConfig()
+          if (!updateChannelLocked) {
+            await patchAppConfig({ updateChannel: channel })
+          }
+        }
+      }
       if (newItem.verify) {
         let parsed: MihomoConfig
         try {

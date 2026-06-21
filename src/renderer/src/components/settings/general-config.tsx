@@ -24,7 +24,7 @@ const GeneralConfig: React.FC<GeneralConfigProps> = (props) => {
   const {
     silentStart = false,
     autoCheckUpdate,
-
+    updateChannel = 'stable',
     disableGPU = false
   } = appConfig || {}
 
@@ -90,6 +90,19 @@ const GeneralConfig: React.FC<GeneralConfigProps> = (props) => {
             }}
           />
         </SettingItem>
+        {showHiddenSettings && (
+          <SettingItem title="Alpha channel" divider>
+            <Switch
+              checked={updateChannel === 'alpha'}
+              onCheckedChange={(value) => {
+                patchAppConfig({
+                  updateChannel: value ? 'alpha' : 'stable',
+                  updateChannelLocked: true
+                })
+              }}
+            />
+          </SettingItem>
+        )}
         {showHiddenSettings && (
           <SettingItem
             title={t('settings.general.disableGPU')}
