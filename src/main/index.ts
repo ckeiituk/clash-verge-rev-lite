@@ -1,7 +1,16 @@
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { registerIpcMainHandlers } from './utils/ipc'
 import windowStateKeeper from 'electron-window-state'
-import { app, BrowserWindow, dialog, ipcMain, Menu, Notification, powerMonitor, shell } from 'electron'
+import {
+  app,
+  BrowserWindow,
+  dialog,
+  ipcMain,
+  Menu,
+  Notification,
+  powerMonitor,
+  shell
+} from 'electron'
 import { addProfileItem, getAppConfig, patchControledMihomoConfig } from './config'
 import { quitWithoutCore, startCore, stopCore } from './core/manager'
 import { triggerSysProxy } from './sys/sysproxy'
@@ -19,7 +28,6 @@ import { exePath, taskDir } from './utils/dirs'
 import { showFloatingWindow } from './resolve/floatingWindow'
 import { getAppConfigSync } from './config/app'
 import { t } from './utils/i18n'
-
 
 let quitTimeout: NodeJS.Timeout | null = null
 export let mainWindow: BrowserWindow | null = null
@@ -413,11 +421,7 @@ app.whenReady().then(async () => {
 })
 
 async function handleDeepLink(url: string): Promise<void> {
-  if (
-    !url.startsWith('clash://') &&
-    !url.startsWith('mihomo://') &&
-    !url.startsWith('outclash://')
-  )
+  if (!url.startsWith('clash://') && !url.startsWith('mihomo://') && !url.startsWith('outclash://'))
     return
 
   const urlObj = new URL(url)
@@ -579,10 +583,13 @@ export async function createWindow(appConfig?: AppConfig): Promise<void> {
     mainWindow.on('unresponsive', () => {
       scheduleMainWindowRecovery('window-unresponsive', { forceCrashRenderer: true })
     })
-    mainWindow.webContents.on('did-fail-load', (_event, errorCode, errorDescription, _url, isMainFrame) => {
-      if (!isMainFrame) return
-      scheduleMainWindowRecovery(`did-fail-load (${errorCode}: ${errorDescription})`)
-    })
+    mainWindow.webContents.on(
+      'did-fail-load',
+      (_event, errorCode, errorDescription, _url, isMainFrame) => {
+        if (!isMainFrame) return
+        scheduleMainWindowRecovery(`did-fail-load (${errorCode}: ${errorDescription})`)
+      }
+    )
     mainWindow.webContents.on('render-process-gone', (_event, details) => {
       if (details.reason === 'clean-exit') return
       scheduleMainWindowRecovery(`render-process-gone (${details.reason})`)

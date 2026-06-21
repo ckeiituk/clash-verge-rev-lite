@@ -96,7 +96,11 @@ export async function downloadCustomCss(
     timeout: 15000
   })
   const css = String(res.data)
-  const label = new URL(url).pathname.split('/').pop()?.replace(/\.css$/i, '') || 'Custom Theme'
+  const label =
+    new URL(url).pathname
+      .split('/')
+      .pop()
+      ?.replace(/\.css$/i, '') || 'Custom Theme'
   const content = `/* ${label} */\n${css}`
   if (existingFile) {
     const existingPath = path.join(themesDir(), existingFile)

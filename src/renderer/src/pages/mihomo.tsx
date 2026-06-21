@@ -194,9 +194,7 @@ const Mihomo: React.FC = () => {
     {
       key: 'confirm',
       text:
-        platform === 'win32'
-          ? t('pages.mihomo.noRestartCancel')
-          : t('pages.mihomo.confirmRevoke'),
+        platform === 'win32' ? t('pages.mihomo.noRestartCancel') : t('pages.mihomo.confirmRevoke'),
       variant: 'destructive',
       onPress: async () => {
         try {
@@ -309,11 +307,7 @@ const Mihomo: React.FC = () => {
                 aria-busy={upgrading}
                 onClick={handleCoreUpgrade}
               >
-                {upgrading ? (
-                  <Spinner className="size-4" />
-                ) : (
-                  <CloudDownload className="text-lg" />
-                )}
+                {upgrading ? <Spinner className="size-4" /> : <CloudDownload className="text-lg" />}
               </Button>
             ) : null
           }
@@ -347,9 +341,7 @@ const Mihomo: React.FC = () => {
               <SelectTrigger size="sm" className="w-[350px]">
                 <SelectValue
                   placeholder={
-                    loadingPaths
-                      ? t('pages.mihomo.searchingCore')
-                      : t('pages.mihomo.coreNotFound')
+                    loadingPaths ? t('pages.mihomo.searchingCore') : t('pages.mihomo.coreNotFound')
                   }
                 />
               </SelectTrigger>
@@ -402,19 +394,14 @@ const Mihomo: React.FC = () => {
           </Button>
         </SettingItem>
         <SettingItem title="IPv6" divider>
-          <Switch
-            checked={ipv6}
-            onCheckedChange={(v) => onChangeNeedRestart({ ipv6: v })}
-          />
+          <Switch checked={ipv6} onCheckedChange={(v) => onChangeNeedRestart({ ipv6: v })} />
         </SettingItem>
         <SettingItem title={t('pages.mihomo.logRetentionDays')} divider>
           <Input
             type="number"
             className="h-8 w-[100px]"
             value={maxLogDays.toString()}
-            onChange={(event) =>
-              patchAppConfig({ maxLogDays: parseInt(event.target.value) })
-            }
+            onChange={(event) => patchAppConfig({ maxLogDays: parseInt(event.target.value) })}
           />
         </SettingItem>
         <SettingItem title={t('pages.mihomo.logLevel')}>

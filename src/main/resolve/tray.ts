@@ -20,16 +20,7 @@ import {
   patchMihomoConfig
 } from '../core/mihomoApi'
 import { mainWindow, setNotQuitDialog, showMainWindow, triggerMainWindow } from '..'
-import {
-  app,
-  BrowserWindow,
-  clipboard,
-  ipcMain,
-  Menu,
-  nativeImage,
-  screen,
-  Tray
-} from 'electron'
+import { app, BrowserWindow, clipboard, ipcMain, Menu, nativeImage, screen, Tray } from 'electron'
 import { triggerSysProxy } from '../sys/sysproxy'
 import { quitWithoutCore } from '../core/manager'
 import { mihomoHotReloadConfig } from '../core/mihomoApi'

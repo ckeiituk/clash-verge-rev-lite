@@ -82,7 +82,10 @@ const ControllerSetting: React.FC = () => {
 
   return (
     <SettingCard title={t('mihomo.controllerSettings.externalController')}>
-      <SettingItem title={t('mihomo.controllerSettings.listenAddress')} divider={externalController !== ''}>
+      <SettingItem
+        title={t('mihomo.controllerSettings.listenAddress')}
+        divider={externalController !== ''}
+      >
         <div className="flex">
           {externalControllerInput != externalController && !externalControllerError && (
             <Button
@@ -164,11 +167,7 @@ const ControllerSetting: React.FC = () => {
                     className="text-gray-500 hover:text-gray-700"
                     onClick={() => setShowPassword((prev) => !prev)}
                   >
-                    {showPassword ? (
-                      <EyeClosed className="w-4 h-4" />
-                    ) : (
-                      <Eye className="w-4 h-4" />
-                    )}
+                    {showPassword ? <EyeClosed className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </InputGroupButton>
                 </InputGroupAddon>
                 <InputGroupInput

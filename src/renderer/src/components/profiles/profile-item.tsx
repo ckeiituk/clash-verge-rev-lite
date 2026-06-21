@@ -393,15 +393,12 @@ const ProfileItem: React.FC<Props> = (props) => {
               </div>
             </div>
             <div className="pl-3 justify-items-center">
-              <div className="text-[11px] text-muted-foreground">
-                {t('profile.daysRemaining')}
-              </div>
+              <div className="text-[11px] text-muted-foreground">{t('profile.daysRemaining')}</div>
               <div className="text-sm font-bold mt-0.5 leading-tight">
                 {extra?.expire ? daysRemaining : <InfinityIcon className="size-5" />}
               </div>
             </div>
           </div>
-
 
           {/* Footer */}
           <div className="border-t border-foreground/10 mt-3 pt-2 flex items-center justify-between text-[11px] text-muted-foreground">

@@ -333,9 +333,7 @@ export async function createProfile(item: Partial<ProfileItem>): Promise<Profile
           : announceValue
         newItem.announce = decoded.replace(/\\n/g, '\n')
       }
-      const customCssKey = Object.keys(headers).find((k) =>
-        k.toLowerCase().endsWith('custom-css')
-      )
+      const customCssKey = Object.keys(headers).find((k) => k.toLowerCase().endsWith('custom-css'))
       if (customCssKey) {
         const cssUrl = headers[customCssKey]
         try {
@@ -344,7 +342,11 @@ export async function createProfile(item: Partial<ProfileItem>): Promise<Profile
               ? { protocol: 'http', host: '127.0.0.1', port: mixedPort }
               : undefined
           const existingProfile = await getProfileItem(id)
-          newItem.customCss = await downloadCustomCss(cssUrl, proxyConfig, existingProfile?.customCss)
+          newItem.customCss = await downloadCustomCss(
+            cssUrl,
+            proxyConfig,
+            existingProfile?.customCss
+          )
         } catch {
           // ignore css download failure
         }

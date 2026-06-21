@@ -13,7 +13,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: "22"
+          node-version: '22'
 
       - name: Install pnpm
         uses: pnpm/action-setup@v5
@@ -22,7 +22,7 @@ jobs:
 
       - name: Install dependencies
         env:
-          SKIP_PREPARE: "1"
+          SKIP_PREPARE: '1'
         run: pnpm install
 
       - name: Release updater file

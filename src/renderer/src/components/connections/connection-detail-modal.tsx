@@ -72,7 +72,12 @@ const buildMenuItems = (value: string | string[], prefix: string[], displayName?
   return items
 }
 
-const CopyableValue: React.FC<CopyableValueProps> = ({ label, value, displayName, prefix = [] }) => {
+const CopyableValue: React.FC<CopyableValueProps> = ({
+  label,
+  value,
+  displayName,
+  prefix = []
+}) => {
   const [copied, setCopied] = useState(false)
   const displayText = displayName || (Array.isArray(value) ? value.join(', ') : value)
   const menuItems = buildMenuItems(value, prefix, displayName)
@@ -144,10 +149,10 @@ const DetailRow: React.FC<{ label: string; children: React.ReactNode }> = ({ lab
 
 const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
   <div>
-    <h4 className="text-xs font-medium text-muted-foreground/70 uppercase tracking-wider mb-1">{title}</h4>
-    <div className="rounded-lg bg-muted/30 px-3 py-1 divide-y divide-border/50">
-      {children}
-    </div>
+    <h4 className="text-xs font-medium text-muted-foreground/70 uppercase tracking-wider mb-1">
+      {title}
+    </h4>
+    <div className="rounded-lg bg-muted/30 px-3 py-1 divide-y divide-border/50">{children}</div>
   </div>
 )
 
@@ -161,13 +166,22 @@ const ConnectionDetailModal: React.FC<Props> = ({ connection, onClose }) => {
   const processName = connection.metadata.process || connection.metadata.sourceIP || ''
 
   return (
-    <Dialog open={true} onOpenChange={(open) => { if (!open) onClose() }}>
+    <Dialog
+      open={true}
+      onOpenChange={(open) => {
+        if (!open) onClose()
+      }}
+    >
       <DialogContent className="max-w-md flag-emoji" showCloseButton={false}>
         <DialogHeader>
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <DialogTitle className="text-base leading-tight break-all">
-                {processName && <>{processName} <span className="text-muted-foreground font-normal">→</span> </>}
+                {processName && (
+                  <>
+                    {processName} <span className="text-muted-foreground font-normal">→</span>{' '}
+                  </>
+                )}
                 {destination}
               </DialogTitle>
               <div className="flex items-center gap-1.5 mt-2 flex-wrap">
@@ -175,7 +189,9 @@ const ConnectionDetailModal: React.FC<Props> = ({ connection, onClose }) => {
                   variant={connection.isActive ? 'default' : 'destructive'}
                   className="text-[10px] px-1.5 py-0"
                 >
-                  {connection.isActive ? t('connections.detail.active') : t('connections.detail.closed')}
+                  {connection.isActive
+                    ? t('connections.detail.active')
+                    : t('connections.detail.closed')}
                 </Badge>
                 <Badge variant="outline" className="text-[10px] px-1.5 py-0 rounded-sm">
                   {connection.metadata.type}({connection.metadata.network.toUpperCase()})
@@ -209,7 +225,11 @@ const ConnectionDetailModal: React.FC<Props> = ({ connection, onClose }) => {
           <Section title={t('connections.sections.routing')}>
             <CopyableValue
               label={t('connection.rule')}
-              value={connection.rule ? `${connection.rule}${connection.rulePayload ? `(${connection.rulePayload})` : ''}` : t('connection.noRuleMatched')}
+              value={
+                connection.rule
+                  ? `${connection.rule}${connection.rulePayload ? `(${connection.rulePayload})` : ''}`
+                  : t('connection.noRuleMatched')
+              }
               prefix={[]}
             />
             <DetailRow label={t('connection.proxyChain')}>
@@ -257,13 +277,14 @@ const ConnectionDetailModal: React.FC<Props> = ({ connection, onClose }) => {
                   prefix={['IP-CIDR']}
                 />
               )}
-              {connection.metadata.destinationGeoIP && connection.metadata.destinationGeoIP.length > 0 && (
-                <CopyableValue
-                  label={t('connection.destinationGeoIP')}
-                  value={connection.metadata.destinationGeoIP}
-                  prefix={['GEOIP']}
-                />
-              )}
+              {connection.metadata.destinationGeoIP &&
+                connection.metadata.destinationGeoIP.length > 0 && (
+                  <CopyableValue
+                    label={t('connection.destinationGeoIP')}
+                    value={connection.metadata.destinationGeoIP}
+                    prefix={['GEOIP']}
+                  />
+                )}
               {connection.metadata.destinationIPASN && (
                 <CopyableValue
                   label={t('connection.destinationASN')}
@@ -389,9 +410,7 @@ const ConnectionDetailModal: React.FC<Props> = ({ connection, onClose }) => {
                 />
               )}
               {connection.metadata.dnsMode && (
-                <DetailRow label={t('connection.dnsMode')}>
-                  {connection.metadata.dnsMode}
-                </DetailRow>
+                <DetailRow label={t('connection.dnsMode')}>{connection.metadata.dnsMode}</DetailRow>
               )}
               {connection.metadata.specialProxy && (
                 <DetailRow label={t('connection.specialProxy')}>

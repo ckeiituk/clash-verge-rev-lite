@@ -90,7 +90,9 @@ export function mihomoCorePath(core: string): string {
   if (core === 'system') {
     const sysPath = systemCorePath()
     if (!sysPath || !existsSync(sysPath)) {
-      const errorMsg = sysPath ? `${t('error.systemCorePathInvalid')}: ${sysPath}` : t('error.systemCorePathNotSet')
+      const errorMsg = sysPath
+        ? `${t('error.systemCorePathInvalid')}: ${sysPath}`
+        : t('error.systemCorePathNotSet')
       throw new Error(errorMsg)
     }
     return sysPath

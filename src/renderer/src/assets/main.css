@@ -273,12 +273,11 @@
   margin-left: 0 !important;
   color: var(--foreground) !important;
   border-color: var(--stroke-power-on) !important;
-  background:
-    linear-gradient(
-      135deg,
-      color-mix(in oklab, var(--gradient-start-power-on) 56%, transparent),
-      color-mix(in oklab, var(--gradient-end-power-on) 56%, transparent)
-    ) !important;
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--gradient-start-power-on) 56%, transparent),
+    color-mix(in oklab, var(--gradient-end-power-on) 56%, transparent)
+  ) !important;
 }
 
 .driver-popover-next-btn:hover,

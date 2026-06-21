@@ -179,7 +179,11 @@ const EditableList: React.FC<EditableListProps> = ({
                           onChange={(e) => handleUpdate(idx, e.target.value, entry.part2)}
                         />
                       </TooltipTrigger>
-                      <TooltipContent side="left" sideOffset={10} className="bg-destructive text-destructive-foreground">
+                      <TooltipContent
+                        side="left"
+                        sideOffset={10}
+                        className="bg-destructive text-destructive-foreground"
+                      >
                         {part1Error ?? formatErrorText}
                       </TooltipContent>
                     </Tooltip>
@@ -198,7 +202,11 @@ const EditableList: React.FC<EditableListProps> = ({
                           onChange={(e) => handleUpdate(idx, entry.part1, e.target.value)}
                         />
                       </TooltipTrigger>
-                      <TooltipContent side="left" sideOffset={10} className="bg-destructive text-destructive-foreground">
+                      <TooltipContent
+                        side="left"
+                        sideOffset={10}
+                        className="bg-destructive text-destructive-foreground"
+                      >
                         {part2Error ?? formatErrorText}
                       </TooltipContent>
                     </Tooltip>
@@ -208,14 +216,20 @@ const EditableList: React.FC<EditableListProps> = ({
                 <Tooltip open={!part1Valid}>
                   <TooltipTrigger asChild>
                     <Input
-                      className={part1Valid ? 'h-8' : 'h-8 border-red-500 ring-1 ring-red-500 rounded-lg'}
+                      className={
+                        part1Valid ? 'h-8' : 'h-8 border-red-500 ring-1 ring-red-500 rounded-lg'
+                      }
                       disabled={disabled}
                       placeholder={placeholder}
                       value={entry.part1}
                       onChange={(e) => handleUpdate(idx, e.target.value)}
                     />
                   </TooltipTrigger>
-                  <TooltipContent side="left" sideOffset={10} className="bg-destructive text-destructive-foreground">
+                  <TooltipContent
+                    side="left"
+                    sideOffset={10}
+                    className="bg-destructive text-destructive-foreground"
+                  >
                     {part1Error ?? formatErrorText}
                   </TooltipContent>
                 </Tooltip>

@@ -1,4 +1,5 @@
 ## v0.2.6
+
 - fixed issue with error 0xc00000142 when shutting down the computer
 - dark mode issue fixed
 - improved HWID definition
@@ -38,6 +39,7 @@ CI/Release
 ---
 
 ## v0.2.2
+
 - fixed bug in proxy groups menu
 - added message about global mode enabled on main screen
 - fixed minor bugs

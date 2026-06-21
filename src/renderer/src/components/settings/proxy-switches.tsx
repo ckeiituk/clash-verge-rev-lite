@@ -18,11 +18,7 @@ const ProxySwitches: React.FC = () => {
   const { controledMihomoConfig, patchControledMihomoConfig } = useControledMihomoConfig()
   const { tun } = controledMihomoConfig || {}
   const { appConfig, patchAppConfig } = useAppConfig()
-  const {
-    sysProxy,
-    onlyActiveDevice = false,
-    mainSwitchMode = 'tun'
-  } = appConfig || {}
+  const { sysProxy, onlyActiveDevice = false, mainSwitchMode = 'tun' } = appConfig || {}
   const { enable: sysProxyEnable = true, mode } = sysProxy || {}
   const { 'mixed-port': mixedPort } = controledMihomoConfig || {}
   const sysProxyDisabled = mixedPort == 0
@@ -45,11 +41,7 @@ const ProxySwitches: React.FC = () => {
       <SettingItem
         title={t('sider.virtualInterface')}
         actions={
-          <Button
-            size="icon-sm"
-            variant="ghost"
-            onClick={() => navigate('/tun')}
-          >
+          <Button size="icon-sm" variant="ghost" onClick={() => navigate('/tun')}>
             <Settings className="text-lg" />
           </Button>
         }
@@ -72,11 +64,7 @@ const ProxySwitches: React.FC = () => {
       <SettingItem
         title={t('sider.systemProxy')}
         actions={
-          <Button
-            size="icon-sm"
-            variant="ghost"
-            onClick={() => navigate('/sysproxy')}
-          >
+          <Button size="icon-sm" variant="ghost" onClick={() => navigate('/sysproxy')}>
             <Settings className="text-lg" />
           </Button>
         }

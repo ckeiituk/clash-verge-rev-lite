@@ -105,7 +105,11 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ latest }) => {
           {latest && latest.version && <UpdaterButton iconOnly={collapsed} latest={latest} />}
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip={t('common.toggleSidebar')} onClick={toggleSidebar} className="cursor-pointer">
+              <SidebarMenuButton
+                tooltip={t('common.toggleSidebar')}
+                onClick={toggleSidebar}
+                className="cursor-pointer"
+              >
                 {collapsed ? (
                   <ExpandedIcon className="size-4 shrink-0" />
                 ) : (

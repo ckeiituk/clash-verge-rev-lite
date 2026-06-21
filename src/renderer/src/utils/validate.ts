@@ -211,7 +211,9 @@ export const isValidDnsServer = (s: string | undefined, ipOnly = false): Validat
       'not_implemented',
       'refused'
     ])
-    return allowed.has(code) ? { ok: true } : { ok: false, error: t('validation.invalidRcodeValue') }
+    return allowed.has(code)
+      ? { ok: true }
+      : { ok: false, error: t('validation.invalidRcodeValue') }
   }
 
   if (/^https?:\/\//i.test(serverPart)) {

@@ -1,5 +1,13 @@
 import React from 'react'
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@renderer/components/ui/dialog'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '@renderer/components/ui/dialog'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@renderer/components/ui/button'
 import { cn } from '@renderer/lib/utils'
@@ -25,16 +33,8 @@ interface Props {
 
 const ConfirmModal: React.FC<Props> = (props) => {
   const { t } = useTranslation()
-  const {
-    onChange,
-    title,
-    description,
-    confirmText,
-    cancelText,
-    onConfirm,
-    buttons,
-    className
-  } = props
+  const { onChange, title, description, confirmText, cancelText, onConfirm, buttons, className } =
+    props
 
   const modalTitle = title || t('modal.pleaseConfirm')
   const modalConfirmText = confirmText || t('common.confirm')

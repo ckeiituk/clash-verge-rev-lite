@@ -158,10 +158,7 @@ const TrayMenuApp: React.FC = () => {
                         }}
                       >
                         <IoRefresh
-                          className={cn(
-                            'text-xs',
-                            testingGroup === group.name && 'animate-spin'
-                          )}
+                          className={cn('text-xs', testingGroup === group.name && 'animate-spin')}
                         />
                       </Button>
                       <span

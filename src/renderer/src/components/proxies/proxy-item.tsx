@@ -27,8 +27,16 @@ function delayColorClass(delay: number): string {
 
 const ProxyItem: React.FC<Props> = React.memo((props) => {
   const { t } = useTranslation()
-  const { mutateProxies, proxyDisplayLayout, group, proxy, selected, onSelect, onProxyDelay, isGroupDelaying } =
-    props
+  const {
+    mutateProxies,
+    proxyDisplayLayout,
+    group,
+    proxy,
+    selected,
+    onSelect,
+    onProxyDelay,
+    isGroupDelaying
+  } = props
 
   const delay = useMemo(() => {
     if (proxy.history.length > 0) {

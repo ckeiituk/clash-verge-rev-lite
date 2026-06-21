@@ -18,14 +18,19 @@ const HwidLimitAlert = () => {
   const { hwidLimitError, clearHwidLimitError } = useProfileConfig()
 
   return (
-    <AlertDialog open={hwidLimitError !== null} onOpenChange={(open) => !open && clearHwidLimitError()}>
+    <AlertDialog
+      open={hwidLimitError !== null}
+      onOpenChange={(open) => !open && clearHwidLimitError()}
+    >
       <AlertDialogContent size="sm">
         <AlertDialogHeader>
           <AlertDialogMedia>
             <CircleAlert className="size-8 text-destructive" />
           </AlertDialogMedia>
           <AlertDialogTitle>{t('pages.profiles.hwidLimitTitle')}</AlertDialogTitle>
-          <AlertDialogDescription>{t('pages.profiles.hwidLimitDescription')}</AlertDialogDescription>
+          <AlertDialogDescription>
+            {t('pages.profiles.hwidLimitDescription')}
+          </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel onClick={clearHwidLimitError}>{t('common.close')}</AlertDialogCancel>

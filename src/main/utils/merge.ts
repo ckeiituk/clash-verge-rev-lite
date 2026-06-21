@@ -22,8 +22,8 @@ export function deepMerge<T extends object>(target: T, other: Partial<T>): T {
         deepMerge(target[k] as object, other[k] as object)
       }
     } else if (Array.isArray(other[key])) {
-        const k = trimWrap(key)
-        Object.assign(target, { [k]: other[key] })
+      const k = trimWrap(key)
+      Object.assign(target, { [k]: other[key] })
     } else {
       Object.assign(target, { [key]: other[key] })
     }

@@ -656,7 +656,9 @@ const Connections: React.FC = () => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent position="popper">
-                        <SelectItem value="upload">{t('pages.connections.uploadAmount')}</SelectItem>
+                        <SelectItem value="upload">
+                          {t('pages.connections.uploadAmount')}
+                        </SelectItem>
                         <SelectItem value="download">
                           {t('pages.connections.downloadAmount')}
                         </SelectItem>
@@ -667,7 +669,9 @@ const Connections: React.FC = () => {
                           {t('pages.connections.downloadSpeed')}
                         </SelectItem>
                         <SelectItem value="time">{t('pages.connections.time')}</SelectItem>
-                        <SelectItem value="process">{t('pages.connections.processName')}</SelectItem>
+                        <SelectItem value="process">
+                          {t('pages.connections.processName')}
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                     <Button

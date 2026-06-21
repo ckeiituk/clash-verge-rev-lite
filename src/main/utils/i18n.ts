@@ -142,7 +142,7 @@ const zhCN: LocaleTranslations = {
     downloadCancelled: '下载已取消',
     downloadFailed: '下载失败',
     userCancelledDownload: '用户取消下载',
-    scriptReturnMustBeObject: '脚本返回值必须是对象',
+    scriptReturnMustBeObject: '脚本返回值必须是对象'
   },
   ui: {
     defaultTheme: '默认',
@@ -232,7 +232,7 @@ const enUS: LocaleTranslations = {
     switchedToRuleMode: 'Switched to Rule Mode',
     switchedToGlobalMode: 'Switched to Global Mode',
     switchedToDirectMode: 'Switched to Direct Mode',
-    profileImportSuccess: 'Profile imported successfully',
+    profileImportSuccess: 'Profile imported successfully'
   },
   dialog: {
     firstRunAdmin: 'Please run as administrator for the first time',
@@ -283,7 +283,7 @@ const enUS: LocaleTranslations = {
     downloadCancelled: 'Download cancelled',
     downloadFailed: 'Download failed',
     userCancelledDownload: 'User cancelled download',
-    scriptReturnMustBeObject: 'Script return value must be an object',
+    scriptReturnMustBeObject: 'Script return value must be an object'
   },
   ui: {
     defaultTheme: 'Default',

@@ -44,9 +44,16 @@ getAppConfig()
     ['__updateBanner("1.2.0")', 'Show banner with specific version']
   ]
   const maxCmd = Math.max(...commands.map(([c]) => c.length))
-  console.log('\n%c OutClash Dev Commands \n', 'background:#3b82f6;color:white;font-weight:bold;padding:4px 8px;border-radius:4px')
+  console.log(
+    '\n%c OutClash Dev Commands \n',
+    'background:#3b82f6;color:white;font-weight:bold;padding:4px 8px;border-radius:4px'
+  )
   commands.forEach(([cmd, desc]) => {
-    console.log(`  %c${cmd.padEnd(maxCmd + 2)}%c${desc}`, 'color:#3b82f6;font-weight:bold', 'color:inherit')
+    console.log(
+      `  %c${cmd.padEnd(maxCmd + 2)}%c${desc}`,
+      'color:#3b82f6;font-weight:bold',
+      'color:inherit'
+    )
   })
   console.log('')
 }
@@ -79,22 +86,22 @@ init().then(() => {
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <NextThemesProvider attribute="class" enableSystem defaultTheme="dark">
-        <BaseErrorBoundary>
-          <HashRouter>
-            <AppConfigProvider>
-              <ControledMihomoConfigProvider>
-                <ProfileConfigProvider>
-                  <GroupsProvider>
-                    <RulesProvider>
-                      <App />
-                      <Toaster richColors position="bottom-right" />
-                    </RulesProvider>
-                  </GroupsProvider>
-                </ProfileConfigProvider>
-              </ControledMihomoConfigProvider>
-            </AppConfigProvider>
-          </HashRouter>
-        </BaseErrorBoundary>
-      </NextThemesProvider>
+      <BaseErrorBoundary>
+        <HashRouter>
+          <AppConfigProvider>
+            <ControledMihomoConfigProvider>
+              <ProfileConfigProvider>
+                <GroupsProvider>
+                  <RulesProvider>
+                    <App />
+                    <Toaster richColors position="bottom-right" />
+                  </RulesProvider>
+                </GroupsProvider>
+              </ProfileConfigProvider>
+            </ControledMihomoConfigProvider>
+          </AppConfigProvider>
+        </HashRouter>
+      </BaseErrorBoundary>
+    </NextThemesProvider>
   </React.StrictMode>
 )

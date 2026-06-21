@@ -34,7 +34,9 @@ export function getHWID(): string {
         raw = raw.match(/MachineGuid\s+REG_SZ\s+(.+)/)?.[1]?.trim() || ''
         break
       case 'linux':
-        raw = execCommand('cat /etc/machine-id 2>/dev/null || cat /var/lib/dbus/machine-id 2>/dev/null')
+        raw = execCommand(
+          'cat /etc/machine-id 2>/dev/null || cat /var/lib/dbus/machine-id 2>/dev/null'
+        )
         break
     }
   } catch {

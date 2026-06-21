@@ -77,9 +77,7 @@ let providerNames = new Set<string>()
 let unmatchedProviders = new Set<string>()
 
 const normalize = (s: string): string =>
-  s
-    .replace(/\\u([0-9a-fA-F]{4})/g, (_, h) => String.fromCharCode(parseInt(h, 16)))
-    .normalize('NFC')
+  s.replace(/\\u([0-9a-fA-F]{4})/g, (_, h) => String.fromCharCode(parseInt(h, 16))).normalize('NFC')
 
 export async function resetProviderTracking(): Promise<void> {
   const { 'rule-providers': ruleProviders, 'proxy-providers': proxyProviders } =

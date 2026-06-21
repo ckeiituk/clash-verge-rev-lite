@@ -218,7 +218,11 @@ const Profiles: React.FC = () => {
       {sortedItems.length === 0 ? (
         <div className="h-full w-full flex justify-center items-center">
           <div className="flex flex-col items-center gap-3">
-            <Button className="rounded-full w-20 h-20 hover:bg-card" variant="outline" onClick={handleAddProfile}>
+            <Button
+              className="rounded-full w-20 h-20 hover:bg-card"
+              variant="outline"
+              onClick={handleAddProfile}
+            >
               <Plus className="text-muted-foreground size-10" />
             </Button>
             <h2 className="text-muted-foreground text-lg font-medium">

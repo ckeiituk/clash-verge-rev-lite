@@ -8,7 +8,15 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { ChevronLeft } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 
-const sidebarPaths = new Set(['/home', '/profiles', '/proxies', '/connections', '/rules', '/logs', '/settings'])
+const sidebarPaths = new Set([
+  '/home',
+  '/profiles',
+  '/proxies',
+  '/connections',
+  '/rules',
+  '/logs',
+  '/settings'
+])
 const isMac = platform === 'darwin'
 
 // Persist across BasePage remounts during route changes and reset on app restart.
@@ -97,9 +105,7 @@ const BasePage = forwardRef<HTMLDivElement, Props>((props, ref) => {
           </motion.div>
         )}
       </AnimatePresence>
-      <div className="content grow overflow-y-auto custom-scrollbar">
-        {props.children}
-      </div>
+      <div className="content grow overflow-y-auto custom-scrollbar">{props.children}</div>
     </div>
   )
 })

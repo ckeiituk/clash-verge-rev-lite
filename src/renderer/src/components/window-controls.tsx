@@ -100,7 +100,11 @@ const WindowControls: React.FC = () => {
     : [minimizeBtn, maximizeBtn, closeBtn]
 
   return (
-    <div className={`wc-group app-nodrag ${isMac ? `wc-mac${!isFocused ? ' wc-blurred' : ''}` : 'wc-win'}`}>{buttons}</div>
+    <div
+      className={`wc-group app-nodrag ${isMac ? `wc-mac${!isFocused ? ' wc-blurred' : ''}` : 'wc-win'}`}
+    >
+      {buttons}
+    </div>
   )
 }
 

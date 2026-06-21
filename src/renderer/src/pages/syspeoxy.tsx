@@ -11,7 +11,12 @@ import EditableList from '@renderer/components/base/base-list-editor'
 import PacEditorModal from '@renderer/components/sysproxy/pac-editor-modal'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { platform } from '@renderer/utils/init'
-import { openUWPTool, triggerSysProxy, mihomoHotReloadConfig, updateTrayIcon } from '@renderer/utils/ipc'
+import {
+  openUWPTool,
+  triggerSysProxy,
+  mihomoHotReloadConfig,
+  updateTrayIcon
+} from '@renderer/utils/ipc'
 import React, { useEffect, useState } from 'react'
 import ByPassEditorModal from '@renderer/components/sysproxy/bypass-editor-modal'
 import { useTranslation } from 'react-i18next'

@@ -234,12 +234,7 @@ const ServiceModal: React.FC<Props> = (props) => {
         </div>
         <DialogFooter className="flex-row flex-wrap justify-end gap-2">
           <DialogClose asChild>
-            <Button
-              size="sm"
-              variant="ghost"
-              disabled={loading}
-              className="sm:mr-auto"
-            >
+            <Button size="sm" variant="ghost" disabled={loading} className="sm:mr-auto">
               {t('common.close')}
             </Button>
           </DialogClose>

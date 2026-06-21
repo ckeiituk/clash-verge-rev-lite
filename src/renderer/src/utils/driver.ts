@@ -49,7 +49,10 @@ type DriverConfig = {
   steps: DriveStep[]
   onDestroyed?: () => void
   onCloseClick?: (element: Element | undefined, step: DriveStep, options: DriverStepOptions) => void
-  onPopoverRender?: (popover: PopoverDOM, options: { config: DriverConfig; state: unknown; driver: Driver }) => void
+  onPopoverRender?: (
+    popover: PopoverDOM,
+    options: { config: DriverConfig; state: unknown; driver: Driver }
+  ) => void
 }
 
 type Driver = {

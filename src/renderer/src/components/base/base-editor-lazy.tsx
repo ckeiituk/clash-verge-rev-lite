@@ -21,7 +21,7 @@ export const BaseEditor: React.FC<Props> = (props) => {
     <Suspense
       fallback={
         <div className="w-full h-full flex items-center justify-center">
-          <Spinner className='size-8' />
+          <Spinner className="size-8" />
         </div>
       }
     >

@@ -10,7 +10,7 @@ env:
   TAG_CHANNEL: AutoBuild
   MACOS_SIGNING_READY: ${{ secrets.APPLE_CERTIFICATE != '' && secrets.APPLE_CERTIFICATE_PASSWORD != '' && secrets.APPLE_SIGNING_IDENTITY != '' && secrets.APPLE_API_KEY != '' && secrets.APPLE_API_ISSUER != '' && secrets.APPLE_API_KEY_CONTENT != '' }}
 concurrency:
-  group: "${{ github.workflow }} - ${{ github.head_ref || github.ref }}"
+  group: '${{ github.workflow }} - ${{ github.head_ref || github.ref }}'
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
@@ -139,7 +139,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.TAG_NAME }}
-          name: "OutClash ${{ env.TAG_CHANNEL }}"
+          name: 'OutClash ${{ env.TAG_CHANNEL }}'
           body_path: release.txt
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -195,7 +195,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: "22"
+          node-version: '22'
 
       - name: Install pnpm
         uses: pnpm/action-setup@v5
@@ -204,7 +204,7 @@ jobs:
 
       - name: Install dependencies
         env:
-          SKIP_PREPARE: "1"
+          SKIP_PREPARE: '1'
           npm_config_arch: ${{ matrix.arch }}
           npm_config_target_arch: ${{ matrix.arch }}
         run: pnpm install
@@ -232,7 +232,7 @@ jobs:
       - name: Build
         if: matrix.os != 'macos-latest' || env.MACOS_SIGNING_READY == 'true'
         env:
-          NODE_OPTIONS: "--max_old_space_size=4096"
+          NODE_OPTIONS: '--max_old_space_size=4096'
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           npm_config_arch: ${{ matrix.arch }}
           npm_config_target_arch: ${{ matrix.arch }}
@@ -268,7 +268,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.TAG_NAME }}
-          name: "OutClash ${{ env.TAG_CHANNEL }}"
+          name: 'OutClash ${{ env.TAG_CHANNEL }}'
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |

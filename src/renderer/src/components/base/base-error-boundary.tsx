@@ -8,9 +8,7 @@ const ErrorFallback = ({ error }: FallbackProps): JSX.Element => {
   const err = error instanceof Error ? error : new Error(String(error))
   return (
     <div className="p-4">
-      <h2 className="my-2 text-lg font-bold">
-        {t('errorBoundary.title')}
-      </h2>
+      <h2 className="my-2 text-lg font-bold">{t('errorBoundary.title')}</h2>
 
       <Button
         size="sm"

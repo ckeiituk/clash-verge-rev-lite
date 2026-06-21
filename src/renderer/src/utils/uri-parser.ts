@@ -191,7 +191,10 @@ function URI_SSR(line: string): ProxyConfig {
   const serverAndPort = line.substring(0, splitIdx)
   const server = serverAndPort.substring(0, serverAndPort.lastIndexOf(':'))
   const port = parseInt(serverAndPort.substring(serverAndPort.lastIndexOf(':') + 1))
-  const params = line.substring(splitIdx + 1).split('/?')[0].split(':')
+  const params = line
+    .substring(splitIdx + 1)
+    .split('/?')[0]
+    .split(':')
   const proxy: ProxyConfig = {
     name: 'SSR',
     type: 'ssr',
@@ -252,8 +255,7 @@ function URI_VMESS(line: string): ProxyConfig {
       if (params.obfs === 'ws' || params.obfs === 'wss') {
         proxy.network = 'ws'
         proxy['ws-opts'] = {
-          path:
-            (getIfNotBlank(params['obfs-path']) || '"/"').match(/^"(.*)"$/)?.[1] || '/',
+          path: (getIfNotBlank(params['obfs-path']) || '"/"').match(/^"(.*)"$/)?.[1] || '/',
           headers: {
             Host: params['obfs-header']?.match(/Host:\s*([a-zA-Z0-9-.]*)/)?.[1] || ''
           }
@@ -315,7 +317,11 @@ function URI_VMESS(line: string): ProxyConfig {
     let httpupgrade = false
     if (params.net === 'ws' || params.obfs === 'websocket') {
       proxy.network = 'ws'
-    } else if (['http'].includes(params.net) || ['http'].includes(params.obfs) || ['http'].includes(params.type)) {
+    } else if (
+      ['http'].includes(params.net) ||
+      ['http'].includes(params.obfs) ||
+      ['http'].includes(params.type)
+    ) {
       proxy.network = 'http'
     } else if (['grpc'].includes(params.net)) {
       proxy.network = 'grpc'
@@ -340,9 +346,7 @@ function URI_VMESS(line: string): ProxyConfig {
         if (transportHost) {
           transportHost = Array.isArray(transportHost) ? transportHost[0] : transportHost
         }
-        transportPath = Array.isArray(transportPath)
-          ? transportPath[0]
-          : transportPath || '/'
+        transportPath = Array.isArray(transportPath) ? transportPath[0] : transportPath || '/'
       }
       if (transportPath || transportHost) {
         if (['grpc'].includes(proxy.network)) {
@@ -405,7 +409,8 @@ function URI_VLESS(line: string): ProxyConfig {
     if (key && valueRaw !== undefined) params[key] = decodeURIComponent(valueRaw)
   }
 
-  proxy.name = trimStr(name) ?? trimStr(params.remarks) ?? trimStr(params.remark) ?? `VLESS ${server}:${port}`
+  proxy.name =
+    trimStr(name) ?? trimStr(params.remarks) ?? trimStr(params.remark) ?? `VLESS ${server}:${port}`
   proxy.tls = (params.security && params.security !== 'none') || undefined
   if (isShadowrocket && /TRUE|1/i.test(params.tls)) {
     proxy.tls = true
@@ -415,7 +420,9 @@ function URI_VLESS(line: string): ProxyConfig {
   proxy.flow = params.flow ? 'xtls-rprx-vision' : undefined
   proxy['client-fingerprint'] = params.fp || undefined
   proxy.alpn = params.alpn ? params.alpn.split(',') : undefined
-  proxy['skip-cert-verify'] = params.allowInsecure ? /(TRUE)|1/i.test(params.allowInsecure) : undefined
+  proxy['skip-cert-verify'] = params.allowInsecure
+    ? /(TRUE)|1/i.test(params.allowInsecure)
+    : undefined
 
   if (['reality'].includes(params.security)) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -432,16 +439,22 @@ function URI_VLESS(line: string): ProxyConfig {
     proxy.network = 'ws'
     httpupgrade = true
   } else {
-    proxy.network = ['tcp', 'ws', 'http', 'grpc', 'h2'].includes(params.type)
-      ? params.type
-      : 'tcp'
+    proxy.network = ['tcp', 'ws', 'http', 'grpc', 'h2'].includes(params.type) ? params.type : 'tcp'
   }
   if (!proxy.network && isShadowrocket && params.obfs) {
     switch (params.type) {
-      case 'sw': proxy.network = 'ws'; break
-      case 'http': proxy.network = 'http'; break
-      case 'h2': proxy.network = 'h2'; break
-      case 'grpc': proxy.network = 'grpc'; break
+      case 'sw':
+        proxy.network = 'ws'
+        break
+      case 'http':
+        proxy.network = 'http'
+        break
+      case 'h2':
+        proxy.network = 'h2'
+        break
+      case 'grpc':
+        proxy.network = 'grpc'
+        break
     }
   }
   if (proxy.network === 'websocket') proxy.network = 'ws'
@@ -452,7 +465,11 @@ function URI_VLESS(line: string): ProxyConfig {
     const host = params.host ?? params.obfsParam
     if (host) {
       if (params.obfsParam) {
-        try { opts.headers = JSON.parse(host) } catch { opts.headers = { Host: host } }
+        try {
+          opts.headers = JSON.parse(host)
+        } catch {
+          opts.headers = { Host: host }
+        }
       } else {
         opts.headers = { Host: host }
       }
@@ -502,12 +519,25 @@ function URI_Trojan(line: string): ProxyConfig {
       case 'type':
         proxy.network = ['ws', 'h2'].includes(value) ? value : 'tcp'
         break
-      case 'host': host = value; break
-      case 'path': path = value; break
-      case 'alpn': proxy.alpn = value ? value.split(',') : undefined; break
-      case 'sni': proxy.sni = value; break
-      case 'skip-cert-verify': proxy['skip-cert-verify'] = /(TRUE)|1/i.test(value); break
-      case 'fingerprint': case 'fp': proxy['client-fingerprint'] = value; break
+      case 'host':
+        host = value
+        break
+      case 'path':
+        path = value
+        break
+      case 'alpn':
+        proxy.alpn = value ? value.split(',') : undefined
+        break
+      case 'sni':
+        proxy.sni = value
+        break
+      case 'skip-cert-verify':
+        proxy['skip-cert-verify'] = /(TRUE)|1/i.test(value)
+        break
+      case 'fingerprint':
+      case 'fp':
+        proxy['client-fingerprint'] = value
+        break
       case 'encryption': {
         const encryption = value.split(';')
         if (encryption.length === 3) {
@@ -515,7 +545,9 @@ function URI_Trojan(line: string): ProxyConfig {
         }
         break
       }
-      case 'client-fingerprint': proxy['client-fingerprint'] = value; break
+      case 'client-fingerprint':
+        proxy['client-fingerprint'] = value
+        break
     }
   }
   if (proxy.network === 'ws') {
@@ -565,24 +597,60 @@ function URI_Hysteria(line: string): ProxyConfig {
     const key = keyRaw.replace(/_/, '-')
     const value = decodeURIComponent(valueRaw || '')
     switch (key) {
-      case 'alpn': proxy.alpn = value ? value.split(',') : undefined; break
-      case 'insecure': proxy['skip-cert-verify'] = /(TRUE)|1/i.test(value); break
-      case 'auth': proxy['auth-str'] = value; break
-      case 'mport': proxy.ports = value; break
-      case 'obfsParam': proxy.obfs = value; break
-      case 'upmbps': proxy.up = value; break
-      case 'downmbps': proxy.down = value; break
-      case 'obfs': proxy.obfs = value || ''; break
-      case 'fast-open': proxy['fast-open'] = /(TRUE)|1/i.test(value); break
-      case 'peer': proxy['fast-open'] = /(TRUE)|1/i.test(value); break
-      case 'recv-window-conn': proxy['recv-window-conn'] = parseInt(value); break
-      case 'recv-window': proxy['recv-window'] = parseInt(value); break
-      case 'ca': proxy.ca = value; break
-      case 'ca-str': proxy['ca-str'] = value; break
-      case 'disable-mtu-discovery': proxy['disable-mtu-discovery'] = /(TRUE)|1/i.test(value); break
-      case 'fingerprint': proxy.fingerprint = value; break
-      case 'protocol': proxy.protocol = value; break
-      case 'sni': proxy.sni = value; break
+      case 'alpn':
+        proxy.alpn = value ? value.split(',') : undefined
+        break
+      case 'insecure':
+        proxy['skip-cert-verify'] = /(TRUE)|1/i.test(value)
+        break
+      case 'auth':
+        proxy['auth-str'] = value
+        break
+      case 'mport':
+        proxy.ports = value
+        break
+      case 'obfsParam':
+        proxy.obfs = value
+        break
+      case 'upmbps':
+        proxy.up = value
+        break
+      case 'downmbps':
+        proxy.down = value
+        break
+      case 'obfs':
+        proxy.obfs = value || ''
+        break
+      case 'fast-open':
+        proxy['fast-open'] = /(TRUE)|1/i.test(value)
+        break
+      case 'peer':
+        proxy['fast-open'] = /(TRUE)|1/i.test(value)
+        break
+      case 'recv-window-conn':
+        proxy['recv-window-conn'] = parseInt(value)
+        break
+      case 'recv-window':
+        proxy['recv-window'] = parseInt(value)
+        break
+      case 'ca':
+        proxy.ca = value
+        break
+      case 'ca-str':
+        proxy['ca-str'] = value
+        break
+      case 'disable-mtu-discovery':
+        proxy['disable-mtu-discovery'] = /(TRUE)|1/i.test(value)
+        break
+      case 'fingerprint':
+        proxy.fingerprint = value
+        break
+      case 'protocol':
+        proxy.protocol = value
+        break
+      case 'sni':
+        proxy.sni = value
+        break
     }
   }
   if (!proxy.protocol) proxy.protocol = 'udp'
@@ -604,21 +672,49 @@ function URI_TUIC(line: string): ProxyConfig {
     const key = keyRaw.replace(/_/, '-')
     const value = decodeURIComponent(valueRaw || '')
     switch (key) {
-      case 'token': proxy.token = value; break
-      case 'ip': proxy.ip = value; break
-      case 'heartbeat-interval': proxy['heartbeat-interval'] = parseInt(value); break
-      case 'alpn': proxy.alpn = value ? value.split(',') : undefined; break
-      case 'disable-sni': proxy['disable-sni'] = /(TRUE)|1/i.test(value); break
-      case 'reduce-rtt': proxy['reduce-rtt'] = /(TRUE)|1/i.test(value); break
-      case 'request-timeout': proxy['request-timeout'] = parseInt(value); break
-      case 'udp-relay-mode': proxy['udp-relay-mode'] = value; break
-      case 'congestion-controller': proxy['congestion-controller'] = value; break
-      case 'max-udp-relay-packet-size': proxy['max-udp-relay-packet-size'] = parseInt(value); break
-      case 'fast-open': proxy['fast-open'] = /(TRUE)|1/i.test(value); break
-      case 'skip-cert-verify': case 'allow-insecure':
-        proxy['skip-cert-verify'] = /(TRUE)|1/i.test(value); break
-      case 'max-open-streams': proxy['max-open-streams'] = parseInt(value); break
-      case 'sni': proxy.sni = value; break
+      case 'token':
+        proxy.token = value
+        break
+      case 'ip':
+        proxy.ip = value
+        break
+      case 'heartbeat-interval':
+        proxy['heartbeat-interval'] = parseInt(value)
+        break
+      case 'alpn':
+        proxy.alpn = value ? value.split(',') : undefined
+        break
+      case 'disable-sni':
+        proxy['disable-sni'] = /(TRUE)|1/i.test(value)
+        break
+      case 'reduce-rtt':
+        proxy['reduce-rtt'] = /(TRUE)|1/i.test(value)
+        break
+      case 'request-timeout':
+        proxy['request-timeout'] = parseInt(value)
+        break
+      case 'udp-relay-mode':
+        proxy['udp-relay-mode'] = value
+        break
+      case 'congestion-controller':
+        proxy['congestion-controller'] = value
+        break
+      case 'max-udp-relay-packet-size':
+        proxy['max-udp-relay-packet-size'] = parseInt(value)
+        break
+      case 'fast-open':
+        proxy['fast-open'] = /(TRUE)|1/i.test(value)
+        break
+      case 'skip-cert-verify':
+      case 'allow-insecure':
+        proxy['skip-cert-verify'] = /(TRUE)|1/i.test(value)
+        break
+      case 'max-open-streams':
+        proxy['max-open-streams'] = parseInt(value)
+        break
+      case 'sni':
+        proxy.sni = value
+        break
     }
   }
   return proxy
@@ -634,34 +730,62 @@ function URI_Wireguard(line: string): ProxyConfig {
   const name = trimStr(decodeURIComponent(nameRaw || '')) ?? `WireGuard ${server}:${port}`
 
   const proxy: ProxyConfig = {
-    type: 'wireguard', name, server, port: portNum,
-    'private-key': privateKey, udp: true
+    type: 'wireguard',
+    name,
+    server,
+    port: portNum,
+    'private-key': privateKey,
+    udp: true
   }
   for (const addon of addons.split('&')) {
     const [keyRaw, valueRaw] = addon.split('=')
     const key = keyRaw.replace(/_/, '-')
     const value = decodeURIComponent(valueRaw || '')
     switch (key) {
-      case 'address': case 'ip':
+      case 'address':
+      case 'ip':
         value.split(',').forEach((i) => {
-          const ip = i.trim().replace(/\/\d+$/, '').replace(/^\[/, '').replace(/\]$/, '')
+          const ip = i
+            .trim()
+            .replace(/\/\d+$/, '')
+            .replace(/^\[/, '')
+            .replace(/\]$/, '')
           if (isIPv4(ip)) proxy.ip = ip
           else if (isIPv6(ip)) proxy.ipv6 = ip
         })
         break
-      case 'publickey': proxy['public-key'] = value; break
-      case 'allowed-ips': proxy['allowed-ips'] = value.split(','); break
-      case 'pre-shared-key': proxy['pre-shared-key'] = value; break
+      case 'publickey':
+        proxy['public-key'] = value
+        break
+      case 'allowed-ips':
+        proxy['allowed-ips'] = value.split(',')
+        break
+      case 'pre-shared-key':
+        proxy['pre-shared-key'] = value
+        break
       case 'reserved': {
-        const parsed = value.split(',').map((i) => parseInt(i.trim(), 10)).filter(Number.isInteger)
+        const parsed = value
+          .split(',')
+          .map((i) => parseInt(i.trim(), 10))
+          .filter(Number.isInteger)
         if (parsed.length === 3) proxy.reserved = parsed
         break
       }
-      case 'udp': proxy.udp = /(TRUE)|1/i.test(value); break
-      case 'mtu': proxy.mtu = parseInt(value.trim(), 10); break
-      case 'dialer-proxy': proxy['dialer-proxy'] = value; break
-      case 'remote-dns-resolve': proxy['remote-dns-resolve'] = /(TRUE)|1/i.test(value); break
-      case 'dns': proxy.dns = value.split(','); break
+      case 'udp':
+        proxy.udp = /(TRUE)|1/i.test(value)
+        break
+      case 'mtu':
+        proxy.mtu = parseInt(value.trim(), 10)
+        break
+      case 'dialer-proxy':
+        proxy['dialer-proxy'] = value
+        break
+      case 'remote-dns-resolve':
+        proxy['remote-dns-resolve'] = /(TRUE)|1/i.test(value)
+        break
+      case 'dns':
+        proxy.dns = value.split(',')
+        break
     }
   }
   return proxy
@@ -687,11 +811,19 @@ function URI_HTTP(line: string): ProxyConfig {
     const key = keyRaw.replace(/_/, '-')
     const value = decodeURIComponent(valueRaw || '')
     switch (key) {
-      case 'tls': proxy.tls = /(TRUE)|1/i.test(value); break
-      case 'fingerprint': proxy.fingerprint = value; break
-      case 'skip-cert-verify': proxy['skip-cert-verify'] = /(TRUE)|1/i.test(value); break
+      case 'tls':
+        proxy.tls = /(TRUE)|1/i.test(value)
+        break
+      case 'fingerprint':
+        proxy.fingerprint = value
+        break
+      case 'skip-cert-verify':
+        proxy['skip-cert-verify'] = /(TRUE)|1/i.test(value)
+        break
       case 'ip-version':
-        proxy['ip-version'] = ['dual', 'ipv4', 'ipv6', 'ipv4-prefer', 'ipv6-prefer'].includes(value) ? value : 'dual'
+        proxy['ip-version'] = ['dual', 'ipv4', 'ipv6', 'ipv4-prefer', 'ipv6-prefer'].includes(value)
+          ? value
+          : 'dual'
         break
     }
   }
@@ -718,12 +850,22 @@ function URI_SOCKS(line: string): ProxyConfig {
     const key = keyRaw.replace(/_/, '-')
     const value = decodeURIComponent(valueRaw || '')
     switch (key) {
-      case 'tls': proxy.tls = /(TRUE)|1/i.test(value); break
-      case 'fingerprint': proxy.fingerprint = value; break
-      case 'skip-cert-verify': proxy['skip-cert-verify'] = /(TRUE)|1/i.test(value); break
-      case 'udp': proxy.udp = /(TRUE)|1/i.test(value); break
+      case 'tls':
+        proxy.tls = /(TRUE)|1/i.test(value)
+        break
+      case 'fingerprint':
+        proxy.fingerprint = value
+        break
+      case 'skip-cert-verify':
+        proxy['skip-cert-verify'] = /(TRUE)|1/i.test(value)
+        break
+      case 'udp':
+        proxy.udp = /(TRUE)|1/i.test(value)
+        break
       case 'ip-version':
-        proxy['ip-version'] = ['dual', 'ipv4', 'ipv6', 'ipv4-prefer', 'ipv6-prefer'].includes(value) ? value : 'dual'
+        proxy['ip-version'] = ['dual', 'ipv4', 'ipv6', 'ipv4-prefer', 'ipv6-prefer'].includes(value)
+          ? value
+          : 'dual'
         break
     }
   }

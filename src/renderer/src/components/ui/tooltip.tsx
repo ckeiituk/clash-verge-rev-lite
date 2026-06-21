@@ -1,9 +1,9 @@
-"use client"
+'use client'
 
-import * as React from "react"
-import { Tooltip as TooltipPrimitive } from "radix-ui"
+import * as React from 'react'
+import { Tooltip as TooltipPrimitive } from 'radix-ui'
 
-import { cn } from "@renderer/lib/utils"
+import { cn } from '@renderer/lib/utils'
 
 function TooltipProvider({
   delayDuration = 0,
@@ -22,32 +22,36 @@ const windowFocusSuppress = {
   suppressed: false,
   init: false,
   anchorX: -1,
-  anchorY: -1,
+  anchorY: -1
 }
 
 function initWindowFocusTracking(): void {
   if (windowFocusSuppress.init) return
   windowFocusSuppress.init = true
 
-  window.addEventListener("blur", () => {
+  window.addEventListener('blur', () => {
     windowFocusSuppress.suppressed = true
     windowFocusSuppress.anchorX = -1
     windowFocusSuppress.anchorY = -1
   })
 
-  window.addEventListener("pointermove", (e: PointerEvent) => {
-    if (!windowFocusSuppress.suppressed) return
+  window.addEventListener(
+    'pointermove',
+    (e: PointerEvent) => {
+      if (!windowFocusSuppress.suppressed) return
 
-    if (windowFocusSuppress.anchorX === -1) {
-      windowFocusSuppress.anchorX = e.clientX
-      windowFocusSuppress.anchorY = e.clientY
-    } else if (
-      e.clientX !== windowFocusSuppress.anchorX ||
-      e.clientY !== windowFocusSuppress.anchorY
-    ) {
-      windowFocusSuppress.suppressed = false
-    }
-  }, { passive: true })
+      if (windowFocusSuppress.anchorX === -1) {
+        windowFocusSuppress.anchorX = e.clientX
+        windowFocusSuppress.anchorY = e.clientY
+      } else if (
+        e.clientX !== windowFocusSuppress.anchorX ||
+        e.clientY !== windowFocusSuppress.anchorY
+      ) {
+        windowFocusSuppress.suppressed = false
+      }
+    },
+    { passive: true }
+  )
 }
 
 function Tooltip({
@@ -86,22 +90,25 @@ function Tooltip({
       onOpenChangeProp?.(false)
     }
 
-    window.addEventListener("blur", handleBlur)
+    window.addEventListener('blur', handleBlur)
     return () => {
-      window.removeEventListener("blur", handleBlur)
+      window.removeEventListener('blur', handleBlur)
     }
   }, [open, isControlled, onOpenChangeProp])
 
   return (
     <TooltipProvider>
-      <TooltipPrimitive.Root data-slot="tooltip" open={open} onOpenChange={onOpenChange} {...props} />
+      <TooltipPrimitive.Root
+        data-slot="tooltip"
+        open={open}
+        onOpenChange={onOpenChange}
+        {...props}
+      />
     </TooltipProvider>
   )
 }
 
-function TooltipTrigger({
-  ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Trigger>) {
+function TooltipTrigger({ ...props }: React.ComponentProps<typeof TooltipPrimitive.Trigger>) {
   return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />
 }
 
@@ -117,7 +124,7 @@ function TooltipContent({
         data-slot="tooltip-content"
         sideOffset={sideOffset}
         className={cn(
-          "bg-foreground text-background animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 w-fit origin-(--radix-tooltip-content-transform-origin) rounded-md px-3 py-1.5 text-xs text-balance",
+          'bg-foreground text-background animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 w-fit origin-(--radix-tooltip-content-transform-origin) rounded-md px-3 py-1.5 text-xs text-balance',
           className
         )}
         {...props}

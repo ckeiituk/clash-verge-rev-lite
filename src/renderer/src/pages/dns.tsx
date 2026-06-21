@@ -76,12 +76,16 @@ const DNS: React.FC = () => {
   const [fakeIPFilterError, setFakeIPFilterError] = useState<string | null>(() => {
     if (!Array.isArray(fakeIPFilter)) return null
     const firstInvalid = fakeIPFilter.find((f) => !isValidDomainWildcard(f).ok)
-    return firstInvalid ? (isValidDomainWildcard(firstInvalid).error ?? t('common.formatError')) : null
+    return firstInvalid
+      ? (isValidDomainWildcard(firstInvalid).error ?? t('common.formatError'))
+      : null
   })
   const [defaultNameserverError, setDefaultNameserverError] = useState<string | null>(() => {
     if (!Array.isArray(defaultNameserver)) return null
     const firstInvalid = defaultNameserver.find((f) => !isValidDnsServer(f, true).ok)
-    return firstInvalid ? (isValidDnsServer(firstInvalid, true).error ?? t('common.formatError')) : null
+    return firstInvalid
+      ? (isValidDnsServer(firstInvalid, true).error ?? t('common.formatError'))
+      : null
   })
   const [nameserverError, setNameserverError] = useState<string | null>(() => {
     if (!Array.isArray(nameserver)) return null
@@ -243,7 +247,9 @@ const DNS: React.FC = () => {
                 setValues({ ...values, fakeIPFilter: arr })
                 const firstInvalid = arr.find((f) => !isValidDomainWildcard(f).ok)
                 setFakeIPFilterError(
-                  firstInvalid ? (isValidDomainWildcard(firstInvalid).error ?? t('common.formatError')) : null
+                  firstInvalid
+                    ? (isValidDomainWildcard(firstInvalid).error ?? t('common.formatError'))
+                    : null
                 )
               }}
               placeholder={t('pages.dns.placeholderLan')}
@@ -259,7 +265,9 @@ const DNS: React.FC = () => {
             setValues({ ...values, defaultNameserver: arr })
             const firstInvalid = arr.find((f) => !isValidDnsServer(f, true).ok)
             setDefaultNameserverError(
-              firstInvalid ? (isValidDnsServer(firstInvalid, true).error ?? t('common.formatError')) : null
+              firstInvalid
+                ? (isValidDnsServer(firstInvalid, true).error ?? t('common.formatError'))
+                : null
             )
           }}
           placeholder={t('pages.dns.placeholderDNS')}
@@ -273,7 +281,9 @@ const DNS: React.FC = () => {
             setValues({ ...values, nameserver: arr })
             const firstInvalid = arr.find((f) => !isValidDnsServer(f).ok)
             setNameserverError(
-              firstInvalid ? (isValidDnsServer(firstInvalid).error ?? t('common.formatError')) : null
+              firstInvalid
+                ? (isValidDnsServer(firstInvalid).error ?? t('common.formatError'))
+                : null
             )
           }}
           placeholder={t('pages.dns.placeholderTLS')}

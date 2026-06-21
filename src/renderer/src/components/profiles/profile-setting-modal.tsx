@@ -27,11 +27,7 @@ const ProfileSettingModal: React.FC<Props> = (props) => {
   const { onClose } = props
   const { appConfig, patchAppConfig } = useAppConfig()
 
-  const {
-    profileDisplayDate = 'update',
-    userAgent,
-    diffWorkDir = false,
-  } = appConfig || {}
+  const { profileDisplayDate = 'update', userAgent, diffWorkDir = false } = appConfig || {}
 
   const [ua, setUa] = useState(userAgent ?? '')
   const [defaultUserAgent, setDefaultUserAgent] = useState<string>('')

@@ -362,9 +362,7 @@ function parseShareLink(link: string): { proxyName: string; proxy: ProxyMap } {
   const url = new URL(link)
   const scheme = url.protocol.replace(':', '')
 
-  const proxyName = url.hash
-    ? decodeURIComponent(url.hash.slice(1))
-    : 'Proxy from Link'
+  const proxyName = url.hash ? decodeURIComponent(url.hash.slice(1)) : 'Proxy from Link'
 
   const proxy: ProxyMap = {
     name: proxyName,
@@ -487,9 +485,7 @@ export async function createProfileFromShareLink(
   if (Array.isArray(config['proxy-groups'])) {
     for (const group of config['proxy-groups']) {
       if (Array.isArray(group.proxies)) {
-        group.proxies = group.proxies.map((p: string) =>
-          p === 'myproxy' ? proxyName : p
-        )
+        group.proxies = group.proxies.map((p: string) => (p === 'myproxy' ? proxyName : p))
       }
     }
   }

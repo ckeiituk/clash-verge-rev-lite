@@ -131,9 +131,7 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
               if (Array.isArray(v)) {
                 for (const vv of v) {
                   if (!isValidDnsServer(vv).ok) {
-                    setNameserverPolicyError(
-                      isValidDnsServer(vv).error ?? t('common.formatError')
-                    )
+                    setNameserverPolicyError(isValidDnsServer(vv).error ?? t('common.formatError'))
                     return
                   }
                 }
@@ -144,9 +142,7 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
                   .filter(Boolean)
                 for (const p of parts) {
                   if (!isValidDnsServer(p).ok) {
-                    setNameserverPolicyError(
-                      isValidDnsServer(p).error ?? t('common.formatError')
-                    )
+                    setNameserverPolicyError(isValidDnsServer(p).error ?? t('common.formatError'))
                     return
                   }
                 }

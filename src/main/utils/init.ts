@@ -22,9 +22,7 @@ import { stringifyYaml } from './yaml'
 import { mkdir, writeFile, cp, rm, readdir } from 'fs/promises'
 import { existsSync } from 'fs'
 import path from 'path'
-import {
-  startPacServer
-} from '../resolve/server'
+import { startPacServer } from '../resolve/server'
 import { triggerSysProxy } from '../sys/sysproxy'
 import {
   getAppConfig,
@@ -42,14 +40,7 @@ async function initDirs(): Promise<void> {
   if (!existsSync(dataDir())) {
     await mkdir(dataDir())
   }
-  const dirs = [
-    themesDir(),
-    profilesDir(),
-    rulesDir(),
-    mihomoWorkDir(),
-    logDir(),
-    mihomoTestDir(),
-  ]
+  const dirs = [themesDir(), profilesDir(), rulesDir(), mihomoWorkDir(), logDir(), mihomoTestDir()]
   await Promise.all(
     dirs.map(async (dir) => {
       if (!existsSync(dir)) {
@@ -198,9 +189,7 @@ function initDeeplink(): void {
     if (process.argv.length >= 2) {
       app.setAsDefaultProtocolClient('clash', process.execPath, [path.resolve(process.argv[1])])
       app.setAsDefaultProtocolClient('mihomo', process.execPath, [path.resolve(process.argv[1])])
-      app.setAsDefaultProtocolClient('outclash', process.execPath, [
-        path.resolve(process.argv[1])
-      ])
+      app.setAsDefaultProtocolClient('outclash', process.execPath, [path.resolve(process.argv[1])])
     }
   } else {
     app.setAsDefaultProtocolClient('clash')
@@ -227,15 +216,9 @@ export async function init(): Promise<void> {
     })
   ])
 
-  const {
-    sysProxy,
-    onlyActiveDevice = false,
-    networkDetection = false
-  } = appConfig
+  const { sysProxy, onlyActiveDevice = false, networkDetection = false } = appConfig
 
-  const initTasks: Promise<void>[] = [
-    startSSIDCheck()
-  ]
+  const initTasks: Promise<void>[] = [startSSIDCheck()]
 
   if (networkDetection) {
     initTasks.push(startNetworkDetection())

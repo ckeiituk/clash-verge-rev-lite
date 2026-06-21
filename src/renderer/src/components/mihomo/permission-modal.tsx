@@ -281,11 +281,7 @@ const PermissionModal: React.FC<Props> = (props) => {
         </div>
         <DialogFooter className="flex-row justify-end gap-2">
           <DialogClose asChild>
-            <Button
-              size="sm"
-              variant="ghost"
-              disabled={Object.values(loading).some((v) => v)}
-            >
+            <Button size="sm" variant="ghost" disabled={Object.values(loading).some((v) => v)}>
               {t('common.close')}
             </Button>
           </DialogClose>

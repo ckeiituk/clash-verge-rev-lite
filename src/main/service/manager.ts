@@ -103,7 +103,9 @@ export async function initService(): Promise<void> {
     if (isUserCancelledError(error)) {
       throw new UserCancelledError()
     }
-    throw new Error(`${t('error.serviceInitFailed')}：${error instanceof Error ? error.message : String(error)}`)
+    throw new Error(
+      `${t('error.serviceInitFailed')}：${error instanceof Error ? error.message : String(error)}`
+    )
   }
 
   await new Promise((resolve) => setTimeout(resolve, 500))
@@ -118,7 +120,9 @@ export async function installService(): Promise<void> {
     if (isUserCancelledError(error)) {
       throw new UserCancelledError()
     }
-    throw new Error(`${t('error.serviceInstallFailed')}：${error instanceof Error ? error.message : String(error)}`)
+    throw new Error(
+      `${t('error.serviceInstallFailed')}：${error instanceof Error ? error.message : String(error)}`
+    )
   }
 }
 
@@ -131,7 +135,9 @@ export async function uninstallService(): Promise<void> {
     if (isUserCancelledError(error)) {
       throw new UserCancelledError()
     }
-    throw new Error(`${t('error.serviceUninstallFailed')}：${error instanceof Error ? error.message : String(error)}`)
+    throw new Error(
+      `${t('error.serviceUninstallFailed')}：${error instanceof Error ? error.message : String(error)}`
+    )
   }
 }
 
@@ -144,7 +150,9 @@ export async function startService(): Promise<void> {
     if (isUserCancelledError(error)) {
       throw new UserCancelledError()
     }
-    throw new Error(`${t('error.serviceStartFailed')}：${error instanceof Error ? error.message : String(error)}`)
+    throw new Error(
+      `${t('error.serviceStartFailed')}：${error instanceof Error ? error.message : String(error)}`
+    )
   }
 }
 
@@ -157,7 +165,9 @@ export async function stopService(): Promise<void> {
     if (isUserCancelledError(error)) {
       throw new UserCancelledError()
     }
-    throw new Error(`${t('error.serviceStopFailed')}：${error instanceof Error ? error.message : String(error)}`)
+    throw new Error(
+      `${t('error.serviceStopFailed')}：${error instanceof Error ? error.message : String(error)}`
+    )
   }
 }
 
@@ -170,7 +180,9 @@ export async function restartService(): Promise<void> {
     if (isUserCancelledError(error)) {
       throw new UserCancelledError()
     }
-    throw new Error(`${t('error.serviceRestartFailed')}：${error instanceof Error ? error.message : String(error)}`)
+    throw new Error(
+      `${t('error.serviceRestartFailed')}：${error instanceof Error ? error.message : String(error)}`
+    )
   }
 }
 
@@ -208,8 +220,7 @@ export async function serviceStatus(): Promise<
 export async function testServiceConnection(): Promise<boolean> {
   try {
     const out = await test()
-    return !(out && typeof out === 'object' && 'status' in out && out.status === 'error');
-
+    return !(out && typeof out === 'object' && 'status' in out && out.status === 'error')
   } catch {
     return false
   }

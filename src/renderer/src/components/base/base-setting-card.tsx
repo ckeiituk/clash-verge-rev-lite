@@ -1,6 +1,11 @@
 import React from 'react'
 import { Card, CardContent } from '@renderer/components/ui/card'
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@renderer/components/ui/accordion'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger
+} from '@renderer/components/ui/accordion'
 
 interface Props {
   title?: string

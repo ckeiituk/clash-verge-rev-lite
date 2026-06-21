@@ -24,11 +24,11 @@ A lightweight, cross-platform GUI client for managing <a href="https://github.co
 
 Download the latest release for your platform from the [Releases](https://github.com/ckeiituk/outclash/releases) page.
 
-| Platform | Formats |
-|----------|---------|
+| Platform | Formats                     |
+| -------- | --------------------------- |
 | Windows  | NSIS installer, 7z portable |
-| macOS    | pkg |
-| Linux    | deb, rpm, pacman |
+| macOS    | pkg                         |
+| Linux    | deb, rpm, pacman            |
 
 ## Development
 

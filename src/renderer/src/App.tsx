@@ -34,11 +34,7 @@ let navigate: NavigateFunction
 const App: React.FC = () => {
   const { t } = useTranslation()
   const { appConfig } = useAppConfig()
-  const {
-    appTheme = 'system',
-    customTheme,
-    autoCheckUpdate
-  } = appConfig || {}
+  const { appTheme = 'system', customTheme, autoCheckUpdate } = appConfig || {}
   const { setTheme, systemTheme, resolvedTheme } = useTheme()
   const mapBg = resolvedTheme === 'dark' ? mapDark : mapLight
   navigate = useNavigate()
@@ -54,13 +50,17 @@ const App: React.FC = () => {
     }
   )
 
-  const [debugLatest, setDebugLatest] = useState<{ version: string; changelog: string } | null>(null)
+  const [debugLatest, setDebugLatest] = useState<{ version: string; changelog: string } | null>(
+    null
+  )
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ;(window as any).__updateBanner = (v?: string) => {
       sessionStorage.removeItem('updateBannerDismissedVersion')
       window.dispatchEvent(new CustomEvent('resetUpdateBanner'))
-      setDebugLatest((prev) => prev ? null : { version: v || '99.0.0', changelog: 'Test update banner' })
+      setDebugLatest((prev) =>
+        prev ? null : { version: v || '99.0.0', changelog: 'Test update banner' }
+      )
     }
   }, [])
   const effectiveLatest = debugLatest || latest

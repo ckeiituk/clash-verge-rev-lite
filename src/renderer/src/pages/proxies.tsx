@@ -38,7 +38,8 @@ import {
 } from 'lucide-react'
 
 const groupTypeColor: Record<string, string> = {
-  Selector: 'border-blue-500/40 bg-blue-500/8 text-blue-600 dark:text-blue-400 dark:border-blue-400/40',
+  Selector:
+    'border-blue-500/40 bg-blue-500/8 text-blue-600 dark:text-blue-400 dark:border-blue-400/40',
   URLTest:
     'border-emerald-500/40 bg-emerald-500/8 text-emerald-600 dark:text-emerald-400 dark:border-emerald-400/40',
   Fallback:
@@ -148,7 +149,6 @@ const Proxies: React.FC = () => {
       setDelayingTick((c) => c + 1)
     }
   }, [groups])
-
 
   const { groupCounts, allProxies } = useMemo(() => {
     const groupCounts: number[] = []
@@ -365,13 +365,14 @@ const Proxies: React.FC = () => {
       const showMeta = groupDisplayLayout !== 'hidden'
 
       return (
-        <div
-          className="w-full px-2 pb-2"
-        >
+        <div className="w-full px-2 pb-2">
           <Card
             data-guide={index === 0 ? 'proxies-first-group' : undefined}
             data-guide-open={index === 0 ? `${isOpen[index]}` : undefined}
-            className={cn('w-full relative isolate bg-card/50 backdrop-blur-3xl cursor-pointer py-0 transition-all duration-200 hover:bg-card/65', isExpanded ? 'z-10 shadow-md' : 'hover:shadow-sm')}
+            className={cn(
+              'w-full relative isolate bg-card/50 backdrop-blur-3xl cursor-pointer py-0 transition-all duration-200 hover:bg-card/65',
+              isExpanded ? 'z-10 shadow-md' : 'hover:shadow-sm'
+            )}
             role="button"
             tabIndex={0}
             onClick={() => toggleOpen(index)}
@@ -396,11 +397,18 @@ const Proxies: React.FC = () => {
                       />
                     </Avatar>
                   ) : (
-                    <div className={cn('flex items-center justify-center shrink-0 size-9 rounded-md', typeColorClass)}>
+                    <div
+                      className={cn(
+                        'flex items-center justify-center shrink-0 size-9 rounded-md',
+                        typeColorClass
+                      )}
+                    >
                       {groupTypeIcon[group.type] || <Zap className="size-4" />}
                     </div>
                   )}
-                  <div className={`flex ${groupDisplayLayout === 'double' ? 'flex-col gap-0.5' : 'items-center gap-2'} min-w-0`}>
+                  <div
+                    className={`flex ${groupDisplayLayout === 'double' ? 'flex-col gap-0.5' : 'items-center gap-2'} min-w-0`}
+                  >
                     <div className="flex items-center gap-2">
                       <span className="flag-emoji text-sm font-semibold truncate leading-tight">
                         {group.name}
@@ -408,7 +416,10 @@ const Proxies: React.FC = () => {
                       {showMeta && (
                         <Badge
                           variant="ghost"
-                          className={cn('text-[10px] px-1.5 py-0 h-4 rounded font-semibold uppercase tracking-wider shrink-0', typeColorClass)}
+                          className={cn(
+                            'text-[10px] px-1.5 py-0 h-4 rounded font-semibold uppercase tracking-wider shrink-0',
+                            typeColorClass
+                          )}
                         >
                           {group.type}
                         </Badge>
@@ -491,8 +502,15 @@ const Proxies: React.FC = () => {
       return currentAllProxies[groupIndex] ? (
         <div className="flow-root">
           <div
-            className={cn('mx-2 bg-card/30 border-x border-border/50', innerIndex === 0 && '-mt-5 pt-3', isLastRow && 'rounded-b-xl border-b shadow-sm mb-2', shouldAnimate && 'animate-proxy-row-enter')}
-            style={shouldAnimate ? { animationDelay: `${Math.min(innerIndex * 0.04, 0.3)}s` } : undefined}
+            className={cn(
+              'mx-2 bg-card/30 border-x border-border/50',
+              innerIndex === 0 && '-mt-5 pt-3',
+              isLastRow && 'rounded-b-xl border-b shadow-sm mb-2',
+              shouldAnimate && 'animate-proxy-row-enter'
+            )}
+            style={
+              shouldAnimate ? { animationDelay: `${Math.min(innerIndex * 0.04, 0.3)}s` } : undefined
+            }
           >
             <div
               data-guide={groupIndex === 0 ? 'proxies-first-group-row' : undefined}
@@ -501,7 +519,12 @@ const Proxies: React.FC = () => {
                   ? { gridTemplateColumns: `repeat(${proxyCols}, minmax(0, 1fr))` }
                   : {}
               }
-              className={cn('grid gap-2 px-3 pt-2', proxyCols === 'auto' && 'sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5', isLastRow && 'pb-3')}
+              className={cn(
+                'grid gap-2 px-3 pt-2',
+                proxyCols === 'auto' &&
+                  'sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5',
+                isLastRow && 'pb-3'
+              )}
             >
               {Array.from({ length: cols }).map((_, i) => {
                 const proxy = currentAllProxies[groupIndex][innerIndex * cols + i]
@@ -527,15 +550,7 @@ const Proxies: React.FC = () => {
         <div>Never See This</div>
       )
     },
-    [
-      proxyCols,
-      cols,
-      mutate,
-      onProxyDelay,
-      onChangeProxy,
-      proxyDisplayLayout,
-      delayingTick
-    ]
+    [proxyCols, cols, mutate, onProxyDelay, onChangeProxy, proxyDisplayLayout, delayingTick]
   )
 
   return (

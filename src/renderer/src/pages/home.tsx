@@ -12,7 +12,16 @@ import { useNavigate } from 'react-router-dom'
 import dayjs from 'dayjs'
 import Power from '@renderer/assets/on_icon.svg'
 import Pause from '@renderer/assets/pause_icon.svg'
-import { InfinityIcon, WifiOff, PlusCircle, ChevronRight, Globe, ArrowUp, ArrowDown, RefreshCcw } from 'lucide-react'
+import {
+  InfinityIcon,
+  WifiOff,
+  PlusCircle,
+  ChevronRight,
+  Globe,
+  ArrowUp,
+  ArrowDown,
+  RefreshCcw
+} from 'lucide-react'
 import { SiTelegram } from 'react-icons/si'
 import EditInfoModal from '@renderer/components/profiles/edit-info-modal'
 import { Spinner } from '@renderer/components/ui/spinner'
@@ -33,11 +42,7 @@ let connectionStartTime: number | null = null
 const Home: React.FC = () => {
   const { t } = useTranslation()
   const { appConfig, patchAppConfig } = useAppConfig()
-  const {
-    mainSwitchMode = 'tun',
-    sysProxy,
-    onlyActiveDevice = false,
-  } = appConfig || {}
+  const { mainSwitchMode = 'tun', sysProxy, onlyActiveDevice = false } = appConfig || {}
   const { enable: sysProxyEnable = true, mode } = sysProxy || {}
   const { controledMihomoConfig, patchControledMihomoConfig } = useControledMihomoConfig()
   const { tun } = controledMihomoConfig || {}
@@ -98,7 +103,8 @@ const Home: React.FC = () => {
     }
   }, [isSelected])
 
-  const isDisabled = loading || (mainSwitchMode === 'sysproxy' && mode == 'manual' && sysProxyDisabled)
+  const isDisabled =
+    loading || (mainSwitchMode === 'sysproxy' && mode == 'manual' && sysProxyDisabled)
 
   const status = loading
     ? loadingDirection === 'connecting'
@@ -141,7 +147,8 @@ const Home: React.FC = () => {
   const trafficTotal = subscription?.total ?? 0
   const trafficRemaining = trafficTotal > 0 ? trafficTotal - trafficUsed : 0
   const expireTimestamp = subscription?.expire ?? 0
-  const expireDate = expireTimestamp > 0 ? dayjs.unix(expireTimestamp).format('L') : t('pages.home.never')
+  const expireDate =
+    expireTimestamp > 0 ? dayjs.unix(expireTimestamp).format('L') : t('pages.home.never')
   const daysRemaining =
     expireTimestamp > 0 ? Math.max(0, dayjs.unix(expireTimestamp).diff(dayjs(), 'day')) : 0
 
@@ -155,7 +162,9 @@ const Home: React.FC = () => {
       return {
         href: parsed.toString(),
         isTelegram:
-          parsed.protocol === 'tg:' || normalized.includes('t.me') || normalized.includes('telegram')
+          parsed.protocol === 'tg:' ||
+          normalized.includes('t.me') ||
+          normalized.includes('telegram')
       }
     } catch {
       return null

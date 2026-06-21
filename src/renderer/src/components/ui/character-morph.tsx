@@ -13,7 +13,14 @@ interface CharacterMorphProps {
 
 const CharacterMorph = React.forwardRef<HTMLDivElement, CharacterMorphProps>(
   (
-    { texts, reserveTexts = [], className, interval = 3000, staggerDelay = 0.03, charDuration = 0.5 },
+    {
+      texts,
+      reserveTexts = [],
+      className,
+      interval = 3000,
+      staggerDelay = 0.03,
+      charDuration = 0.5
+    },
     ref
   ) => {
     const [currentIndex, setCurrentIndex] = React.useState(0)
@@ -39,7 +46,10 @@ const CharacterMorph = React.forwardRef<HTMLDivElement, CharacterMorphProps>(
 
     return (
       <div ref={ref} className={cn('relative inline-grid whitespace-nowrap', className)}>
-        <span aria-hidden="true" className="pointer-events-none invisible col-start-1 row-start-1 grid">
+        <span
+          aria-hidden="true"
+          className="pointer-events-none invisible col-start-1 row-start-1 grid"
+        >
           {widthSource.map((text, index) => (
             <span key={`${index}-${text}`} className="col-start-1 row-start-1">
               {text.split(' ').join('\u00A0')}

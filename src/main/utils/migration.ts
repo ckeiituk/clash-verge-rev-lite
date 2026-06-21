@@ -141,9 +141,7 @@ export async function migrateFromOldApp(): Promise<void> {
 
   await log(`Found ${remoteProfiles.length} remote profile(s) to migrate`)
 
-  const existingIds = new Set(
-    ((await getProfileConfig(true)).items || []).map((item) => item.id)
-  )
+  const existingIds = new Set(((await getProfileConfig(true)).items || []).map((item) => item.id))
 
   for (const oldItem of remoteProfiles) {
     try {

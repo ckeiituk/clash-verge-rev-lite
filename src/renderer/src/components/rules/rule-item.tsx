@@ -8,14 +8,14 @@ const RuleItem: React.FC<ControllerRulesDetail & { index: number }> = (props) =>
     <div className={`px-2 pb-2 ${index === 0 ? 'pt-2' : ''}`}>
       <Card className="gap-0 py-0">
         <CardContent className="w-full px-3 py-2">
-          {payload &&
+          {payload && (
             <div
               title={payload}
               className="text-sm text-ellipsis whitespace-nowrap overflow-hidden mb-1"
             >
               {payload}
             </div>
-          }
+          )}
           <div className="flex gap-1.5">
             <Badge variant="outline" className="rounded-sm">
               {type}

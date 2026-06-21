@@ -5,11 +5,7 @@ import {
   getProfileStr,
   getAppConfig
 } from '../config'
-import {
-  mihomoProfileWorkDir,
-  mihomoWorkConfigPath,
-  mihomoWorkDir, rulePath
-} from '../utils/dirs'
+import { mihomoProfileWorkDir, mihomoWorkConfigPath, mihomoWorkDir, rulePath } from '../utils/dirs'
 import { parseYaml, stringifyYaml } from '../utils/yaml'
 import { copyFile, mkdir, readFile, writeFile } from 'fs/promises'
 import { deepMerge } from '../utils/merge'

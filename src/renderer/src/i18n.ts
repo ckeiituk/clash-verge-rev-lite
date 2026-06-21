@@ -46,19 +46,17 @@ const dayjsLocaleMap: Record<string, string> = {
 }
 dayjs.locale(dayjsLocaleMap[savedLanguage] || 'en')
 
-i18n
-  .use(initReactI18next)
-  .init({
-    resources,
-    lng: savedLanguage,
-    fallbackLng: 'en-US',
-    interpolation: {
-      escapeValue: false
-    },
-    react: {
-      useSuspense: false
-    }
-  })
+i18n.use(initReactI18next).init({
+  resources,
+  lng: savedLanguage,
+  fallbackLng: 'en-US',
+  interpolation: {
+    escapeValue: false
+  },
+  react: {
+    useSuspense: false
+  }
+})
 
 // Sync language to main process (tray, macOS menu bar)
 window.electron.ipcRenderer.invoke('setLanguage', savedLanguage)

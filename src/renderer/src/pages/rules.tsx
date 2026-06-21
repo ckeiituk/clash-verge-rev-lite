@@ -62,10 +62,7 @@ const Rules: React.FC = () => {
       }
     >
       {showRulesEditor && profileConfig?.current && (
-        <EditRulesModal
-          id={profileConfig.current}
-          onClose={() => setShowRulesEditor(false)}
-        />
+        <EditRulesModal id={profileConfig.current} onClose={() => setShowRulesEditor(false)} />
       )}
       <div className="flex flex-col h-full">
         <div className="shrink-0 sticky top-0 z-40">
