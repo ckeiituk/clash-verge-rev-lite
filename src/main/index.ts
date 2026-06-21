@@ -286,7 +286,7 @@ app.on('before-quit', async (e) => {
         clearTimeout(quitTimeout)
         quitTimeout = null
       }
-      triggerSysProxy(false, false)
+      await triggerSysProxy(false, false).catch(() => {})
       await stopCore()
       app.exit()
       return
@@ -301,7 +301,7 @@ app.on('before-quit', async (e) => {
         clearTimeout(quitTimeout)
         quitTimeout = null
       }
-      triggerSysProxy(false, false)
+      await triggerSysProxy(false, false).catch(() => {})
       await stopCore()
       app.exit()
     }
@@ -311,7 +311,7 @@ app.on('before-quit', async (e) => {
       clearTimeout(quitTimeout)
       quitTimeout = null
     }
-    triggerSysProxy(false, false)
+    await triggerSysProxy(false, false).catch(() => {})
     await stopCore()
     app.exit()
   }
@@ -322,7 +322,7 @@ powerMonitor.on('shutdown', async () => {
     clearTimeout(quitTimeout)
     quitTimeout = null
   }
-  triggerSysProxy(false, false)
+  await triggerSysProxy(false, false).catch(() => {})
   await stopCore()
   app.exit()
 })
@@ -640,7 +640,7 @@ export async function createWindow(appConfig?: AppConfig): Promise<void> {
     })
 
     mainWindow.on('session-end', async () => {
-      triggerSysProxy(false, false)
+      await triggerSysProxy(false, false).catch(() => {})
       await stopCore()
     })
 
