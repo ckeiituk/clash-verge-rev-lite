@@ -9,6 +9,8 @@ import { addProfileItem, getProfileConfig, setProfileConfig } from '../config'
 const OLD_APP_ID = 'io.github.outclash'
 const MIGRATION_DONE_MARKER = '.migration-done'
 const MIGRATION_FILE = '.migration-profiles.yaml'
+const MIGRATION_ATTEMPTS_FILE = '.migration-attempts'
+const MIGRATION_MAX_ATTEMPTS = 3
 
 interface OldPrfItem {
   uid?: string
@@ -53,6 +55,23 @@ function getMigrationMarkerPath(): string {
 
 function getMigrationFilePath(): string {
   return path.join(dataDir(), MIGRATION_FILE)
+}
+
+function getMigrationAttemptsPath(): string {
+  return path.join(dataDir(), MIGRATION_ATTEMPTS_FILE)
+}
+
+async function readMigrationAttempts(): Promise<number> {
+  try {
+    const n = parseInt((await readFile(getMigrationAttemptsPath(), 'utf-8')).trim(), 10)
+    return Number.isNaN(n) ? 0 : n
+  } catch {
+    return 0
+  }
+}
+
+async function writeMigrationAttempts(n: number): Promise<void> {
+  await writeFile(getMigrationAttemptsPath(), String(n), 'utf-8')
 }
 
 function parseOldProfiles(yamlContent: string): OldPrfItem[] {
@@ -158,8 +177,30 @@ export async function migrateFromOldApp(): Promise<void> {
     await log(`Selected "${importedItems[0].name}" as the active profile`)
   }
 
-  await log(
-    `Migration complete: ${importedItems.length}/${remoteProfiles.length} profile(s) imported`
+  const presentUrls = new Set(
+    (profileCfg.items || []).filter((i) => i.type === 'remote' && i.url).map((i) => i.url)
   )
+  const missingCount = remoteProfiles.filter((p) => !presentUrls.has(p.url)).length
+  const importedCount = remoteProfiles.length - missingCount
+  await log(`Migration complete: ${importedCount}/${remoteProfiles.length} profile(s) imported`)
+
+  // Some profiles couldn't be fetched (e.g. no network at first launch). Don't
+  // mark migration done yet — retry on the next few launches so a transient
+  // outage doesn't silently drop the user's subscriptions. Bounded so a
+  // permanently-dead URL can't make migration retry forever.
+  if (missingCount > 0) {
+    const attempts = await readMigrationAttempts()
+    if (attempts + 1 < MIGRATION_MAX_ATTEMPTS) {
+      await writeMigrationAttempts(attempts + 1)
+      await log(
+        `${missingCount} profile(s) missing — will retry (attempt ${attempts + 1}/${MIGRATION_MAX_ATTEMPTS})`
+      )
+      return
+    }
+    await log(
+      `${missingCount} profile(s) still missing after ${MIGRATION_MAX_ATTEMPTS} attempts — giving up`
+    )
+  }
+
   await writeFile(getMigrationMarkerPath(), new Date().toISOString(), 'utf-8')
 }
