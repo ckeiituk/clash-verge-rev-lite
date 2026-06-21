@@ -27,6 +27,18 @@
     CopyFiles /SILENT "$LOCALAPPDATA\io.github.koala-clash\profiles.yaml" "$TEMP\outclash-migration-profiles.yaml"
   backup_done:
 
+  ; --- Stop leftover old Tauri OutClash processes/service so files unlock and the
+  ;     proxy port / TUN free up before we uninstall the old build and extract ---
+  nsExec::Exec 'taskkill /F /T /IM out-mihomo.exe'
+  Pop $0
+  nsExec::Exec 'taskkill /F /T /IM out-mihomo-alpha.exe'
+  Pop $0
+  ; stop the OLD service by its exact name (new service is "OutClashService")
+  nsExec::Exec 'sc stop outclash_service'
+  Pop $0
+  nsExec::Exec 'sc delete outclash_service'
+  Pop $0
+
   ; --- Old Tauri OutClash (same productName/dir as the new app) ---
   ; electron-builder's built-in uninstallOldVersion does NOT remove it: it looks
   ; up a GUID derived from appId, but the Tauri build registered its uninstaller
@@ -47,6 +59,12 @@
     ; _?= runs the uninstaller in place (no %TEMP% copy) so ExecWait really waits
     ExecWait '"$1\uninstall.exe" /S _?=$1'
   outclash_old_done:
+
+  ; --- Remove old Tauri OutClash autostart so it can't launch a 2nd client at
+  ;     login. The new app autostarts via a scheduled task, not these entries ---
+  DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "OutClash"
+  DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "outclash"
+  Delete "$SMSTARTUP\OutClash.lnk"
 
   ; --- Old Koala Clash (different product name, needs manual lookup) ---
   IfFileExists "$PROGRAMFILES\Koala Clash\uninstall.exe" 0 check_koala_pf64
