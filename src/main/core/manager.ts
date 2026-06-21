@@ -179,13 +179,33 @@ export async function startCore(detached = false): Promise<Promise<void>[]> {
   child.stdout?.pipe(stdout)
   child.stderr?.pipe(stderr)
   return new Promise((resolve, reject) => {
+    let settled = false
+    const settleResolve = (value: Promise<void>[]): void => {
+      if (settled) return
+      settled = true
+      clearTimeout(startTimer)
+      resolve(value)
+    }
+    const settleReject = (reason: unknown): void => {
+      if (settled) return
+      settled = true
+      clearTimeout(startTimer)
+      reject(reason)
+    }
+    // The core normally logs "RESTful API ... listening" within ~1-2s. If it
+    // never does (crash before ready, AV kill, a port the reap missed) neither
+    // resolve nor reject would fire and the awaiter would hang forever — bound it.
+    const startTimer = setTimeout(() => {
+      settleReject(new Error(t('tray.coreStartTimeout')))
+    }, 30000)
+
     child.stdout?.on('data', async (data) => {
       const str = data.toString()
       if (
         (process.platform !== 'win32' && str.includes('External controller unix listen error')) ||
         (process.platform === 'win32' && str.includes('External controller pipe listen error'))
       ) {
-        reject(`${t('tray.controllerListenError')}:\n${str}`)
+        settleReject(`${t('tray.controllerListenError')}:\n${str}`)
       }
 
       if (process.platform === 'win32' && str.includes('updater: finished')) {
@@ -202,7 +222,7 @@ export async function startCore(detached = false): Promise<Promise<void>[]> {
         (process.platform !== 'win32' && str.includes('RESTful API unix listening at')) ||
         (process.platform === 'win32' && str.includes('RESTful API pipe listening at'))
       ) {
-        resolve([
+        settleResolve([
           new Promise((resolve, reject) => {
             const handleProviderInitialization = async (logLine: string): Promise<void> => {
               for (const match of logLine.matchAll(/Start initial provider ([^"]+)"/g)) {

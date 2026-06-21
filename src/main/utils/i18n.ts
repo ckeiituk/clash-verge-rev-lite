@@ -44,6 +44,7 @@ const zhCN: LocaleTranslations = {
     quitApp: '退出应用',
     retest: '重新测试',
     controllerListenError: '控制器监听错误',
+    coreStartTimeout: '内核启动超时',
     tunStartFailed: '虚拟网卡启动失败，前往内核设置页尝试手动授予内核权限'
   },
   menu: {
@@ -183,6 +184,7 @@ const enUS: LocaleTranslations = {
     quitApp: 'Quit App',
     retest: 'Retest',
     controllerListenError: 'Controller listen error',
+    coreStartTimeout: 'Core did not start in time',
     tunStartFailed:
       'Virtual network interface startup failed, go to core settings to try to manually grant core permissions'
   },
@@ -323,6 +325,7 @@ const ruRU: LocaleTranslations = {
     quitApp: 'Выйти из приложения',
     retest: 'Повторить тест',
     controllerListenError: 'Ошибка прослушивания контроллера',
+    coreStartTimeout: 'Ядро не запустилось вовремя',
     tunStartFailed:
       'Не удалось запустить TUN. Перейдите в настройки ядра и попробуйте предоставить права вручную'
   },
