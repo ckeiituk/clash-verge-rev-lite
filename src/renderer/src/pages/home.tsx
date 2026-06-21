@@ -166,22 +166,30 @@ const Home: React.FC = () => {
     setLoading(true)
     setLoadingDirection(enable ? 'connecting' : 'disconnecting')
     try {
-      if (mainSwitchMode === 'tun') {
-        if (enable) {
+      if (enable) {
+        if (mainSwitchMode === 'tun') {
           await patchControledMihomoConfig({ tun: { enable: true }, dns: { enable: true } })
+          await mihomoHotReloadConfig()
         } else {
-          await patchControledMihomoConfig({ tun: { enable: false } })
-        }
-        await mihomoHotReloadConfig()
-      } else {
-        if (mode == 'manual' && sysProxyDisabled) return
-        if (enable) {
+          if (mode == 'manual' && sysProxyDisabled) return
           await patchAppConfig({ sysProxy: { enable: true } })
           await mihomoHotReloadConfig()
           await triggerSysProxy(true, onlyActiveDevice)
-        } else {
+        }
+      } else {
+        // Disable whichever mechanism is currently active, independent of
+        // mainSwitchMode — otherwise switching the mode while a mechanism is on
+        // would leave it running (see upstream 303e1781).
+        const tunWasEnabled = tun?.enable ?? false
+        const sysProxyWasEnabled = sysProxyEnable
+        if (tunWasEnabled) {
+          await patchControledMihomoConfig({ tun: { enable: false } })
+        }
+        if (sysProxyWasEnabled) {
           await triggerSysProxy(false, onlyActiveDevice)
           await patchAppConfig({ sysProxy: { enable: false } })
+        }
+        if (tunWasEnabled || sysProxyWasEnabled) {
           await mihomoHotReloadConfig()
         }
       }
