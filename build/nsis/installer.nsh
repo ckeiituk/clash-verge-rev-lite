@@ -27,9 +27,26 @@
     CopyFiles /SILENT "$LOCALAPPDATA\io.github.koala-clash\profiles.yaml" "$TEMP\outclash-migration-profiles.yaml"
   backup_done:
 
-  ; Old Tauri OutClash has the same productName — electron-builder's
-  ; built-in uninstallOldVersion handles it automatically after user
-  ; clicks Install (CHECK_APP_RUNNING + registry lookup).
+  ; --- Old Tauri OutClash (same productName/dir as the new app) ---
+  ; electron-builder's built-in uninstallOldVersion does NOT remove it: it looks
+  ; up a GUID derived from appId, but the Tauri build registered its uninstaller
+  ; under the flat key ...\Uninstall\OutClash. Uninstall it here — IN-PLACE and
+  ; BEFORE the new files are extracted — so it deletes the OLD files, not ours.
+  ReadRegStr $1 HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\OutClash" "InstallLocation"
+  StrCmp $1 "" 0 +2
+    ReadRegStr $1 HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\OutClash" "InstallLocation"
+  StrCmp $1 "" outclash_old_done 0
+  ; strip the surrounding quotes Tauri writes around InstallLocation
+  StrCpy $2 $1 1
+  StrCmp $2 '"' 0 +2
+    StrCpy $1 $1 "" 1
+  StrCpy $2 $1 1 -1
+  StrCmp $2 '"' 0 +2
+    StrCpy $1 $1 -1
+  IfFileExists "$1\uninstall.exe" 0 outclash_old_done
+    ; _?= runs the uninstaller in place (no %TEMP% copy) so ExecWait really waits
+    ExecWait '"$1\uninstall.exe" /S _?=$1'
+  outclash_old_done:
 
   ; --- Old Koala Clash (different product name, needs manual lookup) ---
   IfFileExists "$PROGRAMFILES\Koala Clash\uninstall.exe" 0 check_koala_pf64
@@ -64,18 +81,9 @@
     Delete "$TEMP\outclash-migration-profiles.yaml"
   no_migration_file:
 
-  ; --- Fallback: clean up old Tauri OutClash if electron-builder missed it ---
-  ; electron-builder's uninstallOldVersion already ran before this point.
-  ; If it found and removed the old Tauri OutClash, the registry entry is gone.
-  ; If not, we clean it up here (after user already confirmed installation).
-  ReadRegStr $0 HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\OutClash" "UninstallString"
-  StrCmp $0 "" check_outclash_hkcu_post run_outclash_post
-  check_outclash_hkcu_post:
-  ReadRegStr $0 HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\OutClash" "UninstallString"
-  StrCmp $0 "" outclash_cleanup_done run_outclash_post
-  run_outclash_post:
-  ExecWait '"$0" /S'
-  outclash_cleanup_done:
+  ; Old Tauri OutClash is now uninstalled in customInit (before extraction),
+  ; so no post-extract fallback is needed here — it would have deleted the
+  ; freshly-installed files since both share $PROGRAMFILES64\OutClash.
 
   SetShellVarContext all
 !macroend
