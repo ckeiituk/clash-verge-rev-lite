@@ -355,7 +355,7 @@ export async function createProfile(item: Partial<ProfileItem>): Promise<Profile
         k.toLowerCase().endsWith('outclash-update-channel')
       )
       if (updateChannelKey) {
-        const channel = headers[updateChannelKey].toLowerCase()
+        const channel = headers[updateChannelKey].trim().toLowerCase()
         // Server-driven channel cohort: only honour an explicit alpha/stable value
         // (absent header leaves the channel unchanged), and never override a channel
         // the user picked manually in settings (updateChannelLocked).

@@ -33,8 +33,11 @@ function isNewerVersion(candidate: string, current: string): boolean {
   }
   if (a.pre === b.pre) return false
   if (a.pre === '') return true // a final release outranks a same-version prerelease
-  if (b.pre === '') return false
-  return a.pre > b.pre
+  if (b.pre === '') return false // a prerelease is never newer than the final release
+  // both are differing prereleases of the same x.y.z (rolling alpha): offer it — the
+  // alpha feed only ever serves the newest, and a lexical compare would mis-rank
+  // numeric suffixes (e.g. "alpha.10" < "alpha.2").
+  return true
 }
 
 export async function checkUpdate(): Promise<AppVersion | undefined> {
