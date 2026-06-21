@@ -114,5 +114,5 @@ jobs:
           path: |
             dist/OutClash*.deb
             dist/OutClash*.rpm
-            dist/OutClash*.pacman
+            dist/OutClash*.pkg.tar.xz
           if-no-files-found: error
