@@ -4,7 +4,7 @@ import path from 'path'
 import { app } from 'electron'
 import { dataDir, logPath } from './dirs'
 import { parseYaml } from './yaml'
-import { addProfileItem } from '../config'
+import { addProfileItem, getProfileConfig, setProfileConfig } from '../config'
 
 const OLD_APP_ID = 'io.github.outclash'
 const MIGRATION_DONE_MARKER = '.migration-done'
@@ -122,8 +122,9 @@ export async function migrateFromOldApp(): Promise<void> {
 
   await log(`Found ${remoteProfiles.length} remote profile(s) to migrate`)
 
-  let successCount = 0
-  let failCount = 0
+  const existingIds = new Set(
+    ((await getProfileConfig(true)).items || []).map((item) => item.id)
+  )
 
   for (const oldItem of remoteProfiles) {
     try {
@@ -132,16 +133,33 @@ export async function migrateFromOldApp(): Promise<void> {
         url: oldItem.url,
         name: oldItem.name || 'Migrated Profile'
       })
-      successCount++
       await log(`Migrated profile "${oldItem.name || oldItem.uid}" (${oldItem.url})`)
     } catch (e) {
-      failCount++
+      // addProfileItem persists the profile *before* it tries to activate it via
+      // a hot-reload into the core. On first-run migration the core is not running
+      // yet, so that activation throws even though the profile was imported. Treat
+      // the persisted config (checked below), not this throw, as the source of
+      // truth; genuine failures (e.g. network) never reach the config.
       await log(
-        `Failed to migrate profile "${oldItem.name || oldItem.uid}" (${oldItem.url}): ${e instanceof Error ? e.message : String(e)}`
+        `Profile "${oldItem.name || oldItem.uid}" (${oldItem.url}) reported: ${e instanceof Error ? e.message : String(e)}`
       )
     }
   }
 
-  await log(`Migration complete: ${successCount} succeeded, ${failCount} failed`)
+  const profileCfg = await getProfileConfig(true)
+  const importedItems = (profileCfg.items || []).filter((item) => !existingIds.has(item.id))
+
+  // Migration runs before the core starts, so addProfileItem could not select any
+  // profile. Pick the first imported one so the core boots with a real config
+  // instead of a blank default.
+  if (importedItems.length > 0 && !profileCfg.current) {
+    profileCfg.current = importedItems[0].id
+    await setProfileConfig(profileCfg)
+    await log(`Selected "${importedItems[0].name}" as the active profile`)
+  }
+
+  await log(
+    `Migration complete: ${importedItems.length}/${remoteProfiles.length} profile(s) imported`
+  )
   await writeFile(getMigrationMarkerPath(), new Date().toISOString(), 'utf-8')
 }
