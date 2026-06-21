@@ -328,6 +328,12 @@ export async function stopCore(force = false): Promise<void> {
         () => resolve()
       )
     })
+  } else {
+    // darwin/linux: reap orphan Tauri sidecars left from the bridge migration.
+    // Match the full cmdline so the new `mihomo` core is never touched.
+    await new Promise<void>((resolve) => {
+      execFile('pkill', ['-f', 'out-mihomo'], () => resolve())
+    })
   }
 }
 
