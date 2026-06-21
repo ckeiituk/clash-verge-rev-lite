@@ -34,10 +34,22 @@ function isNewerVersion(candidate: string, current: string): boolean {
   if (a.pre === b.pre) return false
   if (a.pre === '') return true // a final release outranks a same-version prerelease
   if (b.pre === '') return false // a prerelease is never newer than the final release
-  // both are differing prereleases of the same x.y.z (rolling alpha): offer it — the
-  // alpha feed only ever serves the newest, and a lexical compare would mis-rank
-  // numeric suffixes (e.g. "alpha.10" < "alpha.2").
-  return true
+  // both are prereleases of the same x.y.z: compare dot-separated identifiers per
+  // semver §11 — numeric identifiers numerically (so alpha.10 > alpha.2 and a feed
+  // serving an OLDER alpha.3 over alpha.5 is NOT treated as an update), others lexically.
+  const ap = a.pre.split('.')
+  const bp = b.pre.split('.')
+  for (let i = 0; i < Math.max(ap.length, bp.length); i++) {
+    if (ap[i] === undefined) return false // fewer identifiers → lower precedence
+    if (bp[i] === undefined) return true // more identifiers → higher precedence
+    if (ap[i] === bp[i]) continue
+    const an = /^\d+$/.test(ap[i])
+    const bn = /^\d+$/.test(bp[i])
+    if (an && bn) return Number(ap[i]) > Number(bp[i])
+    if (an !== bn) return bn // numeric identifiers rank lower than alphanumeric ones
+    return ap[i] > bp[i]
+  }
+  return false
 }
 
 export async function checkUpdate(): Promise<AppVersion | undefined> {

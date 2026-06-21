@@ -13,7 +13,7 @@ import {
 } from 'electron'
 import { addProfileItem, getAppConfig, patchControledMihomoConfig } from './config'
 import { quitWithoutCore, startCore, stopCore } from './core/manager'
-import { triggerSysProxy } from './sys/sysproxy'
+import { disableSysProxy } from './sys/sysproxy'
 import icon from '../../resources/icon.png?asset'
 import { createTray } from './resolve/tray'
 import { createApplicationMenu } from './resolve/menu'
@@ -294,7 +294,7 @@ app.on('before-quit', async (e) => {
         clearTimeout(quitTimeout)
         quitTimeout = null
       }
-      await triggerSysProxy(false, false).catch(() => {})
+      await disableSysProxy(false).catch(() => {})
       await stopCore()
       app.exit()
       return
@@ -309,7 +309,7 @@ app.on('before-quit', async (e) => {
         clearTimeout(quitTimeout)
         quitTimeout = null
       }
-      await triggerSysProxy(false, false).catch(() => {})
+      await disableSysProxy(false).catch(() => {})
       await stopCore()
       app.exit()
     }
@@ -319,7 +319,7 @@ app.on('before-quit', async (e) => {
       clearTimeout(quitTimeout)
       quitTimeout = null
     }
-    await triggerSysProxy(false, false).catch(() => {})
+    await disableSysProxy(false).catch(() => {})
     await stopCore()
     app.exit()
   }
@@ -330,7 +330,7 @@ powerMonitor.on('shutdown', async () => {
     clearTimeout(quitTimeout)
     quitTimeout = null
   }
-  await triggerSysProxy(false, false).catch(() => {})
+  await disableSysProxy(false).catch(() => {})
   await stopCore()
   app.exit()
 })
@@ -647,7 +647,7 @@ export async function createWindow(appConfig?: AppConfig): Promise<void> {
     })
 
     mainWindow.on('session-end', async () => {
-      await triggerSysProxy(false, false).catch(() => {})
+      await disableSysProxy(false).catch(() => {})
       await stopCore()
     })
 

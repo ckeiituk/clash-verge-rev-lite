@@ -167,12 +167,15 @@ export async function migrateFromOldApp(): Promise<void> {
   const importedItems = (profileCfg.items || []).filter((item) => !existingIds.has(item.id))
 
   // Migration runs before the core starts, so addProfileItem could not select any
-  // profile. Pick the first imported one so the core boots with a real config
-  // instead of a blank default.
+  // profile. Prefer the subscription the user had active in the old app (matched by
+  // URL); fall back to the first imported one so the core boots with a real config.
   if (importedItems.length > 0 && !profileCfg.current) {
-    profileCfg.current = importedItems[0].id
+    const oldConfig = parseYaml<OldProfiles>(yamlContent)
+    const oldActiveUrl = oldConfig?.items?.find((i) => i.uid === oldConfig.current)?.url
+    const preferred = importedItems.find((i) => i.url === oldActiveUrl) ?? importedItems[0]
+    profileCfg.current = preferred.id
     await setProfileConfig(profileCfg)
-    await log(`Selected "${importedItems[0].name}" as the active profile`)
+    await log(`Selected "${preferred.name}" as the active profile`)
   }
 
   const presentUrls = new Set(
