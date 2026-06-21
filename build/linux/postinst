@@ -1,6 +1,17 @@
 #!/bin/bash
 
 APP_NAME="OutClash"
+APP_DIR="/opt/${APP_NAME}"
+
+# electron-builder may name the launcher after productName (OutClash) or the
+# lowercase package name (outclash); link whichever actually exists.
+if [ -x "${APP_DIR}/${APP_NAME}" ]; then
+    APP_BIN="${APP_DIR}/${APP_NAME}"
+elif [ -x "${APP_DIR}/outclash" ]; then
+    APP_BIN="${APP_DIR}/outclash"
+else
+    APP_BIN=""
+fi
 
 # Clean up old "sparkle" installation
 if [ -L '/usr/bin/sparkle' ]; then
@@ -10,14 +21,16 @@ if [ -L '/usr/bin/sparkle' ]; then
     rm -f '/usr/bin/sparkle'
 fi
 
-if type update-alternatives 2>/dev/null >&1; then
-    # Remove previous link if it doesn't use update-alternatives
-    if [ -L "/usr/bin/${APP_NAME}" -a -e "/usr/bin/${APP_NAME}" -a "$(readlink "/usr/bin/${APP_NAME}")" != "/etc/alternatives/${APP_NAME}" ]; then
-        rm -f "/usr/bin/${APP_NAME}"
+if [ -n "$APP_BIN" ]; then
+    if type update-alternatives 2>/dev/null >&1; then
+        # Remove previous link if it doesn't use update-alternatives
+        if [ -L "/usr/bin/${APP_NAME}" -a -e "/usr/bin/${APP_NAME}" -a "$(readlink "/usr/bin/${APP_NAME}")" != "/etc/alternatives/${APP_NAME}" ]; then
+            rm -f "/usr/bin/${APP_NAME}"
+        fi
+        update-alternatives --install "/usr/bin/${APP_NAME}" "${APP_NAME}" "${APP_BIN}" 100 || ln -sf "${APP_BIN}" "/usr/bin/${APP_NAME}"
+    else
+        ln -sf "${APP_BIN}" "/usr/bin/${APP_NAME}"
     fi
-    update-alternatives --install "/usr/bin/${APP_NAME}" "${APP_NAME}" "/opt/${APP_NAME}/${APP_NAME}" 100 || ln -sf "/opt/${APP_NAME}/${APP_NAME}" "/usr/bin/${APP_NAME}"
-else
-    ln -sf "/opt/${APP_NAME}/${APP_NAME}" "/usr/bin/${APP_NAME}"
 fi
 
 chmod 4755 "/opt/${APP_NAME}/chrome-sandbox" || true
