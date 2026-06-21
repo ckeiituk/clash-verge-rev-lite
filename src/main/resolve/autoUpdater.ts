@@ -15,7 +15,6 @@ import { disableSysProxy } from '../sys/sysproxy'
 import { t } from '../utils/i18n'
 
 let downloadCancelToken: CancelTokenSource | null = null
-let lastCheckedUpdate: AppVersion | undefined
 
 // Compare semver-ish versions (x.y.z with optional -prerelease). Returns true only
 // if `candidate` is strictly newer than `current`, so switching alpha→stable never
@@ -73,10 +72,8 @@ export async function checkUpdate(): Promise<AppVersion | undefined> {
   const latest = parseYaml<AppVersion>(res.data)
   const currentVersion = app.getVersion()
   if (isNewerVersion(latest.version, currentVersion)) {
-    lastCheckedUpdate = latest
     return latest
   } else {
-    lastCheckedUpdate = undefined
     return undefined
   }
 }
@@ -84,10 +81,11 @@ export async function checkUpdate(): Promise<AppVersion | undefined> {
 export async function downloadAndInstallUpdate(version: string): Promise<void> {
   const { 'mixed-port': mixedPort = 0 } = (await getRuntimeConfig()) ?? {}
   const { updateChannel = 'stable' } = await getAppConfig()
-  // Alpha artifacts live at the fixed `alpha` tag, not the semver tag. Prefer the
-  // releaseTag from the feed; if that module state was lost, fall back by channel
-  // (alpha → 'alpha') so the download never targets a non-existent tag.
-  const rawTag = lastCheckedUpdate?.releaseTag ?? (updateChannel === 'alpha' ? 'alpha' : version)
+  // Derive the GitHub release tag from the CURRENT channel, not from cached check
+  // state: alpha artifacts live at the fixed `alpha` tag, stable at the version tag.
+  // This avoids downloading the wrong channel's build if the user toggled channel
+  // after the last update check.
+  const rawTag = updateChannel === 'alpha' ? 'alpha' : version
   const releaseTag = rawTag.startsWith('v') ? rawTag.slice(1) : rawTag
   const baseUrl = `https://github.com/ckeiituk/outclash/releases/download/${releaseTag}/`
   const fileMap = {
