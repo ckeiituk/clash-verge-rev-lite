@@ -17,16 +17,6 @@ if git diff --cached --name-only | grep -q '^src/'; then
     fi
 fi
 
-if git diff --cached --name-only | grep -q '^src-tauri/'; then
-    cd src-tauri
-    cargo fmt
-    if [ $? -ne 0 ]; then
-        echo "rustfmt failed to format the code. Please fix the issues and try again."
-        exit 1
-    fi
-    cd ..
-fi
-
 #git add .
 
 # 允许提交
