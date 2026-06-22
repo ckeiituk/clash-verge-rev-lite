@@ -17,7 +17,7 @@ export const defaultConfig: AppConfig = {
   controlDns: false,
   controlSniff: false,
   hosts: [],
-  sysProxy: { enable: true, mode: 'manual' },
+  sysProxy: { enable: false, mode: 'manual' },
   proxyMode: false,
   proxyModeBehaviorMigrated: true,
   disableLoopbackDetector: false,
