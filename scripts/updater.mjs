@@ -2,17 +2,22 @@ import yaml from 'yaml'
 import { readFileSync, writeFileSync } from 'fs'
 
 const pkg = readFileSync('package.json', 'utf-8')
-let changelog = readFileSync('changelog.md', 'utf-8')
+const fullChangelog = readFileSync('changelog.md', 'utf-8')
 const { version } = JSON.parse(pkg)
 const isAlpha = process.env.CHANNEL === 'alpha'
 const downloadUrl = isAlpha
   ? `https://github.com/ckeiituk/outclash/releases/download/alpha`
   : `https://github.com/ckeiituk/outclash/releases/download/${version}`
+// The update feed shows ONLY the newest version's section (everything from the
+// first "## " up to the next "## "), not the whole changelog history.
+const sections = fullChangelog.split(/^## /m)
+const latestSection = sections.length > 1 ? `## ${sections[1].trimEnd()}` : fullChangelog
 const latest = {
   version,
   ...(isAlpha && { releaseTag: 'alpha' }),
-  changelog
+  changelog: latestSection
 }
+let changelog = fullChangelog
 
 const badge = (format, label, logo) =>
   `https://img.shields.io/badge/${format}-default?style=flat&logo=${logo}&label=${encodeURIComponent(label)}`

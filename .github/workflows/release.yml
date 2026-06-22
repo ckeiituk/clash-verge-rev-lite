@@ -46,7 +46,7 @@ jobs:
         id: fetch_changelog
         run: |
           if [ -f "changelog.md" ]; then
-            UPDATE_LOGS=$(cat changelog.md)
+            UPDATE_LOGS=$(awk '/^## /{n++} n==1' changelog.md)
             if [ -n "$UPDATE_LOGS" ]; then
               echo "Found changelog"
               echo "UPDATE_LOGS<<EOF" >> $GITHUB_ENV
@@ -312,7 +312,7 @@ jobs:
         id: fetch_changelog
         run: |
           if [ -f "changelog.md" ]; then
-            UPDATE_LOGS=$(cat changelog.md)
+            UPDATE_LOGS=$(awk '/^## /{n++} n==1' changelog.md)
             if [ -n "$UPDATE_LOGS" ]; then
               echo "Found changelog"
               echo "UPDATE_LOGS<<EOF" >> $GITHUB_ENV
