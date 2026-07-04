@@ -9,6 +9,16 @@ import { floatingWindow } from '../resolve/floatingWindow'
 import { mihomoIpcPath } from '../utils/dirs'
 import { debounce } from '../utils/debounce'
 import { safeSend } from '../utils/safeSend'
+import { t } from '../utils/i18n'
+
+// The core answered the reload request and rejected the config itself —
+// the running core is untouched, so a restart would only destroy it.
+export class ConfigInvalidError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'ConfigInvalidError'
+  }
+}
 
 let axiosIns: AxiosInstance = null!
 let mihomoTrafficWs: WebSocket | null = null
@@ -283,7 +293,20 @@ export const mihomoHotReloadConfig = async (): Promise<void> => {
   const configPath = diffWorkDir ? mihomoWorkConfigPath(current) : mihomoWorkConfigPath('work')
   await resetProviderTracking()
   const instance = await getAxios()
-  await instance.put('/configs?force=true', { path: configPath })
+  try {
+    await instance.put('/configs?force=true', { path: configPath })
+  } catch (error) {
+    // The response interceptor rejects with error.response.data when the
+    // core answered, and with the raw AxiosError when nothing answered.
+    if (axios.isAxiosError(error) && !error.response) {
+      throw error
+    }
+    const message =
+      typeof error === 'object' && error && 'message' in error
+        ? String(error.message)
+        : String(error)
+    throw new ConfigInvalidError(`${t('error.coreConfigRejected')}: ${message}`)
+  }
   await waitForMihomoReloadReady()
   notifyProfileReloaded()
 }

@@ -13,6 +13,7 @@ import { BaseEditor } from '../base/base-editor-lazy'
 import { getProfileStr, setProfileStr } from '@renderer/utils/ipc'
 import ConfirmModal from '../base/base-confirm'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
 
 interface Props {
   id: string
@@ -138,7 +139,12 @@ const EditFileModal: React.FC<Props> = (props) => {
             <Button
               size="sm"
               onClick={async () => {
-                await setProfileStr(id, currData)
+                try {
+                  await setProfileStr(id, currData)
+                } catch (e) {
+                  toast.error(`${e}`)
+                  return
+                }
                 setOriginalData(currData)
                 forceCloseRef.current = true
                 closeWithAnimation()

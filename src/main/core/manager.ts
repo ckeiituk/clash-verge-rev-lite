@@ -169,9 +169,19 @@ export async function startCore(detached = false): Promise<Promise<void>[]> {
     if (retry) {
       await writeFile(logPath(), `[Manager]: Try Restart Core\n`, { flag: 'a' })
       retry--
-      await restartCore()
+      try {
+        await restartCore()
+      } catch (e) {
+        // Restart refused to spawn (e.g. config no longer validates), so no
+        // further 'close' events will fire — tear down leftovers and stop.
+        await writeFile(logPath(), `[Manager]: Restart after crash failed, ${e}\n`, { flag: 'a' })
+        await stopCore().catch(() => {})
+        await dropSysProxyOnCoreFailure()
+        showError(t('tray.coreStartError'), `${e}`)
+      }
     } else {
       await stopCore()
+      await dropSysProxyOnCoreFailure()
     }
   })
   child.stdout?.pipe(stdout)
@@ -427,12 +437,47 @@ async function stopChildProcess(process: ChildProcess): Promise<void> {
 }
 
 export async function restartCore(): Promise<void> {
+  // No leading stopCore here: startCore validates the new config
+  // (generateProfile -> checkProfile) BEFORE stopping the old core, so a
+  // broken config never kills a healthy one. Errors propagate so callers
+  // can revert persisted state.
+  const promises = await startCore()
+  await Promise.all(promises)
+  await reapplySysProxyIfDropped()
+}
+
+// Set when a terminal core failure forced the OS proxy off; the next
+// successful core start re-applies it once, per the config at that moment.
+let sysProxyDroppedOnFailure = false
+
+export async function dropSysProxyOnCoreFailure(): Promise<void> {
   try {
-    await stopCore()
-    const promises = await startCore()
-    await Promise.all(promises)
-  } catch (e) {
-    showError(t('tray.coreStartError'), `${e}`)
+    const { sysProxy = { enable: false } } = await getAppConfig()
+    if (sysProxy.enable) {
+      sysProxyDroppedOnFailure = true
+      await disableSysProxy(false)
+    }
+  } catch (error) {
+    await writeFile(logPath(), `[Manager]: disable sysproxy on core failure failed, ${error}\n`, {
+      flag: 'a'
+    })
+  }
+}
+
+async function reapplySysProxyIfDropped(): Promise<void> {
+  if (!sysProxyDroppedOnFailure) return
+  sysProxyDroppedOnFailure = false
+  // Read the config fresh: a tray toggle may have flipped sysProxy.enable
+  // while the core was restarting.
+  const { sysProxy = { enable: false }, onlyActiveDevice = false } = await getAppConfig()
+  if (sysProxy.enable) {
+    try {
+      await triggerSysProxy(true, onlyActiveDevice)
+    } catch (error) {
+      await writeFile(logPath(), `[Manager]: reapply sysproxy failed, ${error}\n`, {
+        flag: 'a'
+      })
+    }
   }
 }
 
@@ -473,13 +518,29 @@ async function checkProfile(): Promise<void> {
       { env }
     )
   } catch (error) {
-    if (error instanceof Error && 'stdout' in error) {
-      const { stdout } = error as { stdout: string }
-      const errorLines = stdout
+    if (error instanceof Error && ('stdout' in error || 'stderr' in error)) {
+      const { stdout = '', stderr = '' } = error as unknown as {
+        stdout?: string
+        stderr?: string
+      }
+      const output = `${stdout}\n${stderr}`
+      const errorLines = output
         .split('\n')
-        .filter((line) => line.includes('level=error'))
-        .map((line) => line.split('level=error')[1])
-      throw new Error(`Profile Check Failed:\n${errorLines.join('\n')}`)
+        .map((line) => line.match(/level=(?:error|fatal)(.*)$/)?.[1])
+        .filter((part): part is string => part !== undefined)
+      if (errorLines.length > 0) {
+        throw new Error(`${t('error.profileCheckFailed')}:\n${errorLines.join('\n')}`)
+      }
+      // No level-tagged diagnostics (exec failure, exotic output) — fall back
+      // to the exec error message plus the tail of whatever the core printed.
+      const rawTail = output
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .slice(-10)
+      throw new Error(
+        `${t('error.profileCheckFailed')}:\n${[error.message, ...rawTail].join('\n')}`
+      )
     } else {
       throw error
     }

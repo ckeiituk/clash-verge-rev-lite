@@ -8,8 +8,8 @@ import {
 } from '../utils/dirs'
 import { mkdir, readFile, rm, writeFile } from 'fs/promises'
 import { restartCore } from '../core/manager'
-import { getRuntimeConfig } from '../core/factory'
-import { mihomoHotReloadConfig, patchMihomoConfig } from '../core/mihomoApi'
+import { generateProfile, getRuntimeConfig } from '../core/factory'
+import { ConfigInvalidError, mihomoHotReloadConfig, patchMihomoConfig } from '../core/mihomoApi'
 import { getAppConfig, patchAppConfig } from './app'
 import { getControledMihomoConfig, patchControledMihomoConfig } from './controledMihomo'
 import { ipcMain } from 'electron'
@@ -63,6 +63,15 @@ export async function changeCurrentProfile(id: string): Promise<void> {
     }
   } catch (e) {
     config.current = current
+    // The failed apply already regenerated the runtime config and factory
+    // caches for the new profile — re-sync them with the reverted current.
+    try {
+      await generateProfile()
+    } catch (regenError) {
+      await appendProfileReloadLog(
+        `revert regenerate failed for profile ${id}: ${formatProfileReloadError(regenError)}`
+      )
+    }
     throw e
   } finally {
     await setProfileConfig(config)
@@ -446,6 +455,14 @@ async function reloadCurrentProfileOrRestart(id: string): Promise<void> {
     await mihomoHotReloadConfig()
     await appendProfileReloadLog(`reload success for profile ${id}`)
   } catch (error) {
+    if (error instanceof ConfigInvalidError) {
+      // The core rejected the config and keeps serving the old one —
+      // restarting would only tear down a healthy core.
+      await appendProfileReloadLog(
+        `reload rejected for profile ${id}: ${formatProfileReloadError(error)}`
+      )
+      throw error
+    }
     await appendProfileReloadLog(
       `reload failed for profile ${id}, fallback restart: ${formatProfileReloadError(error)}`
     )
@@ -476,16 +493,68 @@ async function reloadCurrentProfile(id: string): Promise<void> {
   }
 }
 
+// Restore the previous profile content after a failed apply and re-sync the
+// runtime config plus the factory caches poisoned by the failed generate.
+// Every step is best-effort: the ORIGINAL apply error must reach the caller.
+async function revertProfileApply(
+  id: string,
+  previousContent: string | null,
+  applyError: unknown
+): Promise<void> {
+  await appendProfileReloadLog(
+    `apply failed for profile ${id}, reverting: ${formatProfileReloadError(applyError)}`
+  )
+  try {
+    if (previousContent === null) {
+      await rm(profilePath(id))
+    } else {
+      await writeFile(profilePath(id), previousContent, 'utf-8')
+    }
+  } catch (restoreError) {
+    await appendProfileReloadLog(
+      `revert write failed for profile ${id}: ${formatProfileReloadError(restoreError)}`
+    )
+  }
+  try {
+    await generateProfile()
+  } catch (regenError) {
+    await appendProfileReloadLog(
+      `revert regenerate failed for profile ${id}: ${formatProfileReloadError(regenError)}`
+    )
+  }
+  if (!(applyError instanceof ConfigInvalidError)) {
+    // Transport failure: the core may be down. One attempt with the
+    // restored, previously working config.
+    try {
+      await restartCore()
+      await appendProfileReloadLog(`revert restart success for profile ${id}`)
+    } catch (restartError) {
+      await appendProfileReloadLog(
+        `revert restart failed for profile ${id}: ${formatProfileReloadError(restartError)}`
+      )
+    }
+  }
+}
+
 export async function setProfileStr(id: string, content: string): Promise<void> {
   const { current } = await getProfileConfig()
+  const previousContent = existsSync(profilePath(id))
+    ? await readFile(profilePath(id), 'utf-8')
+    : null
   await writeFile(profilePath(id), content, 'utf-8')
   if (current === id) {
-    const { useHotReloadProfile = true } = await getAppConfig()
-    if (useHotReloadProfile) {
-      await reloadCurrentProfileOrRestart(id)
-      return
+    try {
+      const { useHotReloadProfile = true } = await getAppConfig()
+      if (useHotReloadProfile) {
+        await reloadCurrentProfileOrRestart(id)
+        return
+      }
+      await restartCore()
+    } catch (error) {
+      await revertProfileApply(id, previousContent, error)
+      const reason = error instanceof Error ? error.message : String(error)
+      throw new Error(`${reason}\n${t('error.profileReverted')}`)
     }
-    await restartCore()
   }
 }
 

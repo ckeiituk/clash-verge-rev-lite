@@ -12,7 +12,7 @@ import {
   shell
 } from 'electron'
 import { addProfileItem, getAppConfig, patchControledMihomoConfig } from './config'
-import { quitWithoutCore, startCore, stopCore } from './core/manager'
+import { dropSysProxyOnCoreFailure, quitWithoutCore, startCore, stopCore } from './core/manager'
 import { disableSysProxy } from './sys/sysproxy'
 import icon from '../../resources/icon.png?asset'
 import { createTray } from './resolve/tray'
@@ -381,14 +381,21 @@ app.whenReady().then(async () => {
   const coreStartPromise = (async (): Promise<void> => {
     try {
       const [startPromise] = await startCore()
-      startPromise.then(async () => {
-        await initProfileUpdater()
+      startPromise.catch(async (e) => {
+        showError(t('dialog.coreStartError'), `${e}`)
       })
       coreStarted = true
     } catch (e) {
       showError(t('dialog.coreStartError'), `${e}`)
+      // A dead core with the OS proxy still on black-holes all traffic.
+      await dropSysProxyOnCoreFailure()
     }
   })()
+
+  // Start the updater regardless of the core start outcome: subscription
+  // refresh works without a core, and it is the recovery path when a remote
+  // profile broke the start and the server later ships a fixed config.
+  initProfileUpdater()
 
   await createWindowPromise
 
