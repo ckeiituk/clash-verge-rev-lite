@@ -3,6 +3,7 @@ node_modules
 .DS_Store
 dist
 dist-ssr
+dist-design
 out
 *.local
 update.json
@@ -68,3 +69,10 @@ Agents.md
 WORKFLOWS.md
 Workflows.md
 TODO.md
+
+# Local design playground
+src/renderer/design.html
+src/renderer/src/design/
+vite.config.design.mts
+design-appearance.png
+.playwright-mcp/

@@ -4,7 +4,7 @@ const { configs } = require('@electron-toolkit/eslint-config-ts')
 
 module.exports = [
   {
-    ignores: ['**/node_modules/**', '**/dist/**', '**/out/**', '**/extra/**']
+    ignores: ['**/node_modules/**', '**/dist/**', '**/dist-design/**', '**/out/**', '**/extra/**']
   },
 
   js.configs.recommended,
