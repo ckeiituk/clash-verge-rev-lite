@@ -73,6 +73,7 @@ interface AppConfig {
   autoCheckUpdate: boolean
   updateChannel?: 'stable' | 'alpha'
   updateChannelLocked?: boolean
+  logsUploadUrl?: string
   silentStart: boolean
   autoCloseConnection: boolean
   expandProxyGroups?: boolean
@@ -135,6 +136,8 @@ interface ProfileItem {
   announce?: string
   logo?: string
   supportUrl?: string
+  logsUploadUrl?: string
+  customLogsUploadUrl?: string
   customHwid?: string
   globalMode?: boolean
   customCss?: string
@@ -145,4 +148,10 @@ interface SubscriptionUserInfo {
   download: number
   total: number
   expire: number
+}
+
+interface LogFileInfo {
+  name: string
+  size: number // bytes
+  mtime: number // epoch ms
 }

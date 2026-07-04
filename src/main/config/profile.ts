@@ -205,6 +205,7 @@ export async function createProfile(item: Partial<ProfileItem>): Promise<Profile
     url: item.url,
     ua: item.ua,
     customHwid: item.customHwid,
+    customLogsUploadUrl: item.customLogsUploadUrl,
     verify: item.verify ?? true,
     autoUpdate: item.autoUpdate ?? true,
     interval: item.interval || 0,
@@ -327,6 +328,20 @@ export async function createProfile(item: Partial<ProfileItem>): Promise<Profile
       )
       if (supportUrlKey) {
         newItem.supportUrl = headers[supportUrlKey]
+      }
+      const logsUploadUrlKey = Object.keys(headers).find((k) =>
+        k.toLowerCase().endsWith('logs-upload-url')
+      )
+      if (logsUploadUrlKey) {
+        const logsUploadUrl = String(headers[logsUploadUrlKey]).trim()
+        try {
+          const parsed = new URL(logsUploadUrl)
+          if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+            newItem.logsUploadUrl = logsUploadUrl
+          }
+        } catch {
+          // ignore invalid logs upload url
+        }
       }
       const globalModeKey = Object.keys(headers).find((k) =>
         k.toLowerCase().endsWith('global-mode')

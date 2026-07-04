@@ -20,10 +20,12 @@ import {
   Globe,
   ArrowUp,
   ArrowDown,
-  RefreshCcw
+  RefreshCcw,
+  FileUp
 } from 'lucide-react'
 import { SiTelegram } from 'react-icons/si'
 import EditInfoModal from '@renderer/components/profiles/edit-info-modal'
+import SendLogsModal from '@renderer/components/logs/send-logs-modal'
 import { Spinner } from '@renderer/components/ui/spinner'
 import { CharacterMorph } from '@renderer/components/ui/character-morph'
 import { calcTraffic } from '@renderer/utils/calc'
@@ -56,6 +58,7 @@ const Home: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingItem, setEditingItem] = useState<ProfileItem | null>(null)
   const [updating, setUpdating] = useState(false)
+  const [showSendLogs, setShowSendLogs] = useState(false)
 
   const handleAddProfile = (): void => {
     const newProfile: ProfileItem = {
@@ -170,6 +173,25 @@ const Home: React.FC = () => {
       return null
     }
   }, [supportUrl])
+
+  const logsUploadUrl = useMemo(() => {
+    const candidates = [
+      currentProfile?.customLogsUploadUrl,
+      appConfig?.logsUploadUrl,
+      currentProfile?.logsUploadUrl
+    ]
+    for (const candidate of candidates) {
+      const trimmed = candidate?.trim()
+      if (!trimmed) continue
+      try {
+        const parsed = new URL(trimmed)
+        if (parsed.protocol === 'http:' || parsed.protocol === 'https:') return trimmed
+      } catch {
+        // invalid url, try the next candidate
+      }
+    }
+    return ''
+  }, [currentProfile, appConfig])
 
   const onValueChange = async (enable: boolean): Promise<void> => {
     setLoading(true)
@@ -415,23 +437,36 @@ const Home: React.FC = () => {
               </div>
             </div>
           )}
-          {supportLinkInfo && (
-            <div className="flex justify-center text-sm text-muted-foreground">
-              <button
-                data-guide="home-support-link"
-                type="button"
-                onClick={() => open(supportLinkInfo.href)}
-                className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors cursor-pointer"
-              >
-                {supportLinkInfo.isTelegram ? (
-                  <SiTelegram className="size-4" />
-                ) : (
-                  <Globe className="size-4" />
-                )}
-                <span>{t('pages.profiles.support')}</span>
-              </button>
+          {(supportLinkInfo || logsUploadUrl) && (
+            <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
+              {supportLinkInfo && (
+                <button
+                  data-guide="home-support-link"
+                  type="button"
+                  onClick={() => open(supportLinkInfo.href)}
+                  className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors cursor-pointer"
+                >
+                  {supportLinkInfo.isTelegram ? (
+                    <SiTelegram className="size-4" />
+                  ) : (
+                    <Globe className="size-4" />
+                  )}
+                  <span>{t('pages.profiles.support')}</span>
+                </button>
+              )}
+              {logsUploadUrl && (
+                <button
+                  type="button"
+                  onClick={() => setShowSendLogs(true)}
+                  className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors cursor-pointer"
+                >
+                  <FileUp className="size-4" />
+                  <span>{t('pages.home.sendLogs')}</span>
+                </button>
+              )}
             </div>
           )}
+          {showSendLogs && <SendLogsModal onClose={() => setShowSendLogs(false)} />}
         </div>
       )}
     </BasePage>

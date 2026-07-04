@@ -380,6 +380,19 @@ const EditInfoModal: React.FC<Props> = (props) => {
                             />
                           </SettingItem>
                         )}
+                        <SettingItem title={t('profile.logsUploadUrl')}>
+                          <Input
+                            className="h-8"
+                            placeholder="https://..."
+                            value={values.customLogsUploadUrl ?? ''}
+                            onChange={(e) =>
+                              setValues({
+                                ...values,
+                                customLogsUploadUrl: e.target.value.trim() || undefined
+                              })
+                            }
+                          />
+                        </SettingItem>
                         {appConfig?.devMode && (
                           <SettingItem title="HWID Override">
                             <Input
@@ -487,6 +500,19 @@ const EditInfoModal: React.FC<Props> = (props) => {
                     />
                   </SettingItem>
                 )}
+                <SettingItem title={t('profile.logsUploadUrl')}>
+                  <Input
+                    className="h-8"
+                    placeholder="https://..."
+                    value={values.customLogsUploadUrl ?? ''}
+                    onChange={(e) =>
+                      setValues({
+                        ...values,
+                        customLogsUploadUrl: e.target.value.trim() || undefined
+                      })
+                    }
+                  />
+                </SettingItem>
                 {appConfig?.devMode && (
                   <SettingItem title="HWID Override">
                     <Input

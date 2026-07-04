@@ -145,7 +145,9 @@ const zhCN: LocaleTranslations = {
     downloadCancelled: '下载已取消',
     downloadFailed: '下载失败',
     userCancelledDownload: '用户取消下载',
-    scriptReturnMustBeObject: '脚本返回值必须是对象'
+    scriptReturnMustBeObject: '脚本返回值必须是对象',
+    noLogsUploadUrl: '未配置日志上传地址',
+    noLogFilesSelected: '未选择日志文件'
   },
   ui: {
     defaultTheme: '默认',
@@ -289,7 +291,9 @@ const enUS: LocaleTranslations = {
     downloadCancelled: 'Download cancelled',
     downloadFailed: 'Download failed',
     userCancelledDownload: 'User cancelled download',
-    scriptReturnMustBeObject: 'Script return value must be an object'
+    scriptReturnMustBeObject: 'Script return value must be an object',
+    noLogsUploadUrl: 'No logs upload URL configured',
+    noLogFilesSelected: 'No log files selected'
   },
   ui: {
     defaultTheme: 'Default',
@@ -434,7 +438,9 @@ const ruRU: LocaleTranslations = {
     downloadCancelled: 'Загрузка отменена',
     downloadFailed: 'Ошибка загрузки',
     userCancelledDownload: 'Пользователь отменил загрузку',
-    scriptReturnMustBeObject: 'Возвращаемое значение скрипта должно быть объектом'
+    scriptReturnMustBeObject: 'Возвращаемое значение скрипта должно быть объектом',
+    noLogsUploadUrl: 'URL для отправки логов не настроен',
+    noLogFilesSelected: 'Не выбраны файлы логов'
   },
   ui: {
     defaultTheme: 'По умолчанию',

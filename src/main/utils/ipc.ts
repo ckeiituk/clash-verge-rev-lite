@@ -119,6 +119,7 @@ import { getUserAgent } from './userAgent'
 import { setLanguage } from './i18n'
 import { updateApplicationMenu } from '../resolve/menu'
 import { createProfileFromShareLink } from '../core/shareLink'
+import { listLogFiles, uploadLogFiles } from '../resolve/logsUploader'
 
 function ipcErrorWrapper<T>( // eslint-disable-next-line @typescript-eslint/no-explicit-any
   fn: (...args: any[]) => Promise<T> // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -281,6 +282,8 @@ export function registerIpcMainHandlers(): void {
   ipcMain.handle('createHeapSnapshot', () => {
     v8.writeHeapSnapshot(path.join(logDir(), `${Date.now()}.heapsnapshot`))
   })
+  ipcMain.handle('listLogFiles', ipcErrorWrapper(listLogFiles))
+  ipcMain.handle('uploadLogFiles', (_e, fileNames) => ipcErrorWrapper(uploadLogFiles)(fileNames))
   ipcMain.handle('getUserAgent', () => ipcErrorWrapper(getUserAgent)())
   ipcMain.handle('getAppName', (_e, appPath) => ipcErrorWrapper(getAppName)(appPath))
   ipcMain.handle('getImageDataURL', (_e, url) => ipcErrorWrapper(getImageDataURL)(url))

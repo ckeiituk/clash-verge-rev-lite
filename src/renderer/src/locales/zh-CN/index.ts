@@ -241,7 +241,8 @@ export default {
       proxy: '代理:',
       noProfile: '没有活动配置',
       unlimited: '无限',
-      never: '永不'
+      never: '永不',
+      sendLogs: '发送日志'
     },
     settings: {
       title: '应用设置',
@@ -560,7 +561,8 @@ export default {
         '启用后切换或保存订阅时通过 API 热重载配置而无需重启内核，禁用时仍使用重启方式切换',
       disconnectDetectInterval: '断网检测间隔',
       bypassDetectInterfaces: '绕过检测的接口',
-      directOnSpecificWifi: '在特定的 WiFi SSID 下直连'
+      directOnSpecificWifi: '在特定的 WiFi SSID 下直连',
+      logsUploadUrl: '日志上传地址'
     },
     shortcuts: {
       title: '快捷键设置',
@@ -749,6 +751,16 @@ export default {
     domainOrIPCommaSeparated: '域名或 IP，用逗号分隔多个值'
   },
 
+  logsUpload: {
+    title: '发送日志',
+    description: '选择要发送给服务商支持的日志文件。',
+    selectAll: '全选',
+    noFiles: '未找到日志文件',
+    send: '发送',
+    success: '日志发送成功',
+    failed: '日志发送失败'
+  },
+
   profile: {
     editInfo: '编辑信息',
     editFile: '编辑文件',
@@ -841,7 +853,8 @@ export default {
     noProxies: '此配置中没有代理',
     proxiesAdded: '已添加 {{count}} 个代理',
     proxiesSaved: '代理已保存',
-    parseErrors: '{{count}} 个链接解析失败'
+    parseErrors: '{{count}} 个链接解析失败',
+    logsUploadUrl: '日志上传地址（覆盖）'
   },
 
   connection: {

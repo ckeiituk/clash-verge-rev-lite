@@ -166,7 +166,8 @@ export default {
       proxy: 'Proxy:',
       noProfile: 'No active profile',
       unlimited: 'Unlimited',
-      never: 'Never'
+      never: 'Never',
+      sendLogs: 'Send logs'
     },
     settings: {
       title: 'Application Settings',
@@ -496,7 +497,8 @@ export default {
         'When enabled, switching profiles or saving them reloads the config via API without restarting the core. When disabled, the core restarts.',
       disconnectDetectInterval: 'Disconnect detect interval',
       bypassDetectInterfaces: 'Bypass detect interfaces',
-      directOnSpecificWifi: 'Direct mode on specific WiFi SSID'
+      directOnSpecificWifi: 'Direct mode on specific WiFi SSID',
+      logsUploadUrl: 'Logs upload URL'
     },
     shortcuts: {
       title: 'Shortcut Settings',
@@ -689,6 +691,16 @@ export default {
     domainOrIPCommaSeparated: 'Domain or IP, separate multiple values with commas'
   },
 
+  logsUpload: {
+    title: 'Send logs',
+    description: "Select the log files to send to your provider's support.",
+    selectAll: 'Select all',
+    noFiles: 'No log files found',
+    send: 'Send',
+    success: 'Logs sent successfully',
+    failed: 'Failed to send logs'
+  },
+
   profile: {
     editInfo: 'Edit Info',
     editFile: 'Edit File',
@@ -783,7 +795,8 @@ export default {
     noProxies: 'No proxies in this profile',
     proxiesAdded: '{{count}} proxies added',
     proxiesSaved: 'Proxies saved',
-    parseErrors: '{{count}} links failed to parse'
+    parseErrors: '{{count}} links failed to parse',
+    logsUploadUrl: 'Logs upload URL override'
   },
 
   connection: {

@@ -167,7 +167,8 @@ export default {
       proxy: 'Прокси:',
       noProfile: 'Нет активного профиля',
       unlimited: 'Безлимит',
-      never: 'Никогда'
+      never: 'Никогда',
+      sendLogs: 'Отправить логи'
     },
     settings: {
       title: 'Настройки приложения',
@@ -495,7 +496,8 @@ export default {
         'Если включено, при смене или сохранении профиля конфигурация обновляется через API без перезапуска ядра. Иначе ядро перезапускается.',
       disconnectDetectInterval: 'Интервал проверки соединения',
       bypassDetectInterfaces: 'Исключить интерфейсы из проверки',
-      directOnSpecificWifi: 'Включать прямой режим для указанных Wi-Fi SSID'
+      directOnSpecificWifi: 'Включать прямой режим для указанных Wi-Fi SSID',
+      logsUploadUrl: 'URL для отправки логов'
     },
     shortcuts: {
       title: 'Настройки горячих клавиш',
@@ -689,6 +691,15 @@ export default {
     customHosts: 'Пользовательский hosts',
     domainOrIPCommaSeparated: 'Домен или IP, разделите несколько значений запятыми'
   },
+  logsUpload: {
+    title: 'Отправка логов',
+    description: 'Выберите файлы логов для отправки в поддержку провайдера.',
+    selectAll: 'Выбрать все',
+    noFiles: 'Файлы логов не найдены',
+    send: 'Отправить',
+    success: 'Логи успешно отправлены',
+    failed: 'Не удалось отправить логи'
+  },
   profile: {
     editInfo: 'Редактировать информацию',
     editFile: 'Редактировать файл',
@@ -783,7 +794,8 @@ export default {
     noProxies: 'Нет прокси в этом профиле',
     proxiesAdded: '{{count}} прокси добавлено',
     proxiesSaved: 'Прокси сохранены',
-    parseErrors: '{{count}} ссылок не удалось распарсить'
+    parseErrors: '{{count}} ссылок не удалось распарсить',
+    logsUploadUrl: 'URL отправки логов (переопределение)'
   },
 
   connection: {

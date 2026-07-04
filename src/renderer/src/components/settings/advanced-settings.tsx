@@ -9,6 +9,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger
 } from '@renderer/components/ui/dropdown-menu'
+import { Input } from '@renderer/components/ui/input'
 import {
   InputGroup,
   InputGroupAddon,
@@ -72,7 +73,8 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = (props) => {
     envType = [platform === 'win32' ? 'powershell' : 'bash'],
     networkDetection = false,
     networkDetectionBypass = ['VMware', 'vEthernet'],
-    networkDetectionInterval = 10
+    networkDetectionInterval = 10,
+    logsUploadUrl = ''
   } = appConfig || {}
 
   const pauseSSIDArray = pauseSSID ?? emptyArray
@@ -81,6 +83,7 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = (props) => {
 
   const [bypass, setBypass] = useState(networkDetectionBypass)
   const [interval, setInterval] = useState(networkDetectionInterval)
+  const [logsUploadUrlInput, setLogsUploadUrlInput] = useState(logsUploadUrl)
   const envTypeValue = envType as EnvType[]
   const envTypeLabels = envOptions
     .filter((option) => envTypeValue.includes(option.value))
@@ -90,6 +93,10 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = (props) => {
   useEffect(() => {
     setPauseSSIDInput(pauseSSIDArray)
   }, [pauseSSIDArray])
+
+  useEffect(() => {
+    setLogsUploadUrlInput(logsUploadUrl)
+  }, [logsUploadUrl])
 
   const handleEnvTypeChange = async (value: EnvType, checked: boolean): Promise<void> => {
     const next = checked
@@ -319,6 +326,17 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = (props) => {
           checked={useHotReloadProfile}
           onCheckedChange={(v) => {
             patchAppConfig({ useHotReloadProfile: v })
+          }}
+        />
+      </SettingItem>
+      <SettingItem title={t('settings.advanced.logsUploadUrl')} divider>
+        <Input
+          className="w-[200px] h-8"
+          placeholder="https://..."
+          value={logsUploadUrlInput}
+          onChange={(e) => setLogsUploadUrlInput(e.target.value)}
+          onBlur={() => {
+            patchAppConfig({ logsUploadUrl: logsUploadUrlInput.trim() || undefined })
           }}
         />
       </SettingItem>

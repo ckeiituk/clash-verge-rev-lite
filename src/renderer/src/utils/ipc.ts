@@ -476,6 +476,14 @@ export async function stopNetworkDetection(): Promise<void> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('stopNetworkDetection'))
 }
 
+export async function listLogFiles(): Promise<LogFileInfo[]> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('listLogFiles'))
+}
+
+export async function uploadLogFiles(fileNames: string[]): Promise<void> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('uploadLogFiles', fileNames))
+}
+
 let applyThemeRunning = false
 const waitList: string[] = []
 export async function applyTheme(theme: string): Promise<void> {
