@@ -230,7 +230,8 @@ export default {
     },
     logs: {
       title: 'Логи',
-      clearLogs: 'Очистить логи'
+      clearLogs: 'Очистить логи',
+      openLogDir: 'Открыть папку логов'
     },
     rules: {
       title: 'Правила'

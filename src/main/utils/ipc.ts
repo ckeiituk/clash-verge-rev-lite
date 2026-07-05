@@ -1,4 +1,4 @@
-import { app, ipcMain } from 'electron'
+import { app, ipcMain, shell } from 'electron'
 import {
   mihomoChangeProxy,
   mihomoCloseAllConnections,
@@ -284,6 +284,7 @@ export function registerIpcMainHandlers(): void {
   })
   ipcMain.handle('listLogFiles', ipcErrorWrapper(listLogFiles))
   ipcMain.handle('uploadLogFiles', (_e, fileNames) => ipcErrorWrapper(uploadLogFiles)(fileNames))
+  ipcMain.handle('openLogDir', () => ipcErrorWrapper(async () => shell.openPath(logDir()))())
   ipcMain.handle('getUserAgent', () => ipcErrorWrapper(getUserAgent)())
   ipcMain.handle('getAppName', (_e, appPath) => ipcErrorWrapper(getAppName)(appPath))
   ipcMain.handle('getImageDataURL', (_e, url) => ipcErrorWrapper(getImageDataURL)(url))

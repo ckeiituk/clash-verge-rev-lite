@@ -484,6 +484,10 @@ export async function uploadLogFiles(fileNames: string[]): Promise<void> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('uploadLogFiles', fileNames))
 }
 
+export async function openLogDir(): Promise<void> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('openLogDir'))
+}
+
 let applyThemeRunning = false
 const waitList: string[] = []
 export async function applyTheme(theme: string): Promise<void> {

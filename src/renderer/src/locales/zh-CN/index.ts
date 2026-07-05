@@ -303,7 +303,8 @@ export default {
     },
     logs: {
       title: '实时日志',
-      clearLogs: '清空日志'
+      clearLogs: '清空日志',
+      openLogDir: '打开日志文件夹'
     },
     rules: {
       title: '分流规则'

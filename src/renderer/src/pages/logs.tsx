@@ -9,7 +9,8 @@ import { Virtuoso, VirtuosoHandle } from 'react-virtuoso'
 import { useTranslation } from 'react-i18next'
 import { useLogsStore } from '@renderer/store/logs-store'
 import { includesIgnoreCase } from '@renderer/utils/includes'
-import { MapPin, Trash2 } from 'lucide-react'
+import { openLogDir } from '@renderer/utils/ipc'
+import { FolderOpen, MapPin, Trash2 } from 'lucide-react'
 
 const Logs: React.FC = () => {
   const { t } = useTranslation()
@@ -78,6 +79,15 @@ const Logs: React.FC = () => {
               onClick={toggleTrace}
             >
               <MapPin className="text-lg" />
+            </Button>
+            <Button
+              size="icon-sm"
+              title={t('pages.logs.openLogDir')}
+              className="ml-2 p-0 bg-clip-border"
+              variant="outline"
+              onClick={() => openLogDir()}
+            >
+              <FolderOpen className="text-lg" />
             </Button>
             <Button
               size="icon-sm"

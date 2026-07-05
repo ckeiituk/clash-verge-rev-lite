@@ -229,7 +229,8 @@ export default {
     },
     logs: {
       title: 'Real-time Logs',
-      clearLogs: 'Clear logs'
+      clearLogs: 'Clear logs',
+      openLogDir: 'Open logs folder'
     },
     rules: {
       title: 'Routing Rules'
