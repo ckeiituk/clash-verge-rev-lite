@@ -79,7 +79,11 @@ jobs:
           name: "OutClash v${{ env.VERSION }}"
           draft: false
           prerelease: false
-          make_latest: true
+          # Tauri v0.x releases must never become "latest": the Electron line
+          # lives in the same repository, and both the bridge discovery and the
+          # Electron auto-updater (releases/latest/download/latest.yml) resolve
+          # "latest" expecting an Electron release.
+          make_latest: false
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - run: |
@@ -132,6 +136,7 @@ jobs:
           tag_name: v${{env.VERSION}}
           name: "OutClash v${{env.VERSION}}"
           body_path: release.txt
+          make_latest: false
           token: ${{ secrets.GITHUB_TOKEN }}
 
   release:
@@ -294,6 +299,7 @@ jobs:
           tag_name: v${{ env.VERSION }}
           name: "OutClash v${{ env.VERSION }}"
           token: ${{ secrets.GITHUB_TOKEN }}
+          make_latest: false
           fail_on_unmatched_files: false
           files: |
             src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
@@ -484,6 +490,7 @@ jobs:
           tag_name: v${{ env.VERSION }}
           name: "OutClash v${{ env.VERSION }}"
           token: ${{ secrets.GITHUB_TOKEN }}
+          make_latest: false
           files: |
             src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
             src-tauri/target/${{ matrix.target }}/release/bundle/rpm/*.rpm
@@ -596,6 +603,7 @@ jobs:
           tag_name: v${{ env.VERSION }}
           name: "OutClash v${{ env.VERSION }}"
           token: ${{ secrets.GITHUB_TOKEN }}
+          make_latest: false
           files: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*setup*
 
       - name: Portable Bundle

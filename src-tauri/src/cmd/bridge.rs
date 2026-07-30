@@ -229,24 +229,41 @@ pub async fn run_bridge_check() -> Option<BridgeRelease> {
 
     let result = fetch_bridge_release().await;
 
-    let newly_found = {
+    let (newly_found, cache_changed) = {
         let mut state = BRIDGE_STATE.write();
         state.last_check = Some(Instant::now());
+        let previous = state.release.as_ref().map(|r| r.version.clone());
         // Overwrite unconditionally: a disabled gate (or a transient failure)
         // clears the cached release so the tray item disappears on the next
         // menu rebuild.
         state.release = result.clone();
-        match &result {
+        let current = result.as_ref().map(|r| r.version.clone());
+        let newly_found = match &result {
             Some(release) if state.last_notified.as_deref() != Some(release.version.as_str()) => {
                 state.last_notified = Some(release.version.clone());
                 Some(release.clone())
             }
             _ => None,
-        }
+        };
+        (newly_found, previous != current)
     };
+
+    match &result {
+        Some(release) => {
+            log::info!(target: "app", "bridge: check found v{}", release.version);
+        }
+        None => {
+            log::info!(target: "app", "bridge: check found no release (gate closed, offline, or no matching asset)");
+        }
+    }
 
     if let Some(release) = newly_found {
         on_new_release(&release);
+    } else if cache_changed {
+        // Same-version reappearance after a transient failure, or the gate
+        // switching off: resync the tray and the live webview, but do not
+        // toast again.
+        sync_release_ui(result.as_ref());
     }
 
     result
@@ -255,7 +272,7 @@ pub async fn run_bridge_check() -> Option<BridgeRelease> {
 /// Out-of-window signals for a freshly discovered release: system toast,
 /// tray menu item and (when the webview is alive) a frontend event.
 fn on_new_release(release: &BridgeRelease) {
-    use crate::core::{handle::Handle, tray::Tray};
+    use crate::core::handle::Handle;
     use crate::utils::notification::{notify_event, NotificationEvent};
 
     if Handle::global().is_exiting() {
@@ -269,15 +286,28 @@ fn on_new_release(release: &BridgeRelease) {
             },
         );
     }
+    sync_release_ui(Some(release));
+}
+
+/// Bring the tray menu and the live webview in line with the cached release
+/// without notifying the user again.
+fn sync_release_ui(release: Option<&BridgeRelease>) {
+    use crate::core::{handle::Handle, tray::Tray};
+
+    if Handle::global().is_exiting() {
+        return;
+    }
     if let Err(e) = Tray::global().update_all_states() {
         log::warn!(target: "app", "bridge: tray refresh failed: {e}");
     }
-    Handle::notify_bridge_available(
-        release.version.clone(),
-        release.download_url.clone(),
-        release.body.clone(),
-        false,
-    );
+    if let Some(release) = release {
+        Handle::notify_bridge_available(
+            release.version.clone(),
+            release.download_url.clone(),
+            release.body.clone(),
+            false,
+        );
+    }
 }
 
 pub fn bridge_cached_release() -> Option<BridgeRelease> {
@@ -436,7 +466,8 @@ fn get_installer_asset_name() -> String {
     } else if cfg!(target_os = "macos") {
         format!("OutClash_{}.pkg", arch)
     } else {
-        format!("OutClash_{}.deb", arch)
+        // electron-builder names Debian packages by dpkg arch: amd64, not x64
+        format!("OutClash_{}.deb", if arch == "x64" { "amd64" } else { arch })
     }
 }
 

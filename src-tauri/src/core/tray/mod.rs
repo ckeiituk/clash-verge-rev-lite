@@ -799,21 +799,29 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                 return;
             }
 
-            // A freshly created webview picks the flag up via bridge_status;
-            // the event below covers a webview that is already alive.
-            crate::cmd::set_bridge_force_show();
+            // Alive webview: deliver via the forced event. Dead webview
+            // (lightweight / silent start): arm the one-shot flag consumed by
+            // bridge_status on mount. Arming it while the webview is alive
+            // would leak the flag and force-reopen a dismissed dialog on a
+            // later webview re-creation.
+            let webview_alive = handle::Handle::global().get_window().is_some();
+            if !webview_alive {
+                crate::cmd::set_bridge_force_show();
+            }
             if crate::module::lightweight::is_in_lightweight_mode() {
                 crate::module::lightweight::exit_lightweight_mode();
             }
             let result = WindowManager::show_main_window();
             log::info!(target: "app", "Window show result: {result:?}");
-            if let Some(release) = crate::cmd::bridge_cached_release() {
-                handle::Handle::notify_bridge_available(
-                    release.version,
-                    release.download_url,
-                    release.body,
-                    true,
-                );
+            if webview_alive {
+                if let Some(release) = crate::cmd::bridge_cached_release() {
+                    handle::Handle::notify_bridge_available(
+                        release.version,
+                        release.download_url,
+                        release.body,
+                        true,
+                    );
+                }
             }
         }
         "system_proxy" => {
