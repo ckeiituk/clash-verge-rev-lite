@@ -4883,7 +4883,7 @@ dependencies = [
 
 [[package]]
 name = "outclash"
-version = "0.2.6"
+version = "0.3.1"
 dependencies = [
  "ab_glyph",
  "aes-gcm",
@@ -4897,6 +4897,7 @@ dependencies = [
  "dirs 6.0.0",
  "dunce",
  "futures",
+ "futures-util",
  "gethostname",
  "getrandom 0.3.3",
  "hex",
