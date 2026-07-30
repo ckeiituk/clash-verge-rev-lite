@@ -89,44 +89,12 @@ export const SystemInfoCard = () => {
     }
   }, [verge?.auto_check_update]);
 
+  // 24小时轮询已移至 UpdateButton（侧边栏常驻，不依赖当前页面）
   const { refresh } = useUpdateCheck({
     revalidateOnFocus: false,
     refreshInterval: 0,
     dedupingInterval: 60 * 60 * 1000,
   });
-
-  useEffect(() => {
-    if (!verge?.auto_check_update) return;
-
-    const updateLastChecked = () => {
-      const now = Date.now();
-      localStorage.setItem("last_check_update", now.toString());
-      setSystemState((prev) => ({
-        ...prev,
-        lastCheckUpdate: new Date(now).toLocaleString(),
-      }));
-    };
-
-    updateLastChecked();
-    refresh().catch(console.error);
-
-    const timeout = setTimeout(() => {
-      refresh().catch(console.error);
-    }, 5000);
-
-    const interval = setInterval(
-      () => {
-        updateLastChecked();
-        refresh().catch(console.error);
-      },
-      24 * 60 * 60 * 1000,
-    );
-
-    return () => {
-      clearTimeout(timeout);
-      clearInterval(interval);
-    };
-  }, [refresh, verge?.auto_check_update]);
 
   // 导航到设置页面
   const goToSettings = useCallback(() => {

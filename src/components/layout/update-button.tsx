@@ -7,6 +7,7 @@ import { Download } from "lucide-react";
 import { useSidebar } from "../ui/sidebar";
 import { cn } from "@root/lib/utils";
 import { useUpdateCheck } from "@/services/update-check";
+import { useVerge } from "@/hooks/use-verge";
 
 interface Props {
   className?: string;
@@ -16,10 +17,12 @@ const STORAGE_KEY = "outclash:lastUpdateViewerVersion";
 
 type StoredVersion = string | null;
 
+// localStorage (not sessionStorage): lightweight mode destroys the webview,
+// and a session-scoped flag would re-open the viewer on every re-creation.
 const readStoredVersion = (): StoredVersion => {
   if (typeof window === "undefined") return null;
   try {
-    return window.sessionStorage.getItem(STORAGE_KEY);
+    return window.localStorage.getItem(STORAGE_KEY);
   } catch {
     return null;
   }
@@ -29,9 +32,9 @@ const writeStoredVersion = (value: StoredVersion) => {
   if (typeof window === "undefined") return;
   try {
     if (value === null) {
-      window.sessionStorage.removeItem(STORAGE_KEY);
+      window.localStorage.removeItem(STORAGE_KEY);
     } else {
-      window.sessionStorage.setItem(STORAGE_KEY, value);
+      window.localStorage.setItem(STORAGE_KEY, value);
     }
   } catch {
     // ignore storage failures
@@ -43,11 +46,48 @@ export const UpdateButton = (props: Props) => {
   const { state: sidebarState } = useSidebar();
   const viewerRef = useRef<DialogRef>(null);
   const lastOpenedVersionRef = useRef<StoredVersion>(null);
-  const { snapshot, badgeOnly } = useUpdateCheck();
+  const { snapshot, badgeOnly, refresh } = useUpdateCheck();
+  const { verge } = useVerge();
+  const autoCheckUpdate = verge?.auto_check_update;
 
   useEffect(() => {
     lastOpenedVersionRef.current = readStoredVersion();
   }, []);
+
+  // The daily poll lives here (always mounted in the sidebar) rather than on
+  // the home page, so it keeps running no matter which page the window was
+  // left on.
+  useEffect(() => {
+    if (!autoCheckUpdate) return;
+
+    const touch = () => {
+      try {
+        localStorage.setItem("last_check_update", Date.now().toString());
+      } catch {
+        // ignore storage failures
+      }
+    };
+
+    touch();
+    refresh().catch(console.error);
+
+    const timeout = setTimeout(() => {
+      refresh().catch(console.error);
+    }, 5000);
+
+    const interval = setInterval(
+      () => {
+        touch();
+        refresh().catch(console.error);
+      },
+      24 * 60 * 60 * 1000,
+    );
+
+    return () => {
+      clearTimeout(timeout);
+      clearInterval(interval);
+    };
+  }, [autoCheckUpdate, refresh]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

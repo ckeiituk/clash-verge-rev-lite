@@ -1,10 +1,13 @@
 use super::CmdResult;
 use crate::config::Config;
+use once_cell::sync::Lazy;
+use parking_lot::RwLock;
 use reqwest::Client;
 use serde::Serialize;
 use std::env;
 use std::path::PathBuf;
-use std::time::Duration;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::time::{Duration, Instant};
 use tauri::{AppHandle, Emitter};
 use tokio::io::AsyncWriteExt;
 
@@ -31,6 +34,58 @@ pub struct BridgeProgress {
     pub downloaded: u64,
     pub total: u64,
     pub phase: String,
+}
+
+/// Cached outcome of the most recent bridge check, shared by the periodic
+/// background loop, the focus hook, the tray menu and the `bridge_status`
+/// command. Discovery must not depend on a live frontend: the webview may
+/// not exist when a check completes (silent start, lightweight mode).
+#[derive(Default)]
+struct BridgeState {
+    release: Option<BridgeRelease>,
+    last_check: Option<Instant>,
+    /// Release version already announced via toast/tray/event — prevents
+    /// re-notifying on every periodic tick.
+    last_notified: Option<String>,
+    /// One-shot flag set by the tray menu item: the next `bridge_status`
+    /// read must surface the dialog even if this version was dismissed.
+    force_show: bool,
+}
+
+static BRIDGE_STATE: Lazy<RwLock<BridgeState>> = Lazy::new(Default::default);
+static BRIDGE_CHECK_IN_FLIGHT: AtomicBool = AtomicBool::new(false);
+
+const BRIDGE_FIRST_DELAY: Duration = Duration::from_secs(3 * 60);
+const BRIDGE_PERIODIC_INTERVAL: Duration = Duration::from_secs(6 * 60 * 60);
+const BRIDGE_FOCUS_THROTTLE: Duration = Duration::from_secs(15 * 60);
+
+#[derive(Serialize, Clone)]
+pub struct BridgeStatus {
+    pub release: Option<BridgeRelease>,
+    pub forced: bool,
+}
+
+#[cfg(debug_assertions)]
+fn duration_from_env(var: &str, default: Duration) -> Duration {
+    env::var(var)
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .map(Duration::from_secs)
+        .unwrap_or(default)
+}
+
+fn bridge_first_delay() -> Duration {
+    #[cfg(debug_assertions)]
+    return duration_from_env("BRIDGE_FIRST_DELAY_SECS", BRIDGE_FIRST_DELAY);
+    #[cfg(not(debug_assertions))]
+    BRIDGE_FIRST_DELAY
+}
+
+fn bridge_periodic_interval() -> Duration {
+    #[cfg(debug_assertions)]
+    return duration_from_env("BRIDGE_PERIODIC_SECS", BRIDGE_PERIODIC_INTERVAL);
+    #[cfg(not(debug_assertions))]
+    BRIDGE_PERIODIC_INTERVAL
 }
 
 /// Resolve the URL of the currently active remote profile (Remnawave sub URL).
@@ -91,11 +146,12 @@ async fn bridge_rollout_enabled() -> bool {
         .unwrap_or(false)
 }
 
-/// Check if an Electron release is available
-#[tauri::command]
-pub async fn bridge_check() -> CmdResult<Option<BridgeRelease>> {
+/// Fetch the latest Electron release, honoring the rollout gate. Network
+/// only, no side effects; failures are logged and collapse to `None` so
+/// callers can treat any failure as "nothing to advertise".
+async fn fetch_bridge_release() -> Option<BridgeRelease> {
     if !bridge_rollout_enabled().await {
-        return Ok(None);
+        return None;
     }
 
     let client = Client::builder()
@@ -103,19 +159,31 @@ pub async fn bridge_check() -> CmdResult<Option<BridgeRelease>> {
         .connect_timeout(Duration::from_secs(10))
         .timeout(Duration::from_secs(30))
         .build()
-        .map_err(|e| e.to_string())?;
+        .ok()?;
 
     let url = format!(
         "https://api.github.com/repos/{}/releases/latest",
         ELECTRON_REPO
     );
-    let resp = client.get(&url).send().await.map_err(|e| e.to_string())?;
+    let resp = match client.get(&url).send().await {
+        Ok(r) => r,
+        Err(e) => {
+            log::warn!(target: "app", "bridge: release request failed: {e}");
+            return None;
+        }
+    };
 
     if !resp.status().is_success() {
-        return Ok(None);
+        return None;
     }
 
-    let json: serde_json::Value = resp.json().await.map_err(|e| e.to_string())?;
+    let json: serde_json::Value = match resp.json().await {
+        Ok(j) => j,
+        Err(e) => {
+            log::warn!(target: "app", "bridge: release response parse failed: {e}");
+            return None;
+        }
+    };
 
     let version = json["tag_name"]
         .as_str()
@@ -124,7 +192,7 @@ pub async fn bridge_check() -> CmdResult<Option<BridgeRelease>> {
         .to_string();
 
     if version.is_empty() {
-        return Ok(None);
+        return None;
     }
 
     let body = json["body"].as_str().unwrap_or("").to_string();
@@ -142,14 +210,141 @@ pub async fn bridge_check() -> CmdResult<Option<BridgeRelease>> {
         })
     });
 
-    match download_url {
-        Some(url) => Ok(Some(BridgeRelease {
-            version,
-            download_url: url,
-            body,
-        })),
-        None => Ok(None),
+    download_url.map(|url| BridgeRelease {
+        version,
+        download_url: url,
+        body,
+    })
+}
+
+/// Run a full bridge check and fold the outcome into the shared state.
+/// Concurrent callers collapse to the cached value.
+pub async fn run_bridge_check() -> Option<BridgeRelease> {
+    if BRIDGE_CHECK_IN_FLIGHT.swap(true, Ordering::SeqCst) {
+        return BRIDGE_STATE.read().release.clone();
     }
+    let _reset = scopeguard::guard((), |_| {
+        BRIDGE_CHECK_IN_FLIGHT.store(false, Ordering::SeqCst);
+    });
+
+    let result = fetch_bridge_release().await;
+
+    let newly_found = {
+        let mut state = BRIDGE_STATE.write();
+        state.last_check = Some(Instant::now());
+        // Overwrite unconditionally: a disabled gate (or a transient failure)
+        // clears the cached release so the tray item disappears on the next
+        // menu rebuild.
+        state.release = result.clone();
+        match &result {
+            Some(release) if state.last_notified.as_deref() != Some(release.version.as_str()) => {
+                state.last_notified = Some(release.version.clone());
+                Some(release.clone())
+            }
+            _ => None,
+        }
+    };
+
+    if let Some(release) = newly_found {
+        on_new_release(&release);
+    }
+
+    result
+}
+
+/// Out-of-window signals for a freshly discovered release: system toast,
+/// tray menu item and (when the webview is alive) a frontend event.
+fn on_new_release(release: &BridgeRelease) {
+    use crate::core::{handle::Handle, tray::Tray};
+    use crate::utils::notification::{notify_event, NotificationEvent};
+
+    if Handle::global().is_exiting() {
+        return;
+    }
+    if let Some(app) = Handle::global().app_handle() {
+        notify_event(
+            &app,
+            NotificationEvent::BridgeUpdateAvailable {
+                version: &release.version,
+            },
+        );
+    }
+    if let Err(e) = Tray::global().update_all_states() {
+        log::warn!(target: "app", "bridge: tray refresh failed: {e}");
+    }
+    Handle::notify_bridge_available(
+        release.version.clone(),
+        release.download_url.clone(),
+        release.body.clone(),
+        false,
+    );
+}
+
+pub fn bridge_cached_release() -> Option<BridgeRelease> {
+    BRIDGE_STATE.read().release.clone()
+}
+
+pub fn bridge_cached_version() -> Option<String> {
+    BRIDGE_STATE
+        .read()
+        .release
+        .as_ref()
+        .map(|r| r.version.clone())
+}
+
+pub fn set_bridge_force_show() {
+    BRIDGE_STATE.write().force_show = true;
+}
+
+/// Focus-triggered re-check, throttled so rapid focus/blur cycles do not
+/// hammer the subscription endpoint.
+pub fn spawn_bridge_check_if_stale() {
+    if crate::core::handle::Handle::global().is_exiting() {
+        return;
+    }
+    let stale = BRIDGE_STATE
+        .read()
+        .last_check
+        .map_or(true, |t| t.elapsed() >= BRIDGE_FOCUS_THROTTLE);
+    if !stale {
+        return;
+    }
+    crate::process::AsyncHandler::spawn(|| async {
+        let _ = run_bridge_check().await;
+    });
+}
+
+/// Periodic background discovery. Runs for the whole app lifetime so the
+/// rollout gate is noticed even when the webview never exists (silent
+/// start) or was destroyed (lightweight mode).
+pub fn start_bridge_periodic_check() {
+    crate::process::AsyncHandler::spawn(|| async {
+        tokio::time::sleep(bridge_first_delay()).await;
+        loop {
+            if crate::core::handle::Handle::global().is_exiting() {
+                break;
+            }
+            let _ = run_bridge_check().await;
+            tokio::time::sleep(bridge_periodic_interval()).await;
+        }
+    });
+}
+
+/// Check if an Electron release is available
+#[tauri::command]
+pub async fn bridge_check() -> CmdResult<Option<BridgeRelease>> {
+    Ok(run_bridge_check().await)
+}
+
+/// Cached bridge state for instant reads on webview creation; consumes the
+/// one-shot `force_show` flag set by the tray menu item.
+#[tauri::command]
+pub async fn bridge_status() -> CmdResult<BridgeStatus> {
+    let mut state = BRIDGE_STATE.write();
+    Ok(BridgeStatus {
+        release: state.release.clone(),
+        forced: std::mem::take(&mut state.force_show),
+    })
 }
 
 /// Download the Electron installer and launch it
@@ -177,7 +372,6 @@ pub async fn bridge_download(app: AppHandle, url: String) -> CmdResult<()> {
 
     let mut stream = resp.bytes_stream();
     use futures_util::StreamExt;
-    use std::time::Instant;
 
     let mut last_emit = Instant::now();
 

@@ -457,5 +457,14 @@
   "TUN requires Service Mode": "TUN режимы хезмәт күрсәтүне таләп итә",
   "Install Service": "Хезмәтне урнаштыру",
   "Installing Service...": "Хезмәт урнаштырыла...",
-  "Service Administrator Prompt": "OutClash система хезмәтен яңадан урнаштыру өчен администратор хокукларын таләп итә"
+  "Service Administrator Prompt": "OutClash система хезмәтен яңадан урнаштыру өчен администратор хокукларын таләп итә",
+  "Later": "Later",
+  "Update Available": "Update Available",
+  "BridgeUpdateTitle": "OutClash v{{version}} is available",
+  "BridgeUpdateBody": "A major update with a new engine is available. The installer will open automatically — your profiles will be migrated.",
+  "Downloading new version...": "Downloading new version...",
+  "Launching installer...": "Launching installer...",
+  "Please wait, the installer will open shortly...": "Please wait, the installer will open shortly...",
+  "BridgeUpdateAvailableTitle": "OutClash Update Available",
+  "BridgeUpdateAvailableBody": "OutClash v{version} is ready to install. Open the dashboard to update."
 }

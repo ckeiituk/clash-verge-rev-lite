@@ -403,5 +403,14 @@
   "Update Failed": "업데이트 실패",
   "New Version is available": "새 버전이 제공됩니다",
   "New Version": "새 버전",
-  "New update": "새로운 업데이트"
+  "New update": "새로운 업데이트",
+  "Later": "Later",
+  "Update Available": "Update Available",
+  "BridgeUpdateTitle": "OutClash v{{version}} is available",
+  "BridgeUpdateBody": "A major update with a new engine is available. The installer will open automatically — your profiles will be migrated.",
+  "Downloading new version...": "Downloading new version...",
+  "Launching installer...": "Launching installer...",
+  "Please wait, the installer will open shortly...": "Please wait, the installer will open shortly...",
+  "BridgeUpdateAvailableTitle": "OutClash Update Available",
+  "BridgeUpdateAvailableBody": "OutClash v{version} is ready to install. Open the dashboard to update."
 }

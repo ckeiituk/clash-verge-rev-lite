@@ -648,5 +648,14 @@
   "Saved Successfully": "保存成功",
   "New Version is available": "有新版本可用",
   "New Version": "新版本",
-  "New update": "有可用更新"
+  "New update": "有可用更新",
+  "Later": "稍后",
+  "Update Available": "有可用更新",
+  "BridgeUpdateTitle": "OutClash v{{version}} 已发布",
+  "BridgeUpdateBody": "重大更新（全新引擎）已可用。安装程序将自动打开，您的配置将被自动迁移。",
+  "Downloading new version...": "正在下载新版本...",
+  "Launching installer...": "正在启动安装程序...",
+  "Please wait, the installer will open shortly...": "请稍候，安装程序即将打开...",
+  "BridgeUpdateAvailableTitle": "OutClash 更新可用",
+  "BridgeUpdateAvailableBody": "OutClash v{version} 已可安装，请打开面板进行更新。"
 }

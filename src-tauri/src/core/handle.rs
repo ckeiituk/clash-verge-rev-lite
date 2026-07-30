@@ -23,6 +23,7 @@ enum FrontendEvent {
     StartupCompleted,
     ProfileUpdateStarted { uid: String },
     ProfileUpdateCompleted { uid: String },
+    BridgeAvailable { version: String, download_url: String, body: String, forced: bool },
 }
 
 /// 事件发送统计和监控
@@ -145,6 +146,15 @@ impl NotificationSystem {
                                         FrontendEvent::ProfileUpdateCompleted { uid } => {
                                             ("profile-update-completed", Ok(serde_json::json!({ "uid": uid })))
                                         }
+                                        FrontendEvent::BridgeAvailable { version, download_url, body, forced } => (
+                                            "bridge-available",
+                                            Ok(serde_json::json!({
+                                                "version": version,
+                                                "download_url": download_url,
+                                                "body": body,
+                                                "forced": forced,
+                                            })),
+                                        ),
                                     };
 
                                     if let Ok(payload) = payload_result {
@@ -409,6 +419,30 @@ impl Handle {
             system.send_event(FrontendEvent::ProfileUpdateCompleted { uid });
         } else {
             log::warn!("Notification system not initialized when trying to send ProfileUpdateCompleted event.");
+        }
+    }
+
+    pub fn notify_bridge_available(
+        version: String,
+        download_url: String,
+        body: String,
+        forced: bool,
+    ) {
+        let handle = Self::global();
+        if handle.is_exiting() {
+            return;
+        }
+
+        let system_opt = handle.notification_system.read();
+        if let Some(system) = system_opt.as_ref() {
+            system.send_event(FrontendEvent::BridgeAvailable {
+                version,
+                download_url,
+                body,
+                forced,
+            });
+        } else {
+            log::warn!("Notification system not initialized when trying to send BridgeAvailable event.");
         }
     }
 

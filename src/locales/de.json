@@ -563,5 +563,14 @@
   "Copy to clipboard": "Klicken Sie hier, um zu kopieren",
   "Port Config": "Port-Konfiguration",
   "Configuration saved successfully": "Zufalls-Konfiguration erfolgreich gespeichert",
-  "Enable one-click random API port and key. Click to randomize the port and key": "Einstellsichere Zufalls-API-Port- und Schlüsselgenerierung aktivieren. Klicken Sie, um Port und Schlüssel zu randomisieren"
+  "Enable one-click random API port and key. Click to randomize the port and key": "Einstellsichere Zufalls-API-Port- und Schlüsselgenerierung aktivieren. Klicken Sie, um Port und Schlüssel zu randomisieren",
+  "Later": "Later",
+  "Update Available": "Update Available",
+  "BridgeUpdateTitle": "OutClash v{{version}} is available",
+  "BridgeUpdateBody": "A major update with a new engine is available. The installer will open automatically — your profiles will be migrated.",
+  "Downloading new version...": "Downloading new version...",
+  "Launching installer...": "Launching installer...",
+  "Please wait, the installer will open shortly...": "Please wait, the installer will open shortly...",
+  "BridgeUpdateAvailableTitle": "OutClash Update Available",
+  "BridgeUpdateAvailableBody": "OutClash v{version} is ready to install. Open the dashboard to update."
 }

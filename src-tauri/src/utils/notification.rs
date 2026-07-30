@@ -10,6 +10,9 @@ pub enum NotificationEvent<'a> {
     TunModeToggled,
     LightweightModeEntered,
     AppQuit,
+    BridgeUpdateAvailable {
+        version: &'a str,
+    },
     #[cfg(target_os = "macos")]
     AppHidden,
 }
@@ -55,6 +58,13 @@ pub fn notify_event(app: &AppHandle, event: NotificationEvent) {
         }
         NotificationEvent::AppQuit => {
             notify(app, &t("AppQuitTitle"), &t("AppQuitBody"));
+        }
+        NotificationEvent::BridgeUpdateAvailable { version } => {
+            notify(
+                app,
+                &t("BridgeUpdateAvailableTitle"),
+                &t("BridgeUpdateAvailableBody").replace("{version}", version),
+            );
         }
         #[cfg(target_os = "macos")]
         NotificationEvent::AppHidden => {

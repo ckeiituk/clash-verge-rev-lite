@@ -570,5 +570,14 @@
   "Enable one-click random API port and key. Click to randomize the port and key": "開啟一鍵隨機 API 端口和密鑰，點進去就可以隨機端口和密鑰",
   "New Version is available": "有新版本可用",
   "New Version": "新版本",
-  "New update": "有可用更新"
+  "New update": "有可用更新",
+  "Later": "Later",
+  "Update Available": "Update Available",
+  "BridgeUpdateTitle": "OutClash v{{version}} is available",
+  "BridgeUpdateBody": "A major update with a new engine is available. The installer will open automatically — your profiles will be migrated.",
+  "Downloading new version...": "Downloading new version...",
+  "Launching installer...": "Launching installer...",
+  "Please wait, the installer will open shortly...": "Please wait, the installer will open shortly...",
+  "BridgeUpdateAvailableTitle": "OutClash Update Available",
+  "BridgeUpdateAvailableBody": "OutClash v{version} is ready to install. Open the dashboard to update."
 }

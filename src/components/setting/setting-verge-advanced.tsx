@@ -46,6 +46,7 @@ import { LayoutViewer } from "./mods/layout-viewer";
 import { UpdateViewer } from "./mods/update-viewer";
 import { BackupViewer } from "./mods/backup-viewer";
 import { LiteModeViewer } from "./mods/lite-mode-viewer";
+import type { BridgeRelease } from "./mods/bridge-dialog";
 
 interface Props {
   onError?: (err: Error) => void;
@@ -91,9 +92,10 @@ const SettingVergeAdvanced = ({ onError }: Props) => {
     // Show bridge dialog if Electron release is available
     // No more Tauri updates — bridge is the only upgrade path
     try {
-      const bridge = await invoke<any | null>("bridge_check");
+      const bridge = await invoke<BridgeRelease | null>("bridge_check");
       if (bridge) {
-        sessionStorage.removeItem("bridge-dismissed");
+        // A manual check overrides an earlier "Later" for this version
+        localStorage.removeItem(`outclash:bridge-dismissed:${bridge.version}`);
         window.dispatchEvent(
           new CustomEvent("bridge-recheck", { detail: bridge }),
         );

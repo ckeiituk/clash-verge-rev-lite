@@ -12,10 +12,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 
-interface BridgeRelease {
+export interface BridgeRelease {
   version: string;
   download_url: string;
   body: string;
+}
+
+interface BridgeStatus {
+  release: BridgeRelease | null;
+  forced: boolean;
 }
 
 interface BridgeProgress {
@@ -24,39 +29,96 @@ interface BridgeProgress {
   phase: string;
 }
 
+// localStorage (not sessionStorage): lightweight mode destroys the webview,
+// which would reset a session-scoped flag and re-show a dismissed dialog on
+// every webview re-creation. Keyed per version so a newer release re-prompts.
+const dismissKey = (version: string) => `outclash:bridge-dismissed:${version}`;
+
+const isDismissed = (version: string) => {
+  try {
+    return localStorage.getItem(dismissKey(version)) === "1";
+  } catch {
+    return false;
+  }
+};
+
+const markDismissed = (version: string) => {
+  try {
+    localStorage.setItem(dismissKey(version), "1");
+  } catch {
+    // ignore storage failures
+  }
+};
+
+const clearDismissed = (version: string) => {
+  try {
+    localStorage.removeItem(dismissKey(version));
+  } catch {
+    // ignore storage failures
+  }
+};
+
 export function BridgeDialog() {
   const { t } = useTranslation();
   const [release, setRelease] = useState<BridgeRelease | null>(null);
+  const [visible, setVisible] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [progress, setProgress] = useState<BridgeProgress>({
     downloaded: 0,
     total: 0,
     phase: "downloading",
   });
-  const [dismissed, setDismissed] = useState(
-    () => sessionStorage.getItem("bridge-dismissed") === "1",
-  );
 
-  const dismiss = () => {
-    setDismissed(true);
-    sessionStorage.setItem("bridge-dismissed", "1");
+  const showRelease = (r: BridgeRelease, forced: boolean) => {
+    if (forced) clearDismissed(r.version);
+    setRelease(r);
+    setVisible(forced || !isDismissed(r.version));
   };
 
+  const dismiss = () => {
+    if (release) markDismissed(release.version);
+    setVisible(false);
+  };
+
+  // The backend checks in the background and caches the result, so read the
+  // cache first (instant, also carries the tray-click "forced" flag); fall
+  // back to a live check when the cache is still empty right after startup.
   useEffect(() => {
-    if (dismissed) return;
-    invoke<BridgeRelease | null>("bridge_check")
+    let cancelled = false;
+    invoke<BridgeStatus>("bridge_status")
+      .then((status) => {
+        if (cancelled) return null;
+        if (status?.release) {
+          showRelease(status.release, status.forced);
+          return null;
+        }
+        return invoke<BridgeRelease | null>("bridge_check");
+      })
       .then((r) => {
-        if (r) setRelease(r);
+        if (!cancelled && r) showRelease(r, false);
       })
       .catch(() => {});
-  }, [dismissed]);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Background discovery while the webview is alive
+  useEffect(() => {
+    let unlisten: (() => void) | undefined;
+    listen<BridgeRelease & { forced: boolean }>("bridge-available", (event) => {
+      showRelease(event.payload, event.payload.forced);
+    }).then((fn) => {
+      unlisten = fn;
+    });
+    return () => unlisten?.();
+  }, []);
 
   // Allow settings "Check for Updates" to trigger this dialog immediately
   useEffect(() => {
     const handleRecheck = (e: Event) => {
       const detail = (e as CustomEvent<BridgeRelease>).detail;
-      if (detail) setRelease(detail);
-      setDismissed(false);
+      if (detail) showRelease(detail, true);
     };
     window.addEventListener("bridge-recheck", handleRecheck);
     return () => window.removeEventListener("bridge-recheck", handleRecheck);
@@ -90,7 +152,7 @@ export function BridgeDialog() {
     dismiss();
   };
 
-  if (!release || dismissed) return null;
+  if (!release || !visible) return null;
 
   const isInstalling = progress.phase === "installing";
   const pct =
@@ -110,7 +172,7 @@ export function BridgeDialog() {
               ? t("Launching installer...")
               : downloading
                 ? t("Downloading new version...")
-                : `OutClash v${release.version} available`}
+                : t("BridgeUpdateTitle", { version: release.version })}
           </DialogTitle>
         </DialogHeader>
 
@@ -131,10 +193,7 @@ export function BridgeDialog() {
           </div>
         ) : (
           <div className="py-4 text-sm text-muted-foreground">
-            <p>
-              A major update with a new engine is available. The installer will
-              open automatically — your profiles will be migrated.
-            </p>
+            <p>{t("BridgeUpdateBody")}</p>
           </div>
         )}
 

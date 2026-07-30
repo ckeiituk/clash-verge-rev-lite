@@ -279,6 +279,7 @@ impl Tray {
             .all_profile_uid_and_name()
             .unwrap_or_default();
         let is_lightweight_mode = is_in_lightweight_mode();
+        let bridge_update_version = crate::cmd::bridge_cached_version();
 
         match app_handle.tray_by_id("main") {
             Some(tray) => {
@@ -289,6 +290,7 @@ impl Tray {
                     *tun_mode,
                     profile_uid_and_name,
                     is_lightweight_mode,
+                    bridge_update_version,
                 )?));
                 log::debug!(target: "app", "Tray menu updated successfully");
                 Ok(())
@@ -566,6 +568,7 @@ fn create_tray_menu(
     tun_mode_enabled: bool,
     profile_uid_and_name: Vec<(String, String)>,
     is_lightweight_mode: bool,
+    bridge_update_version: Option<String>,
 ) -> Result<tauri::menu::Menu<Wry>> {
     let mode = mode.unwrap_or("");
 
@@ -720,23 +723,41 @@ fn create_tray_menu(
 
     let separator = &PredefinedMenuItem::separator(app_handle).unwrap();
 
+    let bridge_update = bridge_update_version.map(|v| {
+        MenuItem::with_id(
+            app_handle,
+            "bridge_update",
+            format!("{} v{v}", t("New update")),
+            true,
+            None::<&str>,
+        )
+        .unwrap()
+    });
+
+    let mut menu_items: Vec<&dyn IsMenuItem<Wry>> = Vec::new();
+    if let Some(item) = bridge_update.as_ref() {
+        menu_items.push(item);
+        menu_items.push(separator);
+    }
+    menu_items.extend_from_slice(&[
+        open_window,
+        separator,
+        rule_mode,
+        global_mode,
+        separator,
+        profiles,
+        separator,
+        system_proxy,
+        tun_mode,
+        separator,
+        lighteweight_mode,
+        more,
+        separator,
+        quit,
+    ]);
+
     let menu = tauri::menu::MenuBuilder::new(app_handle)
-        .items(&[
-            open_window,
-            separator,
-            rule_mode,
-            global_mode,
-            separator,
-            profiles,
-            separator,
-            system_proxy,
-            tun_mode,
-            separator,
-            lighteweight_mode,
-            more,
-            separator,
-            quit,
-        ])
+        .items(&menu_items)
         .build()
         .unwrap();
     Ok(menu)
@@ -769,6 +790,31 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
             }
             let result = WindowManager::show_main_window();
             log::info!(target: "app", "Window show result: {result:?}");
+        }
+        "bridge_update" => {
+            use crate::utils::window_manager::WindowManager;
+            log::info!(target: "app", "Tray menu click: bridge update");
+
+            if !should_handle_tray_click() {
+                return;
+            }
+
+            // A freshly created webview picks the flag up via bridge_status;
+            // the event below covers a webview that is already alive.
+            crate::cmd::set_bridge_force_show();
+            if crate::module::lightweight::is_in_lightweight_mode() {
+                crate::module::lightweight::exit_lightweight_mode();
+            }
+            let result = WindowManager::show_main_window();
+            log::info!(target: "app", "Window show result: {result:?}");
+            if let Some(release) = crate::cmd::bridge_cached_release() {
+                handle::Handle::notify_bridge_available(
+                    release.version,
+                    release.download_url,
+                    release.body,
+                    true,
+                );
+            }
         }
         "system_proxy" => {
             feat::toggle_system_proxy();

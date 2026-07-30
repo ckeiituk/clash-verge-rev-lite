@@ -694,5 +694,14 @@
   "Constructor": "Конструктор групп",
   "Leave blank to use the URL above": "Оставьте поле пустым, чтобы использовать URL-адрес выше",
   "No profiles available": "Нет доступных профилей",
-  "Configuration saved successfully": "Конфигурация успешно сохранена"
+  "Configuration saved successfully": "Конфигурация успешно сохранена",
+  "Later": "Позже",
+  "Update Available": "Доступно обновление",
+  "BridgeUpdateTitle": "Доступен OutClash v{{version}}",
+  "BridgeUpdateBody": "Доступно крупное обновление с новым движком. Установщик откроется автоматически — ваши профили будут перенесены.",
+  "Downloading new version...": "Загрузка новой версии...",
+  "Launching installer...": "Запуск установщика...",
+  "Please wait, the installer will open shortly...": "Подождите, установщик скоро откроется...",
+  "BridgeUpdateAvailableTitle": "Доступно обновление OutClash",
+  "BridgeUpdateAvailableBody": "OutClash v{version} готов к установке. Откройте панель управления, чтобы обновиться."
 }

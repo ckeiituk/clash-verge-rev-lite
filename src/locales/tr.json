@@ -610,5 +610,14 @@
   "Failed (Network Connection)": "Başarısız (Ağ Bağlantısı)",
   "New Version is available": "Yeni sürüm mevcut",
   "New Version": "Yeni sürüm",
-  "New update": "Yeni güncelleme"
+  "New update": "Yeni güncelleme",
+  "Later": "Later",
+  "Update Available": "Update Available",
+  "BridgeUpdateTitle": "OutClash v{{version}} is available",
+  "BridgeUpdateBody": "A major update with a new engine is available. The installer will open automatically — your profiles will be migrated.",
+  "Downloading new version...": "Downloading new version...",
+  "Launching installer...": "Launching installer...",
+  "Please wait, the installer will open shortly...": "Please wait, the installer will open shortly...",
+  "BridgeUpdateAvailableTitle": "OutClash Update Available",
+  "BridgeUpdateAvailableBody": "OutClash v{version} is ready to install. Open the dashboard to update."
 }

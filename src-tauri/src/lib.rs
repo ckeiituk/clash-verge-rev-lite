@@ -230,6 +230,10 @@ pub fn run() {
                 }
             });
 
+            // Spawned here rather than inside resolve_setup_async: the 30s
+            // timeout above cancels that future, which would kill the loop.
+            cmd::start_bridge_periodic_check();
+
             logging!(
                 info,
                 Type::Setup,
@@ -394,6 +398,7 @@ pub fn run() {
             cmd::entry_lightweight_mode,
             // bridge to electron
             cmd::bridge_check,
+            cmd::bridge_status,
             cmd::bridge_download,
             cmd::bridge_cancel,
         ]);
@@ -512,6 +517,7 @@ pub fn run() {
                                 logging_error!(Type::Hotkey, true, hotkey::Hotkey::global().init())
                             }
                         }
+                        cmd::spawn_bridge_check_if_stale();
                     }
                     tauri::WindowEvent::Focused(false) => {
                         #[cfg(target_os = "macos")]
