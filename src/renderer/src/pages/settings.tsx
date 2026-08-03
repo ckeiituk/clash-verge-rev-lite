@@ -10,23 +10,27 @@ import ProxySwitches from '@renderer/components/settings/proxy-switches'
 import { useTranslation } from 'react-i18next'
 import { Github } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { useAppConfig } from '@renderer/hooks/use-app-config'
 
 const Settings: React.FC = () => {
   const { t } = useTranslation()
-  const [showHiddenSettings, setShowHiddenSettings] = useState(
+  const { appConfig } = useAppConfig()
+  const [hiddenToggled, setHiddenToggled] = useState(
     () => sessionStorage.getItem('devMode') === '1'
   )
+  // dev mode (__dev) implies the hidden settings without a separate __hidden call
+  const showHiddenSettings = hiddenToggled || !!appConfig?.devMode
 
   const toggleHiddenSettings = (value: boolean): void => {
-    setShowHiddenSettings(value)
+    setHiddenToggled(value)
     if (value) sessionStorage.setItem('devMode', '1')
     else sessionStorage.removeItem('devMode')
   }
 
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ;(window as any).__hidden = () => toggleHiddenSettings(!showHiddenSettings)
-  }, [showHiddenSettings])
+    ;(window as any).__hidden = () => toggleHiddenSettings(!hiddenToggled)
+  }, [hiddenToggled])
 
   return (
     <BasePage
