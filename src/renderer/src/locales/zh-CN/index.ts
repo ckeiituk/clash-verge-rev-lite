@@ -304,7 +304,8 @@ export default {
     logs: {
       title: '实时日志',
       clearLogs: '清空日志',
-      openLogDir: '打开日志文件夹'
+      openLogDir: '打开日志文件夹',
+      autoScroll: '自动滚动'
     },
     rules: {
       title: '分流规则'

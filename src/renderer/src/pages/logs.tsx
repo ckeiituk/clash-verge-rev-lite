@@ -75,7 +75,7 @@ const Logs: React.FC = () => {
                 trace && 'bg-primary text-primary-foreground'
               )}
               variant={trace ? 'default' : 'outline'}
-              title={t('logs.autoScroll')}
+              title={t('pages.logs.autoScroll')}
               onClick={toggleTrace}
             >
               <MapPin className="text-lg" />

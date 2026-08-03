@@ -231,7 +231,8 @@ export default {
     logs: {
       title: 'Логи',
       clearLogs: 'Очистить логи',
-      openLogDir: 'Открыть папку логов'
+      openLogDir: 'Открыть папку логов',
+      autoScroll: 'Автопрокрутка'
     },
     rules: {
       title: 'Правила'
