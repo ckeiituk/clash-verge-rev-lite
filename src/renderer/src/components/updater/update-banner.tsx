@@ -7,11 +7,12 @@ import { useUpdaterStore } from '@renderer/store/updater-store'
 
 interface Props {
   version: string
+  releaseTag?: string
   changelog: string
   onDismiss: () => void
 }
 
-const UpdateBanner: React.FC<Props> = ({ version, changelog, onDismiss }) => {
+const UpdateBanner: React.FC<Props> = ({ version, releaseTag, changelog, onDismiss }) => {
   const { t } = useTranslation()
   const [openModal, setOpenModal] = useState(false)
   const updateStatus = {
@@ -26,6 +27,7 @@ const UpdateBanner: React.FC<Props> = ({ version, changelog, onDismiss }) => {
       {openModal && (
         <UpdaterModal
           version={version}
+          releaseTag={releaseTag}
           changelog={changelog}
           updateStatus={updateStatus}
           onCancel={async () => {

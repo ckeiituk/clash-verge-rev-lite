@@ -98,6 +98,7 @@ const BasePage = forwardRef<HTMLDivElement, Props>((props, ref) => {
             <div className="pt-2 pb-1 px-2">
               <UpdateBanner
                 version={updateInfo.version}
+                releaseTag={updateInfo.releaseTag}
                 changelog={updateInfo.changelog}
                 onDismiss={handleBannerDismiss}
               />

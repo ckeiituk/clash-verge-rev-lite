@@ -10,6 +10,7 @@ interface Props {
   iconOnly?: boolean
   latest?: {
     version: string
+    releaseTag?: string
     changelog: string
   }
 }
@@ -41,6 +42,7 @@ const UpdaterButton: React.FC<Props> = (props) => {
       {openModal && (
         <UpdaterModal
           version={latest.version}
+          releaseTag={latest.releaseTag}
           changelog={latest.changelog}
           updateStatus={updateStatus}
           onCancel={handleCancelUpdate}

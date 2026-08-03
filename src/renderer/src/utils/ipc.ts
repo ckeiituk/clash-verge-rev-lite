@@ -321,9 +321,9 @@ export async function checkUpdate(): Promise<AppVersion | undefined> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('checkUpdate'))
 }
 
-export async function downloadAndInstallUpdate(version: string): Promise<void> {
+export async function downloadAndInstallUpdate(version: string, releaseTag?: string): Promise<void> {
   return ipcErrorWrapper(
-    await window.electron.ipcRenderer.invoke('downloadAndInstallUpdate', version)
+    await window.electron.ipcRenderer.invoke('downloadAndInstallUpdate', version, releaseTag)
   )
 }
 

@@ -54,22 +54,36 @@ function isNewerVersion(candidate: string, current: string): boolean {
 export async function checkUpdate(): Promise<AppVersion | undefined> {
   const { 'mixed-port': mixedPort = 0 } = (await getRuntimeConfig()) ?? {}
   const { updateChannel = 'stable' } = await getAppConfig()
-  const url =
-    updateChannel === 'alpha'
-      ? 'https://github.com/ckeiituk/outclash/releases/download/alpha/alpha.yml'
-      : 'https://github.com/ckeiituk/outclash/releases/latest/download/latest.yml'
-  const res = await axios.get(url, {
-    headers: { 'Content-Type': 'application/octet-stream' },
-    ...(mixedPort != 0 && {
-      proxy: {
-        protocol: 'http',
-        host: '127.0.0.1',
-        port: mixedPort
-      }
-    }),
-    responseType: 'text'
-  })
-  const latest = parseYaml<AppVersion>(res.data)
+  const stableUrl = 'https://github.com/ckeiituk/outclash/releases/latest/download/latest.yml'
+  const alphaUrl = 'https://github.com/ckeiituk/outclash/releases/download/alpha/alpha.yml'
+  const fetchFeed = async (url: string): Promise<AppVersion> => {
+    const res = await axios.get(url, {
+      headers: { 'Content-Type': 'application/octet-stream' },
+      ...(mixedPort != 0 && {
+        proxy: {
+          protocol: 'http',
+          host: '127.0.0.1',
+          port: mixedPort
+        }
+      }),
+      responseType: 'text'
+    })
+    return parseYaml<AppVersion>(res.data)
+  }
+  // The alpha channel watches BOTH feeds and offers whichever is newer; the
+  // stable channel only ever looks at latest.yml. A feed that fails (e.g. no
+  // alpha release published → 404) is skipped as long as the other resolves.
+  const urls = updateChannel === 'alpha' ? [stableUrl, alphaUrl] : [stableUrl]
+  const results = await Promise.allSettled(urls.map(fetchFeed))
+  const feeds = results.flatMap((r) => (r.status === 'fulfilled' ? [r.value] : []))
+  if (feeds.length === 0) {
+    throw (results[0] as PromiseRejectedResult).reason
+  }
+  // On a tie (alpha promoted to stable unchanged) the stable feed wins, so the
+  // update is served from the versioned release rather than the alpha tag.
+  const latest = feeds.reduce((best, cur) =>
+    isNewerVersion(cur.version, best.version) ? cur : best
+  )
   const currentVersion = app.getVersion()
   if (isNewerVersion(latest.version, currentVersion)) {
     return latest
@@ -78,14 +92,12 @@ export async function checkUpdate(): Promise<AppVersion | undefined> {
   }
 }
 
-export async function downloadAndInstallUpdate(version: string): Promise<void> {
+export async function downloadAndInstallUpdate(version: string, feedTag?: string): Promise<void> {
   const { 'mixed-port': mixedPort = 0 } = (await getRuntimeConfig()) ?? {}
-  const { updateChannel = 'stable' } = await getAppConfig()
-  // Derive the GitHub release tag from the CURRENT channel, not from cached check
-  // state: alpha artifacts live at the fixed `alpha` tag, stable at the version tag.
-  // This avoids downloading the wrong channel's build if the user toggled channel
-  // after the last update check.
-  const rawTag = updateChannel === 'alpha' ? 'alpha' : version
+  // Download from the release the offered version actually came from: the alpha
+  // feed stamps `releaseTag: alpha` (fixed tag), the stable feed's artifacts
+  // live at the version tag itself.
+  const rawTag = feedTag || version
   const releaseTag = rawTag.startsWith('v') ? rawTag.slice(1) : rawTag
   const baseUrl = `https://github.com/ckeiituk/outclash/releases/download/${releaseTag}/`
   const fileMap = {

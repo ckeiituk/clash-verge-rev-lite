@@ -2,6 +2,7 @@ import { createContext, useContext } from 'react'
 
 interface UpdateInfo {
   version: string
+  releaseTag?: string
   changelog: string
 }
 

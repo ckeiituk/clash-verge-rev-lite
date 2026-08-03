@@ -17,6 +17,7 @@ import { Download, X } from 'lucide-react'
 
 interface Props {
   version: string
+  releaseTag?: string
   changelog: string
   updateStatus?: {
     downloading: boolean
@@ -29,12 +30,12 @@ interface Props {
 
 const UpdaterModal: React.FC<Props> = (props) => {
   const { t } = useTranslation()
-  const { version, changelog, updateStatus, onCancel, onClose } = props
+  const { version, releaseTag, changelog, updateStatus, onCancel, onClose } = props
   const [downloading, setDownloading] = useState(false)
   const onUpdate = async (): Promise<void> => {
     try {
       setDownloading(true)
-      await downloadAndInstallUpdate(version)
+      await downloadAndInstallUpdate(version, releaseTag)
     } catch (e) {
       toast.error(`${e}`)
       setDownloading(false)
@@ -73,7 +74,7 @@ const UpdaterModal: React.FC<Props> = (props) => {
               variant="outline"
               className="app-nodrag"
               onClick={() => {
-                open(`https://github.com/ckeiituk/outclash/releases/tag/${version}`)
+                open(`https://github.com/ckeiituk/outclash/releases/tag/${releaseTag ?? version}`)
               }}
             >
               {t('updater.goToDownload')}

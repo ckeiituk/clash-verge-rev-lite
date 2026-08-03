@@ -36,6 +36,7 @@ const Actions: React.FC<ActionsProps> = (props) => {
   const navigate = useNavigate()
   const { data: coreVersion } = useSWR('mihomoVersion', mihomoVersion)
   const [newVersion, setNewVersion] = useState('')
+  const [newReleaseTag, setNewReleaseTag] = useState<string | undefined>(undefined)
   const [changelog, setChangelog] = useState('')
   const [openUpdate, setOpenUpdate] = useState(false)
   const [checkingUpdate, setCheckingUpdate] = useState(false)
@@ -71,6 +72,7 @@ const Actions: React.FC<ActionsProps> = (props) => {
         <UpdaterModal
           onClose={() => setOpenUpdate(false)}
           version={newVersion}
+          releaseTag={newReleaseTag}
           changelog={changelog}
           updateStatus={updateStatus}
           onCancel={handleCancelUpdate}
@@ -113,6 +115,7 @@ const Actions: React.FC<ActionsProps> = (props) => {
                 const version = await checkUpdate()
                 if (version) {
                   setNewVersion(version.version)
+                  setNewReleaseTag(version.releaseTag)
                   setChangelog(version.changelog)
                   setOpenUpdate(true)
                 } else {

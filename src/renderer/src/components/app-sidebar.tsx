@@ -31,6 +31,7 @@ import ConfigViewer from '@renderer/components/sider/config-viewer'
 interface AppSidebarProps {
   latest?: {
     version: string
+    releaseTag?: string
     changelog: string
   }
 }
