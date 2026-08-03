@@ -207,7 +207,10 @@ if (syncConfig.disableGPU) {
 function getDeepLinkFromArgs(argv: string[]): string | undefined {
   return argv.find(
     (arg) =>
-      arg.startsWith('clash://') || arg.startsWith('mihomo://') || arg.startsWith('outclash://')
+      arg.startsWith('clash://') ||
+      arg.startsWith('mihomo://') ||
+      arg.startsWith('outclash://') ||
+      arg.startsWith('koala-clash://')
   )
 }
 
@@ -428,7 +431,12 @@ app.whenReady().then(async () => {
 })
 
 async function handleDeepLink(url: string): Promise<void> {
-  if (!url.startsWith('clash://') && !url.startsWith('mihomo://') && !url.startsWith('outclash://'))
+  if (
+    !url.startsWith('clash://') &&
+    !url.startsWith('mihomo://') &&
+    !url.startsWith('outclash://') &&
+    !url.startsWith('koala-clash://')
+  )
     return
 
   const urlObj = new URL(url)

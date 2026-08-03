@@ -24,6 +24,7 @@ protocols:
     - 'clash'
     - 'mihomo'
     - 'outclash'
+    - 'koala-clash'
 win:
   target:
     - nsis
@@ -60,7 +61,7 @@ linux:
   desktop:
     entry:
       Name: OutClash
-      MimeType: 'x-scheme-handler/clash;x-scheme-handler/mihomo;x-scheme-handler/outclash'
+      MimeType: 'x-scheme-handler/clash;x-scheme-handler/mihomo;x-scheme-handler/outclash;x-scheme-handler/koala-clash'
   target:
     - deb
     - rpm

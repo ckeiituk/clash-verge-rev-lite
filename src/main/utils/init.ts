@@ -190,11 +190,15 @@ function initDeeplink(): void {
       app.setAsDefaultProtocolClient('clash', process.execPath, [path.resolve(process.argv[1])])
       app.setAsDefaultProtocolClient('mihomo', process.execPath, [path.resolve(process.argv[1])])
       app.setAsDefaultProtocolClient('outclash', process.execPath, [path.resolve(process.argv[1])])
+      app.setAsDefaultProtocolClient('koala-clash', process.execPath, [
+        path.resolve(process.argv[1])
+      ])
     }
   } else {
     app.setAsDefaultProtocolClient('clash')
     app.setAsDefaultProtocolClient('mihomo')
     app.setAsDefaultProtocolClient('outclash')
+    app.setAsDefaultProtocolClient('koala-clash')
   }
 }
 
