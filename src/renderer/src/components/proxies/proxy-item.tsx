@@ -81,6 +81,15 @@ const ProxyItem: React.FC<Props> = React.memo((props) => {
     return d.toString()
   }
 
+  const delayIndicator = (
+    <span className="relative inline-flex items-center justify-center w-full">
+      {showLoading && <Spinner className="size-3 absolute text-foreground" />}
+      <span className={cn(delayColorClass(delay), showLoading && 'invisible')}>
+        {delayContent(delay)}
+      </span>
+    </span>
+  )
+
   const onDelay = (): void => {
     setLoading(true)
     onProxyDelay(proxy, group.testUrl).finally(() => {
@@ -144,15 +153,9 @@ const ProxyItem: React.FC<Props> = React.memo((props) => {
                     e.stopPropagation()
                     onDelay()
                   }}
-                  className={cn(
-                    'h-7 w-8 min-w-8 px-0 text-xs font-medium cursor-pointer',
-                    delayColorClass(delay)
-                  )}
+                  className="h-7 w-8 min-w-8 px-0 text-xs font-medium cursor-pointer"
                 >
-                  <span className="relative inline-flex items-center justify-center w-full">
-                    {showLoading && <Spinner className="size-3 absolute" />}
-                    <span className={cn(showLoading && 'invisible')}>{delayContent(delay)}</span>
-                  </span>
+                  {delayIndicator}
                 </Button>
               </div>
             </>
@@ -191,15 +194,9 @@ const ProxyItem: React.FC<Props> = React.memo((props) => {
                     e.stopPropagation()
                     onDelay()
                   }}
-                  className={cn(
-                    'h-7 w-8 min-w-8 px-0 text-xs font-medium cursor-pointer',
-                    delayColorClass(delay)
-                  )}
+                  className="h-7 w-8 min-w-8 px-0 text-xs font-medium cursor-pointer"
                 >
-                  <span className="relative inline-flex items-center justify-center w-full">
-                    {showLoading && <Spinner className="size-3 absolute" />}
-                    <span className={cn(showLoading && 'invisible')}>{delayContent(delay)}</span>
-                  </span>
+                  {delayIndicator}
                 </Button>
               </div>
             </>
