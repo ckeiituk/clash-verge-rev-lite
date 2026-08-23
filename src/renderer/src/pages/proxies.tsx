@@ -128,6 +128,15 @@ const Proxies: React.FC = () => {
     }
   }, [groups.length, expandProxyGroups])
 
+  // Re-apply to every group when the setting itself flips (e.g. a subscription sent the
+  // `expand-proxy-groups` header while this page is already open).
+  const prevExpandProxyGroupsRef = useRef(expandProxyGroups)
+  useEffect(() => {
+    if (prevExpandProxyGroupsRef.current === expandProxyGroups) return
+    prevExpandProxyGroupsRef.current = expandProxyGroups
+    setIsOpen((prev) => prev.map(() => expandProxyGroups))
+  }, [expandProxyGroups])
+
   useEffect(() => {
     groups.forEach((group) => {
       const iconUrl = group.icon

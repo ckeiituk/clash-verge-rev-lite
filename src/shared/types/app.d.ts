@@ -142,6 +142,7 @@ interface ProfileItem {
   customLogsUploadUrl?: string
   customHwid?: string
   globalMode?: boolean
+  expandProxyGroups?: boolean
   customCss?: string
 }
 
