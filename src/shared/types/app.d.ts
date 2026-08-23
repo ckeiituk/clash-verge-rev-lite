@@ -128,6 +128,7 @@ interface ProfileItem {
   verify?: boolean // remote
   interval?: number
   home?: string
+  homeName?: string
   updated?: number
   useProxy?: boolean
   extra?: SubscriptionUserInfo
