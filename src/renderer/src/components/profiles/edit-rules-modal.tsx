@@ -59,6 +59,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import {
+  AlertTriangle,
   ArrowDownToLine,
   ArrowUpToLine,
   CheckIcon,
@@ -79,7 +80,12 @@ import React, {
   useRef
 } from 'react'
 import { createPortal, flushSync } from 'react-dom'
-import { getProfileStr, setRuleStr, getRuleStr, mihomoHotReloadConfig } from '@renderer/utils/ipc'
+import {
+  getProfileParseStr,
+  setRuleStr,
+  getRuleStr,
+  mihomoHotReloadConfig
+} from '@renderer/utils/ipc'
 import { useProfileConfig } from '@renderer/hooks/use-profile-config'
 import { useTranslation } from 'react-i18next'
 import yaml from 'js-yaml'
@@ -212,6 +218,142 @@ const parseRuleStringToItem = (ruleStr: string): RuleItem => {
     additionalParams: additionalParamsRaw.filter(Boolean),
     offset: offset && offset > 0 ? offset : undefined
   }
+}
+
+const toRuleStrings = (value: unknown): string[] =>
+  Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === 'string' && item.trim() !== '')
+    : []
+
+const parseProfileRules = (parsed: unknown): RuleItem[] => {
+  if (!parsed || typeof parsed !== 'object') return []
+  return toRuleStrings((parsed as Record<string, unknown>).rules).map(parseRuleStringToItem)
+}
+
+const builtinProxyTargets = ['DIRECT', 'REJECT', 'REJECT-DROP', 'PASS', 'COMPATIBLE']
+
+const collectProxyGroups = (parsed: unknown): string[] => {
+  const groups: string[] = []
+
+  if (parsed && typeof parsed === 'object') {
+    const collectNames = (value: unknown): void => {
+      if (!Array.isArray(value)) return
+      value.forEach((entry) => {
+        const name = (entry as Record<string, unknown> | null)?.['name']
+        if (typeof name === 'string' && name) groups.push(name)
+      })
+    }
+
+    collectNames((parsed as Record<string, unknown>)['proxy-groups'])
+    collectNames((parsed as Record<string, unknown>)['proxies'])
+  }
+
+  groups.push(...builtinProxyTargets)
+  return [...new Set(groups)]
+}
+
+interface RuleOverrides {
+  prepend?: unknown
+  append?: unknown
+  delete?: unknown
+}
+
+interface RuleEditorState {
+  rules: RuleItem[]
+  prependRules: Set<number>
+  appendRules: Set<number>
+  deletedRules: Set<number>
+}
+
+// 按位置插入规则，并同步已插入规则的下标
+const insertRulesAtPositions = (
+  rulesToProcess: RuleItem[],
+  allRules: RuleItem[],
+  positionCalculator: (rule: RuleItem, currentRules: RuleItem[]) => number
+): { updatedRules: RuleItem[]; ruleIndices: Set<number> } => {
+  const updatedRules = [...allRules]
+  const ruleIndices = new Set<number>()
+
+  rulesToProcess.forEach((rule) => {
+    const targetPosition = positionCalculator(rule, updatedRules)
+    const actualPosition = Math.min(targetPosition, updatedRules.length)
+    updatedRules.splice(actualPosition, 0, rule)
+
+    const newRuleIndices = new Set<number>()
+    ruleIndices.forEach((idx) => {
+      newRuleIndices.add(idx >= actualPosition ? idx + 1 : idx)
+    })
+    newRuleIndices.add(actualPosition)
+
+    ruleIndices.clear()
+    newRuleIndices.forEach((idx) => ruleIndices.add(idx))
+  })
+
+  return { updatedRules, ruleIndices }
+}
+
+const applyRuleOverrides = (
+  initialRules: RuleItem[],
+  ruleData: RuleOverrides | null | undefined
+): RuleEditorState => {
+  let rules = [...initialRules]
+  const prependRules = new Set<number>()
+  const appendRules = new Set<number>()
+  const deletedRules = new Set<number>()
+
+  if (!ruleData || typeof ruleData !== 'object') {
+    return { rules, prependRules, appendRules, deletedRules }
+  }
+
+  const prependItems = toRuleStrings(ruleData.prepend).map(parseRuleStringToItem)
+  if (prependItems.length > 0) {
+    let prependInsertCount = 0
+    const { updatedRules, ruleIndices } = insertRulesAtPositions(
+      prependItems,
+      rules,
+      (rule, currentRules) => {
+        if (rule.offset !== undefined && rule.offset < currentRules.length) {
+          return rule.offset
+        }
+        return prependInsertCount++
+      }
+    )
+    rules = updatedRules
+    ruleIndices.forEach((index) => prependRules.add(index))
+  }
+
+  const appendItems = toRuleStrings(ruleData.append).map(parseRuleStringToItem)
+  if (appendItems.length > 0) {
+    const { updatedRules, ruleIndices } = insertRulesAtPositions(
+      appendItems,
+      rules,
+      (rule, currentRules) =>
+        rule.offset !== undefined
+          ? Math.max(0, currentRules.length - rule.offset)
+          : currentRules.length
+    )
+    rules = updatedRules
+    ruleIndices.forEach((index) => appendRules.add(index))
+  }
+
+  toRuleStrings(ruleData.delete)
+    .map(parseRuleStringToItem)
+    .forEach((deleteRule) => {
+      const matchedIndex = rules.findIndex(
+        (rule) =>
+          rule.type === deleteRule.type &&
+          rule.payload === deleteRule.payload &&
+          rule.proxy === deleteRule.proxy &&
+          JSON.stringify(rule.additionalParams || []) ===
+            JSON.stringify(deleteRule.additionalParams || [])
+      )
+
+      if (matchedIndex !== -1) {
+        deletedRules.add(matchedIndex)
+      }
+    })
+
+  return { rules, prependRules, appendRules, deletedRules }
 }
 
 const domainValidator = (value: string): boolean => {
@@ -1019,6 +1161,9 @@ const EditRulesModal: React.FC<Props> = (props) => {
   )
   const [isYamlMode, setIsYamlMode] = useState(false)
   const [yamlContent, setYamlContent] = useState('')
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [rawRuleContent, setRawRuleContent] = useState('')
+  const loadErrorToastRef = useRef<string | null>(null)
   const { t } = useTranslation()
 
   const ruleIndexMap = useMemo(() => {
@@ -1068,221 +1213,52 @@ const EditRulesModal: React.FC<Props> = (props) => {
     [prependRules, appendRules]
   )
 
-  // 解析规则字符串
-  const parseRuleString = useCallback((ruleStr: string): RuleItem => {
-    return parseRuleStringToItem(ruleStr)
-  }, [])
-
-  // 处理前置规则位置
-  const processRulesWithPositions = useCallback(
-    (
-      rulesToProcess: RuleItem[],
-      allRules: RuleItem[],
-      positionCalculator: (rule: RuleItem, currentRules: RuleItem[]) => number
-    ): { updatedRules: RuleItem[]; ruleIndices: Set<number> } => {
-      const updatedRules = [...allRules]
-      const ruleIndices = new Set<number>()
-
-      rulesToProcess.forEach((rule) => {
-        const targetPosition = positionCalculator(rule, updatedRules)
-        const actualPosition = Math.min(targetPosition, updatedRules.length)
-        updatedRules.splice(actualPosition, 0, rule)
-
-        const newRuleIndices = new Set<number>()
-        ruleIndices.forEach((idx) => {
-          if (idx >= actualPosition) {
-            newRuleIndices.add(idx + 1)
-          } else {
-            newRuleIndices.add(idx)
-          }
-        })
-        newRuleIndices.add(actualPosition)
-
-        ruleIndices.clear()
-        newRuleIndices.forEach((idx) => ruleIndices.add(idx))
-      })
-
-      return { updatedRules, ruleIndices }
-    },
-    []
-  )
-
-  // 处理后置规则位置
-  const processAppendRulesWithPositions = useCallback(
-    (
-      rulesToProcess: RuleItem[],
-      allRules: RuleItem[],
-      positionCalculator: (rule: RuleItem, currentRules: RuleItem[]) => number
-    ): { updatedRules: RuleItem[]; ruleIndices: Set<number> } => {
-      const updatedRules = [...allRules]
-      const ruleIndices = new Set<number>()
-
-      rulesToProcess.forEach((rule) => {
-        const targetPosition = positionCalculator(rule, updatedRules)
-        const actualPosition = Math.min(targetPosition, updatedRules.length)
-        updatedRules.splice(actualPosition, 0, rule)
-
-        const newRuleIndices = new Set<number>()
-        ruleIndices.forEach((idx) => {
-          if (idx >= actualPosition) {
-            newRuleIndices.add(idx + 1)
-          } else {
-            newRuleIndices.add(idx)
-          }
-        })
-        newRuleIndices.add(actualPosition)
-
-        ruleIndices.clear()
-        newRuleIndices.forEach((idx) => ruleIndices.add(idx))
-      })
-
-      return { updatedRules, ruleIndices }
-    },
-    []
-  )
-
   useEffect(() => {
     const loadContent = async (): Promise<void> => {
       setIsLoading(true)
+      setLoadError(null)
+
+      let initialRules: RuleItem[] = []
+      let failure: string | null = null
       try {
-        const content = await getProfileStr(id)
+        const content = await getProfileParseStr(id)
         setProfileContent(content)
 
-        const parsed = yaml.load(content) as Record<string, unknown> | undefined
-        let initialRules: RuleItem[] = []
-
-        if (parsed && parsed.rules && Array.isArray(parsed.rules)) {
-          initialRules = parsed.rules.map((rule: string) => parseRuleStringToItem(rule))
-        }
-
-        if (parsed) {
-          const groups: string[] = []
-
-          if (Array.isArray(parsed['proxy-groups'])) {
-            groups.push(
-              ...((parsed['proxy-groups'] as Array<Record<string, unknown>>)
-                .map((group) =>
-                  group && typeof group['name'] === 'string' ? (group['name'] as string) : ''
-                )
-                .filter(Boolean) as string[])
-            )
-          }
-
-          if (Array.isArray(parsed['proxies'])) {
-            groups.push(
-              ...((parsed['proxies'] as Array<Record<string, unknown>>)
-                .map((proxy) =>
-                  proxy && typeof proxy['name'] === 'string' ? (proxy['name'] as string) : ''
-                )
-                .filter(Boolean) as string[])
-            )
-          }
-
-          groups.push('DIRECT', 'REJECT', 'REJECT-DROP', 'PASS', 'COMPATIBLE')
-          setProxyGroups([...new Set(groups)])
-        }
-
-        try {
-          const ruleContent = await getRuleStr(id)
-          const ruleData = yaml.load(ruleContent) as {
-            prepend?: string[]
-            append?: string[]
-            delete?: string[]
-          }
-
-          if (ruleData) {
-            let allRules = [...initialRules]
-            const newPrependRules = new Set<number>()
-            const newAppendRules = new Set<number>()
-            const newDeletedRules = new Set<number>()
-
-            if (ruleData.prepend && Array.isArray(ruleData.prepend)) {
-              const prependRuleItems: RuleItem[] = []
-              ruleData.prepend.forEach((ruleStr: string) => {
-                prependRuleItems.push(parseRuleString(ruleStr))
-              })
-
-              const { updatedRules, ruleIndices } = processRulesWithPositions(
-                prependRuleItems,
-                allRules,
-                (rule, currentRules) => {
-                  if (rule.offset !== undefined && rule.offset < currentRules.length) {
-                    return rule.offset
-                  }
-                  return 0
-                }
-              )
-
-              allRules = updatedRules
-              ruleIndices.forEach((index) => newPrependRules.add(index))
-            }
-
-            if (ruleData.append && Array.isArray(ruleData.append)) {
-              const appendRuleItems: RuleItem[] = []
-              ruleData.append.forEach((ruleStr: string) => {
-                appendRuleItems.push(parseRuleString(ruleStr))
-              })
-
-              const { updatedRules, ruleIndices } = processAppendRulesWithPositions(
-                appendRuleItems,
-                allRules,
-                (rule, currentRules) => {
-                  if (rule.offset !== undefined) {
-                    return Math.max(0, currentRules.length - rule.offset)
-                  }
-                  return currentRules.length
-                }
-              )
-
-              allRules = updatedRules
-              ruleIndices.forEach((index) => newAppendRules.add(index))
-            }
-
-            if (ruleData.delete && Array.isArray(ruleData.delete)) {
-              const deleteRules = ruleData.delete.map((ruleStr: string) => {
-                return parseRuleString(ruleStr)
-              })
-
-              deleteRules.forEach((deleteRule) => {
-                const matchedIndex = allRules.findIndex(
-                  (rule) =>
-                    rule.type === deleteRule.type &&
-                    rule.payload === deleteRule.payload &&
-                    rule.proxy === deleteRule.proxy &&
-                    JSON.stringify(rule.additionalParams || []) ===
-                      JSON.stringify(deleteRule.additionalParams || [])
-                )
-
-                if (matchedIndex !== -1) {
-                  newDeletedRules.add(matchedIndex)
-                }
-              })
-            }
-
-            setPrependRules(newPrependRules)
-            setAppendRules(newAppendRules)
-            setDeletedRules(newDeletedRules)
-            setRules(allRules)
-          } else {
-            setRules(initialRules)
-            setPrependRules(new Set())
-            setAppendRules(new Set())
-            setDeletedRules(new Set())
-          }
-        } catch {
-          setRules(initialRules)
-          setPrependRules(new Set())
-          setAppendRules(new Set())
-          setDeletedRules(new Set())
-        }
-      } catch {
-        // 解析配置文件失败，静默处理
-      } finally {
-        setIsLoading(false)
+        const parsed = yaml.load(content)
+        initialRules = parseProfileRules(parsed)
+        setProxyGroups(collectProxyGroups(parsed))
+      } catch (e) {
+        failure = e instanceof Error ? e.message : String(e)
+        setProfileContent('')
+        setProxyGroups([...builtinProxyTargets])
       }
+
+      let overrides: RuleOverrides | null = null
+      try {
+        const ruleContent = await getRuleStr(id)
+        setRawRuleContent(ruleContent)
+        overrides = (yaml.load(ruleContent) as RuleOverrides | null) ?? null
+      } catch (e) {
+        failure = failure ?? (e instanceof Error ? e.message : String(e))
+      }
+
+      const state = applyRuleOverrides(initialRules, overrides)
+      setRules(state.rules)
+      setPrependRules(state.prependRules)
+      setAppendRules(state.appendRules)
+      setDeletedRules(state.deletedRules)
+      setLoadError(failure)
+      setIsLoading(false)
     }
     loadContent()
-  }, [id, parseRuleString, processRulesWithPositions, processAppendRulesWithPositions])
+  }, [id])
+
+  useEffect(() => {
+    if (loadError && loadErrorToastRef.current !== loadError) {
+      loadErrorToastRef.current = loadError
+      toast.error(`${t('profile.editRules.loadError')}: ${loadError}`)
+    }
+  }, [loadError, t])
 
   const validateRulePayload = useCallback((ruleType: string, payload: string): boolean => {
     if (ruleType === 'MATCH') {
@@ -1384,93 +1360,20 @@ const EditRulesModal: React.FC<Props> = (props) => {
         return parts.join(',')
       })
 
-    return yaml.dump({
-      prepend: prependRuleStrings,
-      append: appendRuleStrings,
-      delete: deletedRuleStrings
-    })
+    return yaml.dump({ prepend: prependRuleStrings, append: appendRuleStrings, delete: deletedRuleStrings })
   }, [prependRules, appendRules, deletedRules, rules])
 
   const applyYamlToVisualState = useCallback(
     (yamlStr: string): boolean => {
       try {
-        const ruleData = yaml.load(yamlStr) as {
-          prepend?: string[]
-          append?: string[]
-          delete?: string[]
-        } | null
+        const ruleData = yaml.load(yamlStr) as RuleOverrides | null
+        const initialRules = parseProfileRules(yaml.load(profileContent))
+        const state = applyRuleOverrides(initialRules, ruleData)
 
-        const parsed = yaml.load(profileContent) as Record<string, unknown> | undefined
-        let initialRules: RuleItem[] = []
-        if (parsed && parsed.rules && Array.isArray(parsed.rules)) {
-          initialRules = parsed.rules.map((rule: string) => parseRuleStringToItem(rule))
-        }
-
-        if (ruleData && typeof ruleData === 'object') {
-          let allRules = [...initialRules]
-          const newPrependRules = new Set<number>()
-          const newAppendRules = new Set<number>()
-          const newDeletedRules = new Set<number>()
-
-          if (ruleData.prepend && Array.isArray(ruleData.prepend)) {
-            let prependInsertCount = 0
-            const { updatedRules, ruleIndices } = processRulesWithPositions(
-              ruleData.prepend.map((s) => parseRuleStringToItem(s)),
-              allRules,
-              (rule, currentRules) => {
-                if (rule.offset !== undefined && rule.offset < currentRules.length) {
-                  return rule.offset
-                }
-                return prependInsertCount++
-              }
-            )
-            allRules = updatedRules
-            ruleIndices.forEach((index) => newPrependRules.add(index))
-          }
-
-          if (ruleData.append && Array.isArray(ruleData.append)) {
-            const { updatedRules, ruleIndices } = processAppendRulesWithPositions(
-              ruleData.append.map((s) => parseRuleStringToItem(s)),
-              allRules,
-              (rule, currentRules) => {
-                if (rule.offset !== undefined) {
-                  return Math.max(0, currentRules.length - rule.offset)
-                }
-                return currentRules.length
-              }
-            )
-            allRules = updatedRules
-            ruleIndices.forEach((index) => newAppendRules.add(index))
-          }
-
-          if (ruleData.delete && Array.isArray(ruleData.delete)) {
-            ruleData.delete
-              .map((s) => parseRuleStringToItem(s))
-              .forEach((deleteRule) => {
-                const matchedIndex = allRules.findIndex(
-                  (rule) =>
-                    rule.type === deleteRule.type &&
-                    rule.payload === deleteRule.payload &&
-                    rule.proxy === deleteRule.proxy &&
-                    JSON.stringify(rule.additionalParams || []) ===
-                      JSON.stringify(deleteRule.additionalParams || [])
-                )
-                if (matchedIndex !== -1) {
-                  newDeletedRules.add(matchedIndex)
-                }
-              })
-          }
-
-          setPrependRules(newPrependRules)
-          setAppendRules(newAppendRules)
-          setDeletedRules(newDeletedRules)
-          setRules(allRules)
-        } else {
-          setRules(initialRules)
-          setPrependRules(new Set())
-          setAppendRules(new Set())
-          setDeletedRules(new Set())
-        }
+        setRules(state.rules)
+        setPrependRules(state.prependRules)
+        setAppendRules(state.appendRules)
+        setDeletedRules(state.deletedRules)
         return true
       } catch (e) {
         toast.error(
@@ -1479,19 +1382,26 @@ const EditRulesModal: React.FC<Props> = (props) => {
         return false
       }
     },
-    [profileContent, processRulesWithPositions, processAppendRulesWithPositions, t]
+    [profileContent, t]
   )
 
   const handleToggleYamlMode = useCallback(() => {
     if (!isYamlMode) {
-      setYamlContent(serializeToYaml())
+      setYamlContent(loadError ? rawRuleContent : serializeToYaml())
       setIsYamlMode(true)
     } else {
       if (applyYamlToVisualState(yamlContent)) {
         setIsYamlMode(false)
       }
     }
-  }, [isYamlMode, serializeToYaml, applyYamlToVisualState, yamlContent])
+  }, [
+    isYamlMode,
+    serializeToYaml,
+    applyYamlToVisualState,
+    yamlContent,
+    loadError,
+    rawRuleContent
+  ])
 
   const handleSave = useCallback(async (): Promise<boolean> => {
     try {
@@ -1499,6 +1409,11 @@ const EditRulesModal: React.FC<Props> = (props) => {
         yaml.load(yamlContent)
         await setRuleStr(id, yamlContent)
         return true
+      }
+
+      if (loadError) {
+        toast.error(t('profile.editRules.saveBlocked'))
+        return false
       }
 
       const ruleYaml = serializeToYaml()
@@ -1510,7 +1425,7 @@ const EditRulesModal: React.FC<Props> = (props) => {
       )
       return false
     }
-  }, [isYamlMode, yamlContent, serializeToYaml, id, t])
+  }, [isYamlMode, yamlContent, serializeToYaml, id, loadError, t])
 
   const handleRuleTypeChange = (selected: string): void => {
     const noResolveSupported = isRuleSupportsNoResolve(selected)
@@ -1875,12 +1790,27 @@ const EditRulesModal: React.FC<Props> = (props) => {
         <DialogHeader className="pb-0 app-drag">
           <div className="flex items-center justify-between">
             <DialogTitle>{t('profile.editRules.title')}</DialogTitle>
-            <Button variant="ghost" size="sm" className="app-nodrag" onClick={handleToggleYamlMode}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="app-nodrag"
+              onClick={handleToggleYamlMode}
+            >
               <Code className="size-4" />
               {isYamlMode ? t('profile.editRules.visualMode') : t('profile.editRules.yamlMode')}
             </Button>
           </div>
         </DialogHeader>
+        {loadError && (
+          <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2">
+            <AlertTriangle className="size-4 shrink-0 text-destructive mt-0.5" />
+            <div className="min-w-0 text-xs space-y-0.5">
+              <p className="font-medium text-destructive">{t('profile.editRules.loadError')}</p>
+              <p className="text-muted-foreground break-words font-mono">{loadError}</p>
+              <p className="text-muted-foreground">{t('profile.editRules.loadErrorHint')}</p>
+            </div>
+          </div>
+        )}
         <div className="h-full overflow-hidden">
           {isYamlMode ? (
             <div className="h-full">
@@ -1891,303 +1821,305 @@ const EditRulesModal: React.FC<Props> = (props) => {
               />
             </div>
           ) : (
-            <div className="flex gap-4 h-full">
-              {/* Left panel - Rule form */}
-              <div className="w-2/5 flex flex-col gap-3 pr-1 overflow-y-auto min-h-0">
-                <div className="flex flex-col gap-3">
-                  <div className="flex flex-col gap-1.5">
-                    <Label>{t('profile.editRules.ruleType')}</Label>
-                    <Select
-                      value={newRule.type}
-                      onValueChange={(value) => handleRuleTypeChange(value)}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent
-                        className="max-h-60"
-                        style={{ maxHeight: 240 }}
-                        position="popper"
-                      >
-                        {ruleTypes.map((type) => (
-                          <SelectItem key={type} value={type}>
-                            {type}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <Label>{t('profile.editRules.payload')}</Label>
-                    {isNewRuleLogical ? (
-                      <Textarea
-                        placeholder={
-                          getRuleExample(newRule.type) || t('profile.editRules.payloadPlaceholder')
-                        }
-                        value={newRule.payload}
-                        onChange={(e) => setNewRule({ ...newRule, payload: e.target.value })}
-                        disabled={newRule.type === 'MATCH'}
-                        className={cn(
-                          'min-h-21 text-xs leading-5 font-mono resize-y',
-                          newRule.payload && newRule.type !== 'MATCH' && !isPayloadValid
-                            ? 'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/50'
-                            : ''
-                        )}
-                      />
-                    ) : (
-                      <Input
-                        placeholder={
-                          getRuleExample(newRule.type) || t('profile.editRules.payloadPlaceholder')
-                        }
-                        value={newRule.payload}
-                        onChange={(e) => setNewRule({ ...newRule, payload: e.target.value })}
-                        disabled={newRule.type === 'MATCH'}
-                        className={cn(
-                          newRule.payload && newRule.type !== 'MATCH' && !isPayloadValid
-                            ? 'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/50'
-                            : ''
-                        )}
-                      />
-                    )}
-                    {isNewRuleLogical && newRuleLogicalSummary.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
-                        {newRuleLogicalSummary.slice(0, 4).map((clause, idx) => (
-                          <Badge
-                            key={`new-clause-${idx}`}
-                            variant="outline"
-                            className="text-[10px] max-w-65 truncate"
-                          >
-                            {clause}
-                          </Badge>
-                        ))}
-                        {newRuleLogicalSummary.length > 4 && (
-                          <Badge variant="outline" className="text-[10px]">
-                            +{newRuleLogicalSummary.length - 4}
-                          </Badge>
-                        )}
-                      </div>
-                    )}
-                    {newRule.payload && newRule.type !== 'MATCH' && !isPayloadValid && (
-                      <p className="text-[11px] text-destructive">
-                        {t('profile.editRules.expectedFormat') || 'Expected format'}:{' '}
-                        {getRuleExample(newRule.type)}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <Label>{t('profile.editRules.proxy')}</Label>
-                    <Popover modal open={newRuleProxyOpen} onOpenChange={setNewRuleProxyOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          className="w-full justify-between font-normal"
-                        >
-                          <span className="truncate">
-                            {newRule.proxy || t('profile.editRules.proxyPlaceholder')}
-                          </span>
-                          <ChevronsUpDownIcon className="ml-2 size-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent
-                        className="p-0 bg-card/90 h-60"
-                        align="start"
-                        style={{ width: 'var(--radix-popper-anchor-width)' }}
-                      >
-                        <Command>
-                          <CommandInput placeholder={t('profile.editRules.proxyPlaceholder')} />
-                          <CommandList>
-                            <CommandEmpty>No results</CommandEmpty>
-                            <CommandGroup>
-                              {proxyGroups.map((group) => (
-                                <CommandItem
-                                  key={group}
-                                  value={group}
-                                  onSelect={(value) => {
-                                    setNewRule({ ...newRule, proxy: value })
-                                    setNewRuleProxyOpen(false)
-                                  }}
-                                >
-                                  {group}
-                                  <CheckIcon
-                                    className={cn(
-                                      'ml-auto size-4',
-                                      newRule.proxy === group ? 'opacity-100' : 'opacity-0'
-                                    )}
-                                  />
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-
-                  {/* Additional params - horizontal switches */}
-                  {(isRuleSupportsNoResolve(newRule.type) || isRuleSupportsSrc(newRule.type)) && (
-                    <>
-                      <Separator />
-                      <div className="flex items-center gap-4">
-                        {isRuleSupportsNoResolve(newRule.type) && (
-                          <div className="flex items-center gap-2">
-                            <Switch
-                              id="no-resolve"
-                              size="sm"
-                              checked={newRule.additionalParams?.includes('no-resolve') || false}
-                              onCheckedChange={(checked) =>
-                                handleAdditionalParamChange('no-resolve', checked)
-                              }
-                            />
-                            <Label htmlFor="no-resolve" className="text-xs">
-                              {t('profile.editRules.noResolve')}
-                            </Label>
-                          </div>
-                        )}
-                        {isRuleSupportsSrc(newRule.type) && (
-                          <div className="flex items-center gap-2">
-                            <Switch
-                              id="src"
-                              size="sm"
-                              checked={newRule.additionalParams?.includes('src') || false}
-                              onCheckedChange={(checked) =>
-                                handleAdditionalParamChange('src', checked)
-                              }
-                            />
-                            <Label htmlFor="src" className="text-xs">
-                              {t('profile.editRules.src')}
-                            </Label>
-                          </div>
-                        )}
-                      </div>
-                    </>
-                  )}
-
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      className="flex-1"
-                      onClick={() => handleAddRule('prepend')}
-                      disabled={isAddRuleDisabled(newRule, validateRulePayload)}
-                    >
-                      <ArrowUpToLine className="size-4" />
-                      {t('profile.editRules.addRulePrepend')}
-                    </Button>
-                    <Button
-                      className="flex-1"
-                      variant="outline"
-                      onClick={() => handleAddRule('append')}
-                      disabled={isAddRuleDisabled(newRule, validateRulePayload)}
-                    >
-                      <ArrowDownToLine className="size-4" />
-                      {t('profile.editRules.addRuleAppend')}
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Collapsible instructions */}
-                <Accordion type="single" collapsible className="mt-auto">
-                  <AccordionItem value="instructions" className="border-b-0">
-                    <AccordionTrigger className="text-sm py-2">
-                      {t('profile.editRules.instructions')}
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="text-xs text-muted-foreground space-y-1.5">
-                        <p>{t('profile.editRules.instructions1')}</p>
-                        <p>{t('profile.editRules.instructions2')}</p>
-                        <p>{t('profile.editRules.instructions3')}</p>
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-              </div>
-
-              {/* Right panel - Rule list in actual order */}
-              <div className="w-3/5 border-l pl-4 pr-1 flex flex-col min-h-0">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="flex items-center gap-2 shrink-0">
-                    <h3 className="text-lg font-semibold whitespace-nowrap">
-                      {t('profile.editRules.currentRules')}
-                    </h3>
-                    <Badge variant="secondary">{rules.length}</Badge>
-                    {customRulesCount > 0 && (
-                      <Badge
-                        variant="outline"
-                        className="text-[10px] text-emerald-700 dark:text-emerald-400 border-emerald-600/40 dark:border-emerald-500/40 bg-emerald-50 dark:bg-emerald-950/50"
-                      >
-                        +{customRulesCount}
-                      </Badge>
-                    )}
-                  </div>
-                  <Input
-                    placeholder={t('profile.editRules.searchPlaceholder')}
-                    className="min-w-0 h-8 ml-auto"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragStart={handleDragStart}
-                  onDragEnd={handleDragEnd}
-                  onDragCancel={handleDragCancel}
-                >
-                  <SortableContext
-                    items={isDragEnabled ? sortableIds : []}
-                    strategy={verticalListSortingStrategy}
+          <div className="flex gap-4 h-full">
+            {/* Left panel - Rule form */}
+            <div className="w-2/5 flex flex-col gap-3 pr-1 overflow-y-auto min-h-0">
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-1.5">
+                  <Label>{t('profile.editRules.ruleType')}</Label>
+                  <Select
+                    value={newRule.type}
+                    onValueChange={(value) => handleRuleTypeChange(value)}
                   >
-                    <div className="flex flex-col gap-1.5 overflow-y-auto flex-1 pr-1">
-                      {isLoading ? (
-                        <div className="flex flex-col items-center justify-center h-full py-8 gap-2">
-                          <Spinner className="size-8" />
-                          <span className="text-sm text-muted-foreground">
-                            {t('common.loading') || 'Loading...'}
-                          </span>
-                        </div>
-                      ) : filteredRules.length === 0 ? (
-                        <div className="text-center text-muted-foreground py-4">
-                          {rules.length === 0
-                            ? t('profile.editRules.noRules')
-                            : searchTerm
-                              ? t('profile.editRules.noMatchingRules')
-                              : t('profile.editRules.noRules')}
-                        </div>
-                      ) : (
-                        filteredRules.map((rule) => {
-                          const originalIndex = ruleIndexMap.get(rule) ?? -1
-                          const isDeleted = deletedRules.has(originalIndex)
-                          const custom = isRuleCustom(rule)
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent
+                      className="max-h-60"
+                      style={{ maxHeight: 240 }}
+                      position="popper"
+                    >
+                      {ruleTypes.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                          return (
-                            <RuleListItem
-                              key={rule.id}
-                              rule={rule}
-                              originalIndex={originalIndex}
-                              isDeleted={isDeleted}
-                              isCustom={custom}
-                              sortableId={rule.id}
-                              isDragDisabled={!isDragEnabled}
-                              onRemove={handleRemoveRule}
-                              isEditing={editingIndex === originalIndex}
-                              editingRule={editingIndex === originalIndex ? editingRule : null}
-                              onStartEditing={handleStartEditing}
-                              onCancelEditing={handleCancelEditing}
-                              onConfirmEditing={handleConfirmEditing}
-                              onEditingRuleChange={handleEditingRuleChange}
-                              proxyGroups={proxyGroups}
-                            />
-                          )
-                        })
+                <div className="flex flex-col gap-1.5">
+                  <Label>{t('profile.editRules.payload')}</Label>
+                  {isNewRuleLogical ? (
+                    <Textarea
+                      placeholder={
+                        getRuleExample(newRule.type) || t('profile.editRules.payloadPlaceholder')
+                      }
+                      value={newRule.payload}
+                      onChange={(e) => setNewRule({ ...newRule, payload: e.target.value })}
+                      disabled={newRule.type === 'MATCH'}
+                      className={cn(
+                        'min-h-21 text-xs leading-5 font-mono resize-y',
+                        newRule.payload && newRule.type !== 'MATCH' && !isPayloadValid
+                          ? 'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/50'
+                          : ''
+                      )}
+                    />
+                  ) : (
+                    <Input
+                      placeholder={
+                        getRuleExample(newRule.type) || t('profile.editRules.payloadPlaceholder')
+                      }
+                      value={newRule.payload}
+                      onChange={(e) => setNewRule({ ...newRule, payload: e.target.value })}
+                      disabled={newRule.type === 'MATCH'}
+                      className={cn(
+                        newRule.payload && newRule.type !== 'MATCH' && !isPayloadValid
+                          ? 'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/50'
+                          : ''
+                      )}
+                    />
+                  )}
+                  {isNewRuleLogical && newRuleLogicalSummary.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {newRuleLogicalSummary.slice(0, 4).map((clause, idx) => (
+                        <Badge
+                          key={`new-clause-${idx}`}
+                          variant="outline"
+                          className="text-[10px] max-w-65 truncate"
+                        >
+                          {clause}
+                        </Badge>
+                      ))}
+                      {newRuleLogicalSummary.length > 4 && (
+                        <Badge variant="outline" className="text-[10px]">
+                          +{newRuleLogicalSummary.length - 4}
+                        </Badge>
                       )}
                     </div>
-                  </SortableContext>
-                  {createPortal(dragOverlayNode, document.body)}
-                </DndContext>
+                  )}
+                  {newRule.payload && newRule.type !== 'MATCH' && !isPayloadValid && (
+                    <p className="text-[11px] text-destructive">
+                      {t('profile.editRules.expectedFormat') || 'Expected format'}:{' '}
+                      {getRuleExample(newRule.type)}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <Label>{t('profile.editRules.proxy')}</Label>
+                  <Popover modal open={newRuleProxyOpen} onOpenChange={setNewRuleProxyOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        className="w-full justify-between font-normal"
+                      >
+                        <span className="truncate">
+                          {newRule.proxy || t('profile.editRules.proxyPlaceholder')}
+                        </span>
+                        <ChevronsUpDownIcon className="ml-2 size-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className="p-0 bg-card/90 h-60"
+                      align="start"
+                      style={{ width: 'var(--radix-popper-anchor-width)' }}
+                    >
+                      <Command>
+                        <CommandInput placeholder={t('profile.editRules.proxyPlaceholder')} />
+                        <CommandList>
+                          <CommandEmpty>No results</CommandEmpty>
+                          <CommandGroup>
+                            {proxyGroups.map((group) => (
+                              <CommandItem
+                                key={group}
+                                value={group}
+                                onSelect={(value) => {
+                                  setNewRule({ ...newRule, proxy: value })
+                                  setNewRuleProxyOpen(false)
+                                }}
+                              >
+                                {group}
+                                <CheckIcon
+                                  className={cn(
+                                    'ml-auto size-4',
+                                    newRule.proxy === group ? 'opacity-100' : 'opacity-0'
+                                  )}
+                                />
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {/* Additional params - horizontal switches */}
+                {(isRuleSupportsNoResolve(newRule.type) || isRuleSupportsSrc(newRule.type)) && (
+                  <>
+                    <Separator />
+                    <div className="flex items-center gap-4">
+                      {isRuleSupportsNoResolve(newRule.type) && (
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            id="no-resolve"
+                            size="sm"
+                            checked={newRule.additionalParams?.includes('no-resolve') || false}
+                            onCheckedChange={(checked) =>
+                              handleAdditionalParamChange('no-resolve', checked)
+                            }
+                          />
+                          <Label htmlFor="no-resolve" className="text-xs">
+                            {t('profile.editRules.noResolve')}
+                          </Label>
+                        </div>
+                      )}
+                      {isRuleSupportsSrc(newRule.type) && (
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            id="src"
+                            size="sm"
+                            checked={newRule.additionalParams?.includes('src') || false}
+                            onCheckedChange={(checked) =>
+                              handleAdditionalParamChange('src', checked)
+                            }
+                          />
+                          <Label htmlFor="src" className="text-xs">
+                            {t('profile.editRules.src')}
+                          </Label>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    className="flex-1"
+                    onClick={() => handleAddRule('prepend')}
+                    disabled={
+                      isLoading || !!loadError || isAddRuleDisabled(newRule, validateRulePayload)
+                    }
+                  >
+                    <ArrowUpToLine className="size-4" />
+                    {t('profile.editRules.addRulePrepend')}
+                  </Button>
+                  <Button
+                    className="flex-1"
+                    variant="outline"
+                    onClick={() => handleAddRule('append')}
+                    disabled={
+                      isLoading || !!loadError || isAddRuleDisabled(newRule, validateRulePayload)
+                    }
+                  >
+                    <ArrowDownToLine className="size-4" />
+                    {t('profile.editRules.addRuleAppend')}
+                  </Button>
+                </div>
               </div>
+
+              {/* Collapsible instructions */}
+              <Accordion type="single" collapsible className="mt-auto">
+                <AccordionItem value="instructions" className="border-b-0">
+                  <AccordionTrigger className="text-sm py-2">
+                    {t('profile.editRules.instructions')}
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="text-xs text-muted-foreground space-y-1.5">
+                      <p>{t('profile.editRules.instructions1')}</p>
+                      <p>{t('profile.editRules.instructions2')}</p>
+                      <p>{t('profile.editRules.instructions3')}</p>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
             </div>
+
+            {/* Right panel - Rule list in actual order */}
+            <div className="w-3/5 border-l pl-4 pr-1 flex flex-col min-h-0">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="flex items-center gap-2 shrink-0">
+                  <h3 className="text-lg font-semibold whitespace-nowrap">{t('profile.editRules.currentRules')}</h3>
+                  <Badge variant="secondary">{rules.length}</Badge>
+                  {customRulesCount > 0 && (
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] text-emerald-700 dark:text-emerald-400 border-emerald-600/40 dark:border-emerald-500/40 bg-emerald-50 dark:bg-emerald-950/50"
+                    >
+                      +{customRulesCount}
+                    </Badge>
+                  )}
+                </div>
+                <Input
+                  placeholder={t('profile.editRules.searchPlaceholder')}
+                  className="min-w-0 h-8 ml-auto"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+                onDragCancel={handleDragCancel}
+              >
+                <SortableContext
+                  items={isDragEnabled ? sortableIds : []}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <div className="flex flex-col gap-1.5 overflow-y-auto flex-1 pr-1">
+                    {isLoading ? (
+                      <div className="flex flex-col items-center justify-center h-full py-8 gap-2">
+                        <Spinner className="size-8" />
+                        <span className="text-sm text-muted-foreground">
+                          {t('common.loading') || 'Loading...'}
+                        </span>
+                      </div>
+                    ) : filteredRules.length === 0 ? (
+                      <div className="text-center text-muted-foreground py-4">
+                        {rules.length === 0
+                          ? t('profile.editRules.noRules')
+                          : searchTerm
+                            ? t('profile.editRules.noMatchingRules')
+                            : t('profile.editRules.noRules')}
+                      </div>
+                    ) : (
+                      filteredRules.map((rule) => {
+                        const originalIndex = ruleIndexMap.get(rule) ?? -1
+                        const isDeleted = deletedRules.has(originalIndex)
+                        const custom = isRuleCustom(rule)
+
+                        return (
+                          <RuleListItem
+                            key={rule.id}
+                            rule={rule}
+                            originalIndex={originalIndex}
+                            isDeleted={isDeleted}
+                            isCustom={custom}
+                            sortableId={rule.id}
+                            isDragDisabled={!isDragEnabled}
+                            onRemove={handleRemoveRule}
+                            isEditing={editingIndex === originalIndex}
+                            editingRule={editingIndex === originalIndex ? editingRule : null}
+                            onStartEditing={handleStartEditing}
+                            onCancelEditing={handleCancelEditing}
+                            onConfirmEditing={handleConfirmEditing}
+                            onEditingRuleChange={handleEditingRuleChange}
+                            proxyGroups={proxyGroups}
+                          />
+                        )
+                      })
+                    )}
+                  </div>
+                </SortableContext>
+                {createPortal(dragOverlayNode, document.body)}
+              </DndContext>
+            </div>
+          </div>
           )}
         </div>
         <DialogFooter className="pt-0">
@@ -2207,6 +2139,7 @@ const EditRulesModal: React.FC<Props> = (props) => {
           </DialogClose>
           <Button
             size="sm"
+            disabled={isLoading || (!!loadError && !isYamlMode)}
             onClick={async () => {
               const saved = await handleSave()
               if (saved) {
