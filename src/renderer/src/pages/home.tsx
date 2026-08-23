@@ -5,9 +5,8 @@ import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-c
 import { useProfileConfig } from '@renderer/hooks/use-profile-config'
 import { useGroups } from '@renderer/hooks/use-groups'
 import { triggerSysProxy, updateTrayIcon, mihomoHotReloadConfig } from '@renderer/utils/ipc'
-import NumberFlow from '@number-flow/react'
 import { useTranslation } from 'react-i18next'
-import { useEffect, useMemo, useState } from 'react'
+import { memo, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import dayjs from 'dayjs'
 import Power from '@renderer/assets/on_icon.svg'
@@ -40,6 +39,40 @@ function formatBytes(bytes: number): string {
 
 // Module-level variable: persists across component mounts/unmounts
 let connectionStartTime: number | null = null
+
+const ConnectedTimer = memo(({ active }: { active: boolean }) => {
+  const [elapsed, setElapsed] = useState(0)
+
+  useEffect(() => {
+    if (!active) {
+      connectionStartTime = null
+      setElapsed(0)
+      return undefined
+    }
+
+    if (connectionStartTime === null) {
+      connectionStartTime = Date.now()
+    }
+
+    const updateElapsed = (): void => {
+      setElapsed(Math.floor((Date.now() - connectionStartTime!) / 1000))
+    }
+    updateElapsed()
+    const interval = setInterval(updateElapsed, 1000)
+    return () => clearInterval(interval)
+  }, [active])
+
+  const hours = Math.floor(elapsed / 3600)
+  const minutes = Math.floor((elapsed % 3600) / 60)
+  const seconds = elapsed % 60
+  return (
+    <span>
+      {String(hours).padStart(2, '0')}:{String(minutes).padStart(2, '0')}:
+      {String(seconds).padStart(2, '0')}
+    </span>
+  )
+})
+ConnectedTimer.displayName = 'ConnectedTimer'
 
 const Home: React.FC = () => {
   const { t } = useTranslation()
@@ -80,31 +113,7 @@ const Home: React.FC = () => {
     'connecting'
   )
 
-  const [elapsed, setElapsed] = useState(() => {
-    if (connectionStartTime !== null) {
-      return Math.floor((Date.now() - connectionStartTime) / 1000)
-    }
-    return 0
-  })
-
   const isSelected = (tun?.enable ?? false) || sysProxyEnable
-
-  useEffect(() => {
-    if (isSelected) {
-      if (connectionStartTime === null) {
-        connectionStartTime = Date.now()
-      }
-      setElapsed(Math.floor((Date.now() - connectionStartTime) / 1000))
-      const interval = setInterval(() => {
-        setElapsed(Math.floor((Date.now() - connectionStartTime!) / 1000))
-      }, 1000)
-      return () => clearInterval(interval)
-    } else {
-      connectionStartTime = null
-      setElapsed(0)
-      return undefined
-    }
-  }, [isSelected])
 
   const isDisabled =
     loading || (mainSwitchMode === 'sysproxy' && mode == 'manual' && sysProxyDisabled)
@@ -123,9 +132,6 @@ const Home: React.FC = () => {
     t('pages.home.disconnected')
   ]
   const showConnectedTimer = !loading && isSelected
-  const elapsedHours = Math.floor(elapsed / 3600)
-  const elapsedMinutes = Math.floor((elapsed % 3600) / 60)
-  const elapsedSeconds = elapsed % 60
 
   // Current profile & subscription
   const currentProfile = useMemo(() => {
@@ -386,20 +392,7 @@ const Home: React.FC = () => {
                   showConnectedTimer ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1'
                 }`}
               >
-                <NumberFlow
-                  value={elapsedHours}
-                  format={{ minimumIntegerDigits: 2, useGrouping: false }}
-                />
-                <span>:</span>
-                <NumberFlow
-                  value={elapsedMinutes}
-                  format={{ minimumIntegerDigits: 2, useGrouping: false }}
-                />
-                <span>:</span>
-                <NumberFlow
-                  value={elapsedSeconds}
-                  format={{ minimumIntegerDigits: 2, useGrouping: false }}
-                />
+                <ConnectedTimer active={isSelected} />
               </div>
             </div>
             <div
