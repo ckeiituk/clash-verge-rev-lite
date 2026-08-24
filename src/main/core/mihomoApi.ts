@@ -158,10 +158,15 @@ async function resolveProviderProxies(
 ): Promise<Record<string, ControllerProxiesDetail>> {
   if (names.size === 0) return {}
 
-  const providers =
-    fallbackToAllProviders || providerNames.size > PROVIDER_DETAIL_FETCH_THRESHOLD
-      ? Object.values((await mihomoProxyProviders()).providers)
-      : await Promise.all([...providerNames].map((name) => mihomoProxyProvider(name)))
+  let providers: ControllerProxyProviderDetail[]
+  try {
+    providers =
+      fallbackToAllProviders || providerNames.size > PROVIDER_DETAIL_FETCH_THRESHOLD
+        ? Object.values((await mihomoProxyProviders()).providers)
+        : await Promise.all([...providerNames].map((name) => mihomoProxyProvider(name)))
+  } catch {
+    return {}
+  }
 
   const providerProxies: Record<string, ControllerProxiesDetail> = {}
   providers.forEach((provider) => {
@@ -218,7 +223,10 @@ export const mihomoGroups = async (): Promise<ControllerMixedGroup[]> => {
       const globalConfig = (
         runtime?.['proxy-groups'] as { name: string; url?: string }[] | undefined
       )?.find((g) => g.name === 'GLOBAL')
-      rawGroups.unshift({ group: { ...global, testUrl: globalConfig?.url }, providers: [] })
+      rawGroups.unshift({
+        group: { ...global, testUrl: globalConfig?.url ?? global.testUrl },
+        providers: []
+      })
     }
   }
 
