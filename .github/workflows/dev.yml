@@ -49,12 +49,6 @@ jobs:
       - name: Download sidecar binaries
         run: pnpm prepare --${{ matrix.arch }}
 
-      - name: Skip macOS build (signing secrets missing)
-        if: matrix.os == 'macos-latest' && env.MACOS_SIGNING_READY != 'true'
-        run: |
-          echo "Skipping macOS build: signing secrets missing."
-          exit 0
-
       - name: Create Apple API Key file
         if: matrix.os == 'macos-latest' && env.MACOS_SIGNING_READY == 'true'
         run: |
@@ -65,31 +59,57 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: sudo apt-get update && sudo apt-get install -y libarchive-tools fakeroot
 
-      - name: Build
-        if: matrix.os != 'macos-latest' || env.MACOS_SIGNING_READY == 'true'
+      - name: Build (Windows)
+        if: matrix.os == 'windows-latest'
         env:
           NODE_OPTIONS: '--max_old_space_size=4096'
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           npm_config_arch: ${{ matrix.arch }}
           npm_config_target_arch: ${{ matrix.arch }}
-          CSC_LINK: ${{ matrix.os == 'windows-latest' && secrets.WINDOWS_CERTIFICATE || (matrix.os == 'macos-latest' && secrets.APPLE_CERTIFICATE || '') }}
-          CSC_KEY_PASSWORD: ${{ matrix.os == 'windows-latest' && secrets.WINDOWS_CERT_PASSWORD || (matrix.os == 'macos-latest' && secrets.APPLE_CERTIFICATE_PASSWORD || '') }}
-          CSC_NAME: ${{ matrix.os == 'macos-latest' && secrets.APPLE_SIGNING_IDENTITY || '' }}
-          APPLE_API_KEY_ID: ${{ matrix.os == 'macos-latest' && secrets.APPLE_API_KEY || '' }}
-          APPLE_API_ISSUER: ${{ matrix.os == 'macos-latest' && secrets.APPLE_API_ISSUER || '' }}
-          APPLE_API_KEY: ${{ matrix.os == 'macos-latest' && format('~/.appstoreconnect/private_keys/AuthKey_{0}.p8', secrets.APPLE_API_KEY) || '' }}
+          CSC_LINK: ${{ secrets.WINDOWS_CERTIFICATE }}
+          CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
         shell: bash
-        run: |
-          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            pnpm build:win --${{ matrix.arch }}
-          elif [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
-            pnpm build:linux --${{ matrix.arch }}
-          else
-            pnpm build:mac --${{ matrix.arch }}
-          fi
+        run: pnpm build:win --${{ matrix.arch }}
+
+      - name: Build (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        env:
+          NODE_OPTIONS: '--max_old_space_size=4096'
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          npm_config_arch: ${{ matrix.arch }}
+          npm_config_target_arch: ${{ matrix.arch }}
+        shell: bash
+        run: pnpm build:linux --${{ matrix.arch }}
+
+      - name: Build (macOS, signed)
+        if: matrix.os == 'macos-latest' && env.MACOS_SIGNING_READY == 'true'
+        env:
+          NODE_OPTIONS: '--max_old_space_size=4096'
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          npm_config_arch: ${{ matrix.arch }}
+          npm_config_target_arch: ${{ matrix.arch }}
+          CSC_LINK: ${{ secrets.APPLE_CERTIFICATE }}
+          CSC_KEY_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          CSC_NAME: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_API_KEY: ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APPLE_API_KEY }}.p8
+        shell: bash
+        run: pnpm build:mac --${{ matrix.arch }}
+
+      - name: Build (macOS, unsigned)
+        if: matrix.os == 'macos-latest' && env.MACOS_SIGNING_READY != 'true'
+        env:
+          NODE_OPTIONS: '--max_old_space_size=4096'
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          npm_config_arch: ${{ matrix.arch }}
+          npm_config_target_arch: ${{ matrix.arch }}
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        shell: bash
+        run: pnpm build:mac --${{ matrix.arch }}
 
       - name: Upload Artifacts (macOS)
-        if: matrix.os == 'macos-latest' && env.MACOS_SIGNING_READY == 'true'
+        if: matrix.os == 'macos-latest'
         uses: actions/upload-artifact@v7
         with:
           name: macos-${{ matrix.arch }}
